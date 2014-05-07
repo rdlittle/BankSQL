@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root prefHeight="348.0" prefWidth="600.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <Label layoutX="10.0" layoutY="29.0" text="Date" />
+        <DatePicker fx:id="transDate" layoutX="101.0" layoutY="22.0" />
+        <Label layoutX="10.0" layoutY="81.0" text="Store" />
+        <Label layoutX="10.0" layoutY="234.0" text="Item" />
+        <TextField fx:id="transDescription" layoutX="101.0" layoutY="228.0" prefHeight="26.0" prefWidth="291.0" />
+        <Label layoutX="400.0" layoutY="233.0" text="Amount" />
+        <TextField fx:id="transAmt" layoutX="465.5" layoutY="227.0" prefHeight="26.0" prefWidth="111.0" />
+        <ChoiceBox fx:id="primaryCat" layoutX="101.0" layoutY="126.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
+        </ChoiceBox>
+        <Label layoutX="10.0" layoutY="131.0" text="Category 1" />
+        <Label layoutX="448.5" layoutY="34.0" text="Account" />
+        <ChoiceBox fx:id="accountNum" layoutX="535.0" layoutY="26.0" xmlns:fx="http://javafx.com/fxml">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="1" />
+                    <String fx:value="2" />
+                </FXCollections>
+            </items>
+        </ChoiceBox>
+        <Label layoutX="446.5" layoutY="81.0" text="Trans ID" />
+        <TextField fx:id="transId" layoutX="511.0" layoutY="77.0" prefHeight="26.0" prefWidth="63.0" />
+        <Label layoutX="10.0" layoutY="180.0" text="Category 2" />
+        <ChoiceBox fx:id="subCat" layoutX="101.0" layoutY="174.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
+        </ChoiceBox>
+        <Button fx:id="btnOk" layoutX="352.5" layoutY="290.0" mnemonicParsing="false" onAction="#addItem" prefHeight="26.0" prefWidth="63.0" text="OK" />
+        <Button fx:id="btnDelete" layoutX="432.5" layoutY="290.0" mnemonicParsing="false" onAction="#deleteItem" prefHeight="26.0" prefWidth="63.0" text="Delete" />
+        <Button fx:id="btnCancel" layoutX="515.5" layoutY="289.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
+        <ComboBox fx:id="cbStores" layoutX="101.0" layoutY="78.0" prefHeight="25.0" prefWidth="291.0" />
+    </children>
+</fx:root>

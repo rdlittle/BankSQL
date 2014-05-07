@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml" prefHeight="470.0" prefWidth="950.0">
+    <children>
+        <Label layoutX="10.0" layoutY="29.0" text="Date" />
+        <DatePicker fx:id="transDate" layoutX="75.0" layoutY="24.0" />
+        
+        <Label layoutX="397.5" layoutY="29.0" text="Account" />
+        <ChoiceBox fx:id="accountNum" layoutX="465.5" layoutY="24.0" xmlns:fx="http://javafx.com/fxml">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="1" />
+                    <String fx:value="2" />
+                </FXCollections>
+            </items>
+        </ChoiceBox>        
+        
+        <Label layoutX="792.0" layoutY="29.0" text="ID" />
+        <TextField fx:id="transId" layoutX="843.0" layoutY="22.0" prefHeight="26.0" prefWidth="87.0" />
+        
+        <Label layoutX="10.0" layoutY="81.0" text="Category" />
+        <ChoiceBox fx:id="primaryCat" layoutX="75.0" layoutY="77.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
+        </ChoiceBox>   
+
+        <Label layoutX="375.464599609375" layoutY="82.0" text="Sub Cat" />
+        <ChoiceBox fx:id="subCat" layoutX="443.0" layoutY="78.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
+        </ChoiceBox>
+
+        <Label layoutX="612.5" layoutY="29.0" text="Check#" />
+        <TextField fx:id="checkNum" layoutX="682.0" layoutY="24.0" prefHeight="26.0" prefWidth="50.0" />
+        
+        <Label layoutX="750.0" layoutY="81.0" text="Amount" />
+        <TextField fx:id="transAmt" layoutX="820.0" layoutY="76.0" prefHeight="26.0" prefWidth="111.0" />
+        
+        <Label layoutX="10.0" layoutY="130.0" text="Desc" />
+        <TextField fx:id="transDescription" layoutX="75.0" layoutY="124.0" prefHeight="26.0" prefWidth="857.0" />
+        
+        <TableView layoutX="72.0" layoutY="182.0" prefHeight="223.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">
+            <columns>
+                <TableColumn prefWidth="75.0" text="C1" />
+                <TableColumn prefWidth="75.0" text="C2" />
+            </columns>
+        </TableView>
+        
+        <Button fx:id="btnCancel" layoutX="860.5" layoutY="421.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
+        <Button fx:id="btnOk" layoutX="782.5" layoutY="421.0" mnemonicParsing="false" onAction="#submitItem" prefHeight="26.0" prefWidth="63.0" text="OK" />
+        
+    </children>
+</fx:root>
