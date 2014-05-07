@@ -16,7 +16,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.PopupControl;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
@@ -26,6 +25,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 /**
@@ -82,14 +83,12 @@ public class StoresView extends Pane {
             public void handle(Event event) {
                 int row = table.getSelectionModel().getSelectedIndex();
                 Stores s = table.getItems().get(row);
-                int r = (new ConfirmDialog()).getResult();
+                ConfirmDialog cd=new ConfirmDialog();
+                int r = cd.getResult();
                 System.out.println(r);
                 if (r == ConfirmDialog.CONFIRM_YES) {
                     storesManager.delete(s);
                     list.remove(s);
-                    System.out.println("Deleted item " + s.getStoreName());
-                } else {
-                    System.out.println("Item " + s.getStoreName()+" not deleted");
                 }
             }
         });
@@ -98,7 +97,8 @@ public class StoresView extends Pane {
             @Override
             public void handle(Event event) {
                 int row = table.getSelectionModel().getSelectedIndex();
-                System.out.println("Edit item " + row);
+                StoreForm form = new StoreForm(view,table.getItems().get(row));
+                form.showForm();
             }
         });
 
@@ -173,7 +173,7 @@ public class StoresView extends Pane {
         }
     };
 
-    static class ConfirmDialog extends PopupControl {
+    static class ConfirmDialog extends Popup {
 
         Stage stage;
         Scene scene;
@@ -181,7 +181,7 @@ public class StoresView extends Pane {
         Button btnYes;
         Button btnNo;
         Button btnCancel;
-        private static int result;
+        private int result;
 
         public static final int CONFIRM_CANCEL = -1;
         public static final int CONFIRM_NO = 0;
@@ -190,18 +190,25 @@ public class StoresView extends Pane {
         public ConfirmDialog() {
             super();
             stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
             pane = new Pane();
             scene = new Scene(pane);
             btnYes = new Button("Yes");
             btnNo = new Button("No");
             btnCancel = new Button("Cancel");
-            VBox vbox = new VBox();
-            vbox.getChildren().add(new Label("Are you sure?"));
+            
             HBox buttons = new HBox();
             buttons.getChildren().addAll(btnYes, btnNo, btnCancel);
+            
+            VBox vbox = new VBox();
+            vbox.getChildren().add(new Label("Are you sure?"));
             vbox.getChildren().add(buttons);
+            
             pane.getChildren().add(vbox);
+            
             stage.setScene(scene);
+            //getContent().add(pane);
+            
             btnYes.setOnAction(new EventHandler() {
                 @Override
                 public void handle(Event event) {
@@ -224,13 +231,12 @@ public class StoresView extends Pane {
                 }
             });
             stage.setTitle("Confirm Action");
-            stage.setMinHeight(200);
-            stage.setMinWidth(250);
+            stage.requestFocus();
             stage.showAndWait();
         }
 
-        public static int getResult() {
-            return ConfirmDialog.result;
+        public int getResult() {
+            return result;
         }
 
         private void setResult(int r) {

@@ -17,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 /**
@@ -49,15 +50,16 @@ public class StoreForm extends AnchorPane {
     }
 
     public StoreForm(StoresView view, Stores store) {
+        this();
         this.view = view;
         this.store = store;
 
-        btnOk = new Button();
-        btnCancel = new Button();
-        btnDelete = new Button();
-        txtStoreName = new TextField();
-        stage = new Stage();
-        scene = new Scene(this);
+//        btnOk = new Button();
+//        btnCancel = new Button();
+//        btnDelete = new Button();
+//        txtStoreName = new TextField();
+//        stage = new Stage();
+//        scene = new Scene(this);
     }
 
     public void showForm() {
@@ -65,7 +67,9 @@ public class StoreForm extends AnchorPane {
         URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/StoreForm.fxml");
         ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
         FXMLLoader loader = new FXMLLoader(location, resources);
-
+        
+        stage.initModality(Modality.APPLICATION_MODAL);
+        
         loader.setRoot(this);
         loader.setController(this);
 
