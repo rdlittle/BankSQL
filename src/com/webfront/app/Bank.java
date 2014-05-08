@@ -100,7 +100,7 @@ public class Bank extends Application {
                 stores.getList().sort(StoresView.StoreComparator);
             }
         });
-        
+        scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);
         primaryStage.show();

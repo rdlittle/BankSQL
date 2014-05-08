@@ -1,0 +1,35 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : May 8, 2014, 8:17:27 AM
+    Author     : rlittle
+*/
+
+.button {
+    -fx-background-color: cornflowerblue;
+    -fx-text-fill: white;
+    -fx-border-color: rgb(49, 89, 23);
+    -fx-border-radius: 5;
+    -fx-padding: 3 6 6 6;
+    -fx-effect: dropshadow( one-pass-box , black , 8 , 0.0 , 2 , 0 );
+}
+
+.button:hover {
+    -fx-background-color: lightgoldenrodyellow;
+    -fx-text-fill: black;
+    -fx-border-color: rgb(49, 89, 23);
+    -fx-border-radius: 5;
+    -fx-padding: 3 6 6 6;
+    
+}
+
+.button:pressed {
+    -fx-background-color: brown;
+    -fx-text-fill: white;
+    -fx-border-color: rgb(49, 89, 23);
+    -fx-border-radius: 5;
+    -fx-padding: 3 6 6 6;    
+}
