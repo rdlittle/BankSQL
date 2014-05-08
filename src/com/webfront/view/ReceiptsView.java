@@ -26,7 +26,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -86,15 +85,6 @@ public class ReceiptsView extends Pane {
         btnAdd.setOnAction((ActionEvent event) -> {
             ReceiptForm receiptForm = new ReceiptForm(receiptsView, new Receipts());
         });
-//        DropShadow shadow = new DropShadow();
-//
-//        btnAdd.addEventHandler(MouseEvent.MOUSE_ENTERED, (MouseEvent e) -> {
-//            btnAdd.setEffect(shadow);
-//        });
-//
-//        btnAdd.addEventHandler(MouseEvent.MOUSE_EXITED, (MouseEvent e) -> {
-//            btnAdd.setEffect(null);
-//        });
 
         table = new TableView<>();
         table.setMinWidth(1300.0);
