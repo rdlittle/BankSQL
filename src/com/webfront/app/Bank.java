@@ -12,12 +12,15 @@ import javafx.application.Application;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -69,13 +72,26 @@ public class Bank extends Application {
         tabPane.getTabs().add(ledgerTab);
         tabPane.getTabs().add(storesTab);
         tabPane.getTabs().add(receiptsTab);
+        
+        Pane statusPanel = new Pane();
+        statusPanel.setPrefSize(scene.getWidth(), 100);
+        statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
+        statusPanel.setPadding(new Insets(1,5,1,5));
+        statusPanel.getChildren().add(new Label("Status Bar"));
 
         ((VBox) scene.getRoot()).getChildren().add(menuBar);
         ((VBox) scene.getRoot()).getChildren().add(tabPane);
+        ((VBox) scene.getRoot()).getChildren().add(statusPanel);
 
         ledgerView.setPrefSize(scene.getWidth(), scene.getHeight());
-        ledgerView.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 100);
+        ledgerView.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
 
+        receipts.setPrefSize(scene.getWidth(), scene.getHeight());
+        receipts.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
+        
+        stores.setPrefSize(scene.getWidth(), scene.getHeight());
+        stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
+        
         receipts.setStoreList(stores.getList());
         receipts.getStoreAdded().addListener(new InvalidationListener() {
             @Override

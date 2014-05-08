@@ -11,6 +11,8 @@ import java.util.Comparator;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -83,7 +85,7 @@ public class StoresView extends Pane {
             public void handle(Event event) {
                 int row = table.getSelectionModel().getSelectedIndex();
                 Stores s = table.getItems().get(row);
-                ConfirmDialog cd=new ConfirmDialog();
+                ConfirmDialog cd = new ConfirmDialog("Preparing to delete "+s.getStoreName());
                 int r = cd.getResult();
                 System.out.println(r);
                 if (r == ConfirmDialog.CONFIRM_YES) {
@@ -97,7 +99,7 @@ public class StoresView extends Pane {
             @Override
             public void handle(Event event) {
                 int row = table.getSelectionModel().getSelectedIndex();
-                StoreForm form = new StoreForm(view,table.getItems().get(row));
+                StoreForm form = new StoreForm(view, table.getItems().get(row));
                 form.showForm();
             }
         });
@@ -132,7 +134,10 @@ public class StoresView extends Pane {
         table.setItems(list);
         table.getColumns().addAll(storeIdCol, storeNameCol);
 
-        vbox.getChildren().addAll(table, btnAdd);
+        HBox buttons = new HBox();
+        buttons.setPadding(new Insets(5, 5, 5, 5));
+        buttons.getChildren().add(btnAdd);
+        vbox.getChildren().addAll(table, buttons);
         getChildren().addAll(vbox);
     }
 
@@ -182,33 +187,44 @@ public class StoresView extends Pane {
         Button btnNo;
         Button btnCancel;
         private int result;
+        private String prompt;
+        private String message;
 
         public static final int CONFIRM_CANCEL = -1;
         public static final int CONFIRM_NO = 0;
         public static final int CONFIRM_YES = 1;
 
-        public ConfirmDialog() {
+        public ConfirmDialog(String msg) {
             super();
+            message = msg;
+            prompt = new String();
+            init();
+            showDialog();
+        }
+
+        private void init() {
+
             stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            pane = new Pane();
-            scene = new Scene(pane);
+
             btnYes = new Button("Yes");
             btnNo = new Button("No");
             btnCancel = new Button("Cancel");
-            
+
             HBox buttons = new HBox();
+            buttons.alignmentProperty().setValue(Pos.BASELINE_RIGHT);
+            buttons.setSpacing(20.0);
             buttons.getChildren().addAll(btnYes, btnNo, btnCancel);
-            
+
             VBox vbox = new VBox();
-            vbox.getChildren().add(new Label("Are you sure?"));
-            vbox.getChildren().add(buttons);
-            
-            pane.getChildren().add(vbox);
-            
-            stage.setScene(scene);
-            //getContent().add(pane);
-            
+            vbox.setPadding(new Insets(10, 10, 10, 10));
+            vbox.setSpacing(10.0);
+            vbox.alignmentProperty().set(Pos.CENTER);
+            Label lblPrompt = new Label("Are you sure?");
+            Label promptMessage = new Label(getMessage());
+            lblPrompt.setPrefHeight(100);
+            vbox.getChildren().addAll(promptMessage, lblPrompt, buttons);
+
             btnYes.setOnAction(new EventHandler() {
                 @Override
                 public void handle(Event event) {
@@ -230,9 +246,30 @@ public class StoresView extends Pane {
                     stage.close();
                 }
             });
+
+            stage.setWidth(300.0);
+            stage.setHeight(150.0);
+            scene = new Scene(vbox);
+
             stage.setTitle("Confirm Action");
+            stage.setScene(scene);
+
+        }
+
+        private void showDialog() {
             stage.requestFocus();
             stage.showAndWait();
+        }
+
+        public void setPrompt(String text) {
+            this.prompt = text;
+        }
+
+        public String getPrompt() {
+            if (prompt == null || prompt.isEmpty()) {
+                return "Are you sure?";
+            }
+            return prompt;
         }
 
         public int getResult() {
@@ -241,6 +278,23 @@ public class StoresView extends Pane {
 
         private void setResult(int r) {
             this.result = r;
+        }
+
+        /**
+         * @return the message
+         */
+        public String getMessage() {
+            if (this.message == null || this.message.isEmpty()) {
+                return "";
+            }
+            return this.message;
+        }
+
+        /**
+         * @param message the message to set
+         */
+        public void setMessage(String message) {
+            this.message = message;
         }
     }
 

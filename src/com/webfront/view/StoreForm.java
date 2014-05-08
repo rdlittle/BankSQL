@@ -53,13 +53,6 @@ public class StoreForm extends AnchorPane {
         this();
         this.view = view;
         this.store = store;
-
-//        btnOk = new Button();
-//        btnCancel = new Button();
-//        btnDelete = new Button();
-//        txtStoreName = new TextField();
-//        stage = new Stage();
-//        scene = new Scene(this);
     }
 
     public void showForm() {
@@ -118,7 +111,7 @@ public class StoreForm extends AnchorPane {
     @FXML
     private void delete() {
         if(store!=null && store.getId()!=null) {
-            if(store.getId().intValue()>0) {
+            if(store.getId()>0) {
                view.storesManager.delete(store);
                view.getList().remove(store);
             }

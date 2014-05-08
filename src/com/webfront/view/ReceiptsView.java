@@ -18,7 +18,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -192,13 +191,6 @@ public class ReceiptsView extends Pane {
         };
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-//        table.getItems().addListener(new ListChangeListener() {
-//            @Override
-//            public void onChanged(ListChangeListener.Change c) {
-//                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//            }
-//        });
-
         table.setItems(list);
 
         grid.setHgap(10.0);
