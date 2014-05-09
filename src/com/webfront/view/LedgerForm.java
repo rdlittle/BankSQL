@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -31,6 +32,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 /**
@@ -64,12 +66,18 @@ public final class LedgerForm extends AnchorPane {
     Button btnOk;
     @FXML
     Button btnCancel;
-
+    
+    @FXML
+    Pane distView;
+    
     Stage stage;
     Scene scene;
 
     HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
+    
+    @FXML
+    DistributionView distTable;
 
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
@@ -89,6 +97,8 @@ public final class LedgerForm extends AnchorPane {
         storeMap = new HashMap<>();
         categoryMap = new HashMap<>();
         subCatMap = new HashMap<>();
+        distView = new Pane();
+        distTable = new DistributionView(FXCollections.observableArrayList());
         buildForm();
         setFormData();
     }
@@ -107,7 +117,7 @@ public final class LedgerForm extends AnchorPane {
             loader.setRoot(this);
             loader.setController(this);
             loader.load();
-
+            
             ObservableList<Category> cList = view.getCategoryManager().getCategories();
 
             for (Category c : cList) {
@@ -129,6 +139,7 @@ public final class LedgerForm extends AnchorPane {
             if (oldItem != null) {
                 if (oldItem.getDistribution() != null) {
                     if (oldItem.getDistribution().size() > 0) {
+
                         for (Distribution d : oldItem.getDistribution()) {
                             Category c = d.getCategory();
                             if (c != null) {
@@ -183,12 +194,11 @@ public final class LedgerForm extends AnchorPane {
                                 dist.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
                                 dist.setCategory(subCatMap.get(newCat));
                                 dist.setLedger(oldItem);
-                                if(oldItem.getDistribution().get(0).getId()!=null) {
+                                if (oldItem.getDistribution().get(0).getId() != null) {
                                     oldItem.getDistribution().get(0).setCategory(subCatMap.get(newCat));
                                 } else {
                                     oldItem.getDistribution().set(0, dist);
                                 }
-                                
                                 btnOk.setDisable(false);
                             }
                         }
@@ -219,7 +229,9 @@ public final class LedgerForm extends AnchorPane {
                     }
                 }
             });
-
+            distView.setPrefSize(857.0, 175.0);
+            distTable.setPrefSize(857.0, 175.0);
+            distView.getChildren().add(distTable);
             stage.show();
 
         } catch (IOException ex) {
@@ -246,13 +258,15 @@ public final class LedgerForm extends AnchorPane {
             }
             if (oldItem.getDistribution() != null && oldItem.getDistribution().size() > 0) {
                 if (oldItem.getDistribution().get(0) != null) {
+                    distTable.setList(FXCollections.observableList(oldItem.getReceipts()));
+                    distTable.setItems(distTable.getList());
                     Category c = oldItem.getDistribution().get(0).getCategory();
-                    if(c!=null) {
+                    if (c != null) {
                         subCat.setValue(c.getDescription());
                     }
                 }
             }
-            if(oldItem.getCheckNum()!=null) {
+            if (oldItem.getCheckNum() != null) {
                 checkNum.setText(oldItem.getCheckNum());
             }
             transDate.setDisable(true);

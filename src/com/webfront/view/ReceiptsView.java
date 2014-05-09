@@ -76,7 +76,6 @@ public class ReceiptsView extends Pane {
         categoryManager = new CategoryManager();
         ledgerManager = new LedgerManager();
 
-        //storeList = storesManager.getList("SELECT * FROM stores ORDER BY storeName");
         storeList = FXCollections.observableArrayList();
         categoryList = (ObservableList<Category>) categoryManager.getCategories();
         list = receiptsManager.getList("SELECT * FROM receipts ORDER BY transDate DESC");

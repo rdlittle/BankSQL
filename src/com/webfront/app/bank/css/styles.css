@@ -27,7 +27,7 @@ and open the template in the editor.
 }
 
 .button:pressed {
-    -fx-background-color: brown;
+    -fx-background-color: navy;
     -fx-text-fill: white;
     -fx-border-color: rgb(49, 89, 23);
     -fx-border-radius: 5;

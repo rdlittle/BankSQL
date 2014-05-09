@@ -5,7 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml" prefHeight="470.0" prefWidth="950.0">
+<fx:root prefHeight="470.0" prefWidth="950.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <Label layoutX="10.0" layoutY="29.0" text="Date" />
         <DatePicker fx:id="transDate" layoutX="75.0" layoutY="24.0" />
@@ -40,15 +40,11 @@
         <Label layoutX="10.0" layoutY="130.0" text="Desc" />
         <TextField fx:id="transDescription" layoutX="75.0" layoutY="124.0" prefHeight="26.0" prefWidth="857.0" />
         
-        <TableView layoutX="72.0" layoutY="182.0" prefHeight="223.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">
-            <columns>
-                <TableColumn prefWidth="75.0" text="C1" />
-                <TableColumn prefWidth="75.0" text="C2" />
-            </columns>
-        </TableView>
+        <Pane fx:id="distView" layoutX="75.0" layoutY="170.0" prefHeight="236.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">
+        </Pane>
         
         <Button fx:id="btnCancel" layoutX="860.5" layoutY="421.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
-        <Button fx:id="btnOk" layoutX="782.5" layoutY="421.0" mnemonicParsing="false" onAction="#submitItem" prefHeight="26.0" prefWidth="63.0" text="OK" />
+        <Button fx:id="btnOk" layoutX="782.5" layoutY="421.0" mnemonicParsing="false" onAction="#submitItem" prefHeight="26.0" prefWidth="63.0" text="OK" /><Label layoutX="8.464599609375" layoutY="185.5" text="Detail" />
         
     </children>
 </fx:root>

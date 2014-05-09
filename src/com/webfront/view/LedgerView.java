@@ -128,7 +128,7 @@ public class LedgerView extends Pane {
 
         table.getItems().addAll(list);
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
-        VBox vbox=new VBox();
+        VBox vbox = new VBox();
         btnSearch = new Button("Search");
         btnSearch.setOnAction(new EventHandler() {
             @Override
@@ -136,7 +136,7 @@ public class LedgerView extends Pane {
                 doSearch("");
             }
         });
-        
+
         btnReset = new Button("Reset");
         btnReset.setOnAction(new EventHandler() {
             @Override
@@ -150,17 +150,20 @@ public class LedgerView extends Pane {
         buttons.setSpacing(10.0);
         buttons.setPadding(new Insets(5, 10, 2, 10));
         buttons.getChildren().addAll(btnSearch, btnReset);
-        vbox.getChildren().addAll(table,buttons);
+        vbox.getChildren().addAll(table, buttons);
         getChildren().addAll(vbox);
     }
 
     public void doSearch(String sql) {
-        SearchForm form = new SearchForm(this,new SearchCriteria());
+        SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();
-        list = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
-        table.getItems().clear();
-        table.setItems(list);
+        if (form.criteria.getSqlStmt() != null) {
+            list = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
+            table.getItems().clear();
+            table.setItems(list);
+        }
     }
+
     /**
      * @return the table
      */
