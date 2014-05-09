@@ -29,7 +29,9 @@ import javafx.stage.Stage;
  * @author rlittle
  */
 public class Bank extends Application {
-
+    
+    final int TAB_BOTTOM_MARGIN = 130;
+    
     @Override
     public void start(Stage primaryStage) {
         Scene scene = new Scene(new VBox(), 1300, 800);
@@ -74,7 +76,7 @@ public class Bank extends Application {
         tabPane.getTabs().add(receiptsTab);
         
         Pane statusPanel = new Pane();
-        statusPanel.setPrefSize(scene.getWidth(), 100);
+        statusPanel.setPrefSize(scene.getWidth(), 110);
         statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
         statusPanel.setPadding(new Insets(1,5,1,5));
         statusPanel.getChildren().add(new Label("Status Bar"));
@@ -84,13 +86,13 @@ public class Bank extends Application {
         ((VBox) scene.getRoot()).getChildren().add(statusPanel);
 
         ledgerView.setPrefSize(scene.getWidth(), scene.getHeight());
-        ledgerView.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
+        ledgerView.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
 
         receipts.setPrefSize(scene.getWidth(), scene.getHeight());
-        receipts.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
+        receipts.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
         
         stores.setPrefSize(scene.getWidth(), scene.getHeight());
-        stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - 130);
+        stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
         
         receipts.setStoreList(stores.getList());
         receipts.getStoreAdded().addListener(new InvalidationListener() {

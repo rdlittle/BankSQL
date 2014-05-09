@@ -16,6 +16,7 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -91,11 +92,7 @@ public class LedgerView extends Pane {
                             String desc = c.getDescription();
                             return new SimpleStringProperty(desc);
                         }
-                    } else {
-//                        System.out.println("Ledger.Distribution is empty");
                     }
-                } else {
-//                    System.out.println("Ledger.Distribution is null");
                 }
                 return null;
             }
@@ -147,10 +144,12 @@ public class LedgerView extends Pane {
             }
         });
         HBox buttons = new HBox();
+        buttons.setAlignment(Pos.BOTTOM_RIGHT);
+        buttons.setPadding(new Insets(10,10,0,10));
         buttons.setSpacing(10.0);
-        buttons.setPadding(new Insets(5, 10, 2, 10));
         buttons.getChildren().addAll(btnSearch, btnReset);
         vbox.getChildren().addAll(table, buttons);
+        
         getChildren().addAll(vbox);
     }
 

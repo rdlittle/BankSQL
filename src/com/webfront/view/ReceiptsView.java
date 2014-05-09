@@ -22,6 +22,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -195,7 +196,9 @@ public class ReceiptsView extends Pane {
         grid.setHgap(10.0);
         grid.add(table, 0, 0);
         HBox buttons = new HBox();
-        buttons.setPadding(new Insets(5, 5, 5, 5));
+        buttons.setAlignment(Pos.BOTTOM_RIGHT);
+        buttons.setPadding(new Insets(10,10,0,10));
+        buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
         grid.add(buttons, 0, 1);
         getChildren().add(grid);

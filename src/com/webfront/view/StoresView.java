@@ -135,7 +135,9 @@ public class StoresView extends Pane {
         table.getColumns().addAll(storeIdCol, storeNameCol);
 
         HBox buttons = new HBox();
-        buttons.setPadding(new Insets(5, 5, 5, 5));
+        buttons.setAlignment(Pos.BOTTOM_RIGHT);
+        buttons.setPadding(new Insets(10,10,0,10));
+        buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
         vbox.getChildren().addAll(table, buttons);
         getChildren().addAll(vbox);
