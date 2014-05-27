@@ -9,8 +9,6 @@ import com.webfront.model.Category;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javax.annotation.PreDestroy;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 /**

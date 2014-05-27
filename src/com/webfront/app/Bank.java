@@ -6,7 +6,6 @@
 package com.webfront.app;
 
 import com.webfront.app.bank.tools.Importer;
-import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import com.webfront.view.CategoryForm;
 import com.webfront.view.LedgerView;
@@ -18,8 +17,6 @@ import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;

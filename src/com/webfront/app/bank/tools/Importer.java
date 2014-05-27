@@ -232,13 +232,13 @@ public final class Importer implements Runnable {
             in = openFile("/home/rlittle/statement.txt");
             doImport(in);
             in.close();
-            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
-            System.out.println("Total deposits: " + totalDeposits.toString());
-            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
-            System.out.println("Total checks: " + totalChecks.toString());
-            System.out.println("Total fees: " + totalFees.toString());
-            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
-            System.out.println("Sorting list...");
+//            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
+//            System.out.println("Total deposits: " + totalDeposits.toString());
+//            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
+//            System.out.println("Total checks: " + totalChecks.toString());
+//            System.out.println("Total fees: " + totalFees.toString());
+//            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
+//            System.out.println("Sorting list...");
             doSort();
             Float balance = beginningBalance;
             DecimalFormat f = new DecimalFormat("#####.00");
@@ -248,7 +248,7 @@ public final class Importer implements Runnable {
             for (Ledger l : getItemList()) {
                 balance += l.getTransAmt();
                 l.setTransBal(balance);
-                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
+//                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
             }
         } catch (MissingResourceException | NullPointerException e) {
             System.out.println(e.toString());

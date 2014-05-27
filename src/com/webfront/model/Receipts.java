@@ -35,9 +35,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Receipts.findById", query = "SELECT r FROM Receipts r WHERE r.id = :id"),
     @NamedQuery(name = "Receipts.findByTransDate", query = "SELECT r FROM Receipts r WHERE r.transDate = :transDate"),
     @NamedQuery(name = "Receipts.findByTransDesc", query = "SELECT r FROM Receipts r WHERE r.transDesc = :transDesc"),
-//    @NamedQuery(name = "Receipts.findByTransId", query = "SELECT r FROM Receipts r WHERE r.transId = :transId"),
-//    @NamedQuery(name = "Receipts.findByStoreId", query = "SELECT r FROM Receipts r WHERE r.storeId = :storeId"),
-    //@NamedQuery(name = "Receipts.findByPrimaryCat", query = "SELECT r FROM Receipts r WHERE r.primaryCat = :primaryCat"),
     @NamedQuery(name = "Receipts.findBySubCat", query = "SELECT r FROM Receipts r WHERE r.subCat = :subCat"),
     @NamedQuery(name = "Receipts.findByAccountNum", query = "SELECT r FROM Receipts r WHERE r.accountNum = :accountNum"),
     @NamedQuery(name = "Receipts.findByTransAmt", query = "SELECT r FROM Receipts r WHERE r.transAmt = :transAmt")})

@@ -5,7 +5,6 @@
  */
 package com.webfront.bean;
 
-import com.webfront.model.Category;
 import java.util.List;
 import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;

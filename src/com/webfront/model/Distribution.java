@@ -27,13 +27,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Table(name = "distribution")
-//@DiscriminatorColumn(name = "accountNum", discriminatorType = DiscriminatorType.INTEGER)
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Distribution.findAll", query = "SELECT d FROM Distribution d"),
     @NamedQuery(name = "Distribution.findById", query = "SELECT d FROM Distribution d WHERE d.id = :id"),
-//    @NamedQuery(name = "Distribution.findByTransId", query = "SELECT d FROM Distribution d WHERE d.transId = :transId"),
-//    @NamedQuery(name = "Distribution.findByCategoryId", query = "SELECT d FROM Distribution d WHERE d.categoryId = :categoryId"),
     @NamedQuery(name = "Distribution.findByAccountNum", query = "SELECT d FROM Distribution d WHERE d.accountNum = :accountNum")})
 public class Distribution implements Serializable {
     private static final long serialVersionUID = 1L;
