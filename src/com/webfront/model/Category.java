@@ -43,9 +43,8 @@ public class Category implements Serializable {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name="parent",referencedColumnName="id")
-    Category parent;
+    @Column()
+    private Integer parent;
     
     public Category() {
     }
@@ -75,12 +74,12 @@ public class Category implements Serializable {
         description = desc;
     }
 
-    public Category getParent() {
-        return parent;
+    public Integer getParent() {
+        return this.parent;
     }
-
-    public void setParent(Category parent) {
-        this.parent = parent;
+    
+    public void setParent(Integer parentId) {
+        this.parent=parentId;
     }
     
     @Override

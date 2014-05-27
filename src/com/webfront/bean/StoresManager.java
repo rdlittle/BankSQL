@@ -10,8 +10,6 @@ import com.webfront.model.Stores;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javax.annotation.PreDestroy;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 /**
@@ -43,32 +41,5 @@ public class StoresManager extends DBManager {
         }
         return null;
     }
-    
-    public void create(Stores store) {
-        EntityTransaction transaction = em.getTransaction();
-        transaction.begin();
-        em.persist(store);
-        transaction.commit();
-    } 
-    
-    public void update(Stores store) {
-        EntityTransaction transaction = em.getTransaction();
-        transaction.begin();
-        em.merge(store);
-        transaction.commit();
-    }
-    
-    public void delete(Stores store) {
-        EntityTransaction transaction = em.getTransaction();
-        transaction.begin();
-        em.remove(store);
-        transaction.commit();        
-    }
-    
-    @PreDestroy
-    public void close() {
-        if(em.isOpen()) {
-            em.close();
-        }
-    }
+
 }

@@ -121,14 +121,15 @@ public final class LedgerForm extends AnchorPane {
             ObservableList<Category> cList = view.getCategoryManager().getCategories();
 
             for (Category c : cList) {
-                Category parent = c.getParent();
+                //Category parent = c.getParent();
+                Integer parent = c.getParent();
                 categoryMap.put(c.getDescription(), c);
-                if (parent == null) {
+                if (parent == 0) {
                     primaryCat.getItems().add(c.getDescription());
                 } else {
                     if (oldItem != null) {
                         if (oldItem.getPrimaryCat() != null) {
-                            if (c.getParent().getId() == oldItem.getPrimaryCat().getId()) {
+                            if (parent == oldItem.getPrimaryCat().getId()) {
                                 subCat.getItems().add(c.getDescription());
                             }
                         }

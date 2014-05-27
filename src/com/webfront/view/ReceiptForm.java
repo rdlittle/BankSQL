@@ -130,9 +130,9 @@ public class ReceiptForm extends AnchorPane {
             // Populate category 1 and category 2 lists
             ObservableList<Category> subList = (ObservableList<Category>) receiptsView.getCategoryList();
             subList.stream().forEach((c) -> {
-                Category parcat = c.getParent();
+                
                 categoryMap.put(c.getDescription(), c);
-                if (parcat == null) {
+                if (c.getParent() == null || c.getParent()==0) {
                     primaryCat.getItems().add(c.getDescription());
                 } else {
                     subCat.getItems().add(c.getDescription());
