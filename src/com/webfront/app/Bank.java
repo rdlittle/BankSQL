@@ -5,7 +5,7 @@
  */
 package com.webfront.app;
 
-import com.webfront.app.bank.tools.Importer;
+import com.webfront.app.utils.Importer;
 import com.webfront.model.Stores;
 import com.webfront.view.CategoryForm;
 import com.webfront.view.LedgerView;

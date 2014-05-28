@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.webfront.app.bank.tools;
+package com.webfront.app.utils;
 
 /**
  *

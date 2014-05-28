@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.webfront.app.bank.tools;
+package com.webfront.app.utils;
 
 import com.webfront.model.Ledger;
 import java.io.BufferedReader;

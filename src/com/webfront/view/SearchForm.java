@@ -5,8 +5,8 @@
  */
 package com.webfront.view;
 
+import com.webfront.app.utils.DateConvertor;
 import com.webfront.bean.CategoryManager;
-import com.webfront.controller.Util;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
@@ -120,7 +120,7 @@ public final class SearchForm extends AnchorPane {
         // Set the upper range to the latest available transaction date
         Ledger ledgerItem = (Ledger) view.getTable().getItems().get(0);
         Date date = ledgerItem.getTransDate();
-        endDate.valueProperty().set(Util.toLocalDate(date));
+        endDate.valueProperty().set(DateConvertor.toLocalDate(date));
         // Set the lower range to 60 days before latest date
         startDate.valueProperty().set(endDate.getValue().minusDays(60));
         criteria.setStartDate(startDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
