@@ -29,7 +29,7 @@ public final class Importer implements Runnable {
 
     static BufferedReader in;
     ResourceBundle config;
-    static final String configName = "com.webfront.app.bank.tools.bank";
+    static final String configName = "com.webfront.app.bank";
     boolean headerDone;
     boolean depositsDone;
     boolean withdrawalsDone;
@@ -45,7 +45,10 @@ public final class Importer implements Runnable {
     Float totalFees;
     private ArrayList<Ledger> itemList;
 
-    public Importer() {
+    String fileName;
+
+    public Importer(String fileName) {
+        this.fileName = fileName;
     }
 
     public BufferedReader openFile(String fileName) {
@@ -227,29 +230,31 @@ public final class Importer implements Runnable {
     @Override
     public void run() {
         setItemList(new ArrayList<>());
+        Float balance;
+        DecimalFormat f = new DecimalFormat("#####.00");
+        if (f instanceof DecimalFormat) {
+            ((DecimalFormat) f).setDecimalSeparatorAlwaysShown(true);
+        }
         try {
             config = ResourceBundle.getBundle(configName);
-            in = openFile("/home/rlittle/statement.txt");
+            in = openFile(fileName);
             doImport(in);
             in.close();
-//            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
-//            System.out.println("Total deposits: " + totalDeposits.toString());
-//            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
-//            System.out.println("Total checks: " + totalChecks.toString());
-//            System.out.println("Total fees: " + totalFees.toString());
-//            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
 //            System.out.println("Sorting list...");
             doSort();
-            Float balance = beginningBalance;
-            DecimalFormat f = new DecimalFormat("#####.00");
-            if (f instanceof DecimalFormat) {
-                ((DecimalFormat) f).setDecimalSeparatorAlwaysShown(true);
-            }
+            balance = beginningBalance;
+
             for (Ledger l : getItemList()) {
                 balance += l.getTransAmt();
                 l.setTransBal(balance);
-//                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
+                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
             }
+            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
+            System.out.println("Total deposits: " + totalDeposits.toString());
+            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
+            System.out.println("Total checks: " + totalChecks.toString());
+            System.out.println("Total fees: " + totalFees.toString());
+            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
         } catch (MissingResourceException | NullPointerException e) {
             System.out.println(e.toString());
         } catch (IOException ex) {
@@ -258,6 +263,7 @@ public final class Importer implements Runnable {
         } catch (ParseException ex) {
             Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
     }
 
     /**
@@ -273,4 +279,5 @@ public final class Importer implements Runnable {
     public void setItemList(ArrayList<Ledger> itemList) {
         this.itemList = itemList;
     }
+
 }

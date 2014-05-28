@@ -12,10 +12,10 @@ import com.webfront.view.LedgerView;
 import com.webfront.view.ReceiptsView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -26,10 +26,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
@@ -63,7 +65,7 @@ public class Bank extends Application {
         fileExit.setMnemonicParsing(true);
         fileNewMenu.getItems().addAll(fileNewCategory, fileNewStore);
 
-        fileMenu.getItems().addAll(fileImport, fileNewMenu, fileExit);
+        fileMenu.getItems().addAll(fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
 
         editMenu.setMnemonicParsing(true);
         editMenu.setMnemonicParsing(true);
@@ -96,18 +98,25 @@ public class Bank extends Application {
 
             @Override
             public void handle(Event event) {
-                Importer importer=new Importer();
-                Thread t=new Thread(importer);
-                t.start();
-                while(t.isAlive()) {
-                    try {
-                        t.join(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Select statement to import");
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+                File selectedFile = fileChooser.showOpenDialog(primaryStage);
+                if (selectedFile != null) {
+                    String fileName = selectedFile.getAbsolutePath();
+                    Importer importer = new Importer(fileName);
+                    Thread t = new Thread(importer);
+                    t.start();
+                    while (t.isAlive()) {
+                        try {
+                            t.join(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
+                    System.out.println("import finished");
+                    ledgerView.getList().addAll(importer.getItemList());
                 }
-                System.out.println("import finished");
-                ledgerView.getList().addAll(importer.getItemList());
             }
         });
 
@@ -121,7 +130,7 @@ public class Bank extends Application {
         fileNewCategory.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                new CategoryForm();
+                new CategoryForm().showForm();
             }
         });
 
@@ -132,7 +141,7 @@ public class Bank extends Application {
         editCategories.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                new CategoryForm();
+                new CategoryForm().showForm();
             }
         });
 
@@ -161,12 +170,9 @@ public class Bank extends Application {
         stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
 
         receipts.setStoreList(stores.getList());
-        receipts.getStoreAdded().addListener(new InvalidationListener() {
-            @Override
-            public void invalidated(Observable observable) {
-                receipts.getStoreAdded().setValue(Boolean.FALSE);
-                stores.getList().sort(StoresView.StoreComparator);
-            }
+        receipts.getStoreAdded().addListener((Observable observable) -> {
+            receipts.getStoreAdded().setValue(Boolean.FALSE);
+            stores.getList().sort(StoresView.StoreComparator);
         });
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
@@ -175,7 +181,7 @@ public class Bank extends Application {
     }
 
     public void doImport() {
-        
+
     }
 
     /**

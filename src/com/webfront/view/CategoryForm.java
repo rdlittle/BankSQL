@@ -57,6 +57,8 @@ public class CategoryForm extends AnchorPane {
     HashMap<String, Integer> subCatMap;
     HashMap<Integer, Category> parentCategories;
     HashMap<Integer, Category> childCategories;
+    
+    Stage stage;
 
     public CategoryForm() {
         primeCatMap = new HashMap<>();
@@ -75,7 +77,6 @@ public class CategoryForm extends AnchorPane {
         URL location = getClass().getResource("/com/webfront/app/fxml/CategoryForm.fxml");
         ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
         FXMLLoader loader = new FXMLLoader(location, resources);
-        Stage stage;
         loader.setRoot(this);
         loader.setController(this);
         stage = new Stage();
@@ -180,9 +181,11 @@ public class CategoryForm extends AnchorPane {
 
         btnOK.setDisable(true);
         
-        stage.showAndWait();
     }
 
+    public void showForm() {
+        stage.showAndWait();
+    }
     /**
      * @return the catList
      */
