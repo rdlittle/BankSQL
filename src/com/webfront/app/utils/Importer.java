@@ -35,14 +35,14 @@ public final class Importer implements Runnable {
     boolean withdrawalsDone;
     boolean checksDone;
     boolean feesDone;
-    String startDate;
-    String endDate;
-    Float beginningBalance;
-    Float endingBalance;
-    Float totalDeposits;
-    Float totalWithdrawals;
-    Float totalChecks;
-    Float totalFees;
+    public String startDate;
+    public String endDate;
+    public Float beginningBalance;
+    public Float endingBalance;
+    public Float totalDeposits;
+    public Float totalWithdrawals;
+    public Float totalChecks;
+    public Float totalFees;
     private ArrayList<Ledger> itemList;
 
     String fileName;
@@ -247,14 +247,14 @@ public final class Importer implements Runnable {
             for (Ledger l : getItemList()) {
                 balance += l.getTransAmt();
                 l.setTransBal(balance);
-                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
+//                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
             }
-            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
-            System.out.println("Total deposits: " + totalDeposits.toString());
-            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
-            System.out.println("Total checks: " + totalChecks.toString());
-            System.out.println("Total fees: " + totalFees.toString());
-            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
+//            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
+//            System.out.println("Total deposits: " + totalDeposits.toString());
+//            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
+//            System.out.println("Total checks: " + totalChecks.toString());
+//            System.out.println("Total fees: " + totalFees.toString());
+//            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
         } catch (MissingResourceException | NullPointerException e) {
             System.out.println(e.toString());
         } catch (IOException ex) {

@@ -8,6 +8,7 @@ package com.webfront.model;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -40,7 +41,7 @@ public class Distribution implements Serializable {
     @Column(name = "id")
     private Integer id;
     
-    @ManyToOne(optional=false)
+    @ManyToOne(cascade = CascadeType.REFRESH, optional=false)
     @JoinColumn(name="transId",referencedColumnName = "id")
     private Ledger ledger;
     
@@ -53,9 +54,9 @@ public class Distribution implements Serializable {
     
     public Distribution() {
     }
-
-    public Distribution(Integer id) {
-        this.id = id;
+    
+    public Distribution(Ledger l) {
+        this.ledger=l;
     }
 
     public Integer getId() {
@@ -120,4 +121,5 @@ public class Distribution implements Serializable {
     public void setLedger(Ledger ledger) {
         this.ledger = ledger;
     }
-}
+
+    }

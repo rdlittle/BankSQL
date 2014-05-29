@@ -304,13 +304,13 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     public void submitItem() {
         if (oldItem != null) {
-            view.getLedgerManager().save(oldItem);
+            view.getLedgerManager().update(oldItem);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {
             Ledger ledger;
             ledger = getFormData();
-            view.getLedgerManager().save(ledger);
+            view.getLedgerManager().create(ledger);
             view.getTable().getItems().add(ledger);
         }
 

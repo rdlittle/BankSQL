@@ -84,7 +84,7 @@ public class Ledger implements Serializable {
     @Column(name = "qifUpdate")
     private Boolean qifUpdate;
     
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="ledger")
+    @OneToMany(cascade = CascadeType.REFRESH, mappedBy="ledger")
     private List<Distribution> distribution;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")

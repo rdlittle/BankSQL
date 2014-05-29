@@ -6,6 +6,9 @@
 package com.webfront.app;
 
 import com.webfront.app.utils.Importer;
+import com.webfront.bean.DistributionManager;
+import com.webfront.model.Distribution;
+import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import com.webfront.view.CategoryForm;
 import com.webfront.view.LedgerView;
@@ -13,6 +16,7 @@ import com.webfront.view.ReceiptsView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -21,11 +25,13 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -46,6 +52,7 @@ public class Bank extends Application {
     public void start(Stage primaryStage) {
 
         Scene scene = new Scene(new VBox(), 1300, 800);
+        ProgressBar progressBar=new ProgressBar(0);
 
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("_File");
@@ -85,6 +92,9 @@ public class Bank extends Application {
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
 
+        Group summary=new Group();
+        summary.getChildren().add(new VBox());
+        summaryTab.setContent(summary);
         LedgerView ledgerView = new LedgerView();
         ledgerTab.setContent(ledgerView);
 
@@ -95,7 +105,6 @@ public class Bank extends Application {
         receiptsTab.setContent(receipts);
 
         fileImport.setOnAction(new EventHandler() {
-
             @Override
             public void handle(Event event) {
                 FileChooser fileChooser = new FileChooser();
@@ -103,6 +112,8 @@ public class Bank extends Application {
                 fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
                 File selectedFile = fileChooser.showOpenDialog(primaryStage);
                 if (selectedFile != null) {
+                    progressBar.setVisible(true);
+                    progressBar.setProgress(0);
                     String fileName = selectedFile.getAbsolutePath();
                     Importer importer = new Importer(fileName);
                     Thread t = new Thread(importer);
@@ -114,7 +125,29 @@ public class Bank extends Application {
                             Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    System.out.println("import finished");
+                    ArrayList<Ledger> list=importer.getItemList();
+                    DistributionManager distMgr=new DistributionManager();
+                    Double itemCount=(double) list.size();
+                    Double progress=(double) 0;
+                    Double itemsCreated=(double) 0;
+                    for(Ledger item : list) {
+                        ledgerView.getLedgerManager().create(item);
+                        Distribution dist=new Distribution(item);
+                        dist.setCategory(item.getPrimaryCat());
+                        distMgr.create(dist);
+                        itemsCreated+=1;
+                        progress=itemsCreated/itemCount;
+                        progressBar.setProgress(progress);
+                        System.out.println(progressBar.getProgress());
+                    }
+                    VBox labels=new VBox();
+                    labels.getChildren().add(new Label("Beginning balance on " + importer.startDate + ": " + importer.beginningBalance.toString()));
+                    labels.getChildren().add(new Label("Total deposits: " + importer.totalDeposits.toString()));
+                    labels.getChildren().add(new Label("Total withdrawals: " + importer.totalWithdrawals.toString()));
+                    labels.getChildren().add(new Label("Total checks: " + importer.totalChecks.toString()));
+                    labels.getChildren().add(new Label("Total fees: " + importer.totalFees.toString()));
+                    labels.getChildren().add(new Label("Ending balance on " + importer.endDate + ": " + importer.endingBalance.toString()));
+                    summary.getChildren().add(labels);
                     ledgerView.getList().addAll(importer.getItemList());
                 }
             }
@@ -152,9 +185,11 @@ public class Bank extends Application {
 
         Pane statusPanel = new Pane();
         statusPanel.setPrefSize(scene.getWidth(), 110);
-        statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
+        //statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
         statusPanel.setPadding(new Insets(1, 5, 1, 5));
-        statusPanel.getChildren().add(new Label("Status Bar"));
+        statusPanel.getChildren().add(progressBar);
+        progressBar.setPrefWidth(scene.getWidth()/2);
+        progressBar.setVisible(false);
 
         ((VBox) scene.getRoot()).getChildren().add(menuBar);
         ((VBox) scene.getRoot()).getChildren().add(tabPane);

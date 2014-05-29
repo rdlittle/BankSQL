@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javax.annotation.PreDestroy;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 public class LedgerManager extends DBManager implements Serializable {
@@ -40,19 +38,29 @@ public class LedgerManager extends DBManager implements Serializable {
         Ledger ledger = (Ledger) query.getSingleResult();
         return ledger;
     }
-
-    public void save(Ledger ledger) {
-        EntityTransaction transaction = em.getTransaction();
-        transaction.begin();
-        em.persist(ledger);
-        transaction.commit();
+    
+    /**
+     *
+     * @return most recent entry in the ledger
+     */
+    public int getLastId() {
+        Query query=em.createNativeQuery("SELECT id FROM ledger ORDER BY id DESC LIMIT 1,1");
+        List<Integer> result=query.getResultList();
+        return result.get(0);
     }
 
-    @PreDestroy
-    public void close() {
-        if (em.isOpen()) {
-            em.close();
-        }
-    }
+//    public void save(Ledger ledger) {
+//        EntityTransaction transaction = em.getTransaction();
+//        transaction.begin();
+//        em.persist(ledger);
+//        transaction.commit();
+//    }
+
+//    @PreDestroy
+//    public void close() {
+//        if (em.isOpen()) {
+//            em.close();
+//        }
+//    }
 
 }
