@@ -164,6 +164,7 @@ public final class Importer implements Runnable {
                         amt = line.substring(72).trim();
                     }
                     Ledger item = new Ledger();
+                    
                     item.setTransDate(stringToDate(date));
                     item.setCheckNum(checkNum);
                     item.setTransDesc("Check# " + checkNum);
@@ -213,7 +214,7 @@ public final class Importer implements Runnable {
     }
 
     private Date stringToDate(String str) throws ParseException {
-        SimpleDateFormat inputDateFormat = new SimpleDateFormat("mm/dd/yy");
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("MM/dd/yy");
         Date inDate = inputDateFormat.parse(str);
         return inDate;
     }

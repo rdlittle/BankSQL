@@ -10,6 +10,7 @@ import com.webfront.bean.LedgerManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
+import java.util.Comparator;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -145,11 +146,11 @@ public class LedgerView extends Pane {
         });
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10,10,0,10));
+        buttons.setPadding(new Insets(10, 10, 0, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().addAll(btnSearch, btnReset);
         vbox.getChildren().addAll(table, buttons);
-        
+
         getChildren().addAll(vbox);
     }
 
@@ -211,5 +212,14 @@ public class LedgerView extends Pane {
     public LedgerManager getLedgerManager() {
         return ledgerManager;
     }
+
+    public static Comparator<Ledger> LedgerComparator = new Comparator<Ledger>() {
+        @Override
+        public int compare(Ledger ledger1, Ledger ledger2) {
+            Integer id1  = ledger1.getId();
+            Integer id2  = ledger2.getId();
+            return id2.compareTo(id1);
+        }
+    };
 
 }

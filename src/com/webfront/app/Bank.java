@@ -21,6 +21,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.beans.Observable;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -47,12 +49,17 @@ import javafx.stage.Stage;
 public class Bank extends Application {
 
     final int TAB_BOTTOM_MARGIN = 130;
+    final ProgressBar progressBar = new ProgressBar(0);
+    final SimpleDoubleProperty sdp;
+
+    public Bank() {
+        this.sdp = new SimpleDoubleProperty();
+    }
 
     @Override
     public void start(Stage primaryStage) {
-
+        progressBar.progressProperty().bind(sdp);
         Scene scene = new Scene(new VBox(), 1300, 800);
-        ProgressBar progressBar=new ProgressBar(0);
 
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("_File");
@@ -92,7 +99,7 @@ public class Bank extends Application {
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
 
-        Group summary=new Group();
+        Group summary = new Group();
         summary.getChildren().add(new VBox());
         summaryTab.setContent(summary);
         LedgerView ledgerView = new LedgerView();
@@ -113,7 +120,6 @@ public class Bank extends Application {
                 File selectedFile = fileChooser.showOpenDialog(primaryStage);
                 if (selectedFile != null) {
                     progressBar.setVisible(true);
-                    progressBar.setProgress(0);
                     String fileName = selectedFile.getAbsolutePath();
                     Importer importer = new Importer(fileName);
                     Thread t = new Thread(importer);
@@ -125,22 +131,22 @@ public class Bank extends Application {
                             Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                    ArrayList<Ledger> list=importer.getItemList();
-                    DistributionManager distMgr=new DistributionManager();
-                    Double itemCount=(double) list.size();
-                    Double progress=(double) 0;
-                    Double itemsCreated=(double) 0;
-                    for(Ledger item : list) {
+                    ArrayList<Ledger> list = importer.getItemList();
+                    DistributionManager distMgr = new DistributionManager();
+                    Double itemCount = (double) list.size();
+                    Double progress = (double) 0;
+                    Double itemsCreated = (double) 0;
+                    for (Ledger item : list) {
                         ledgerView.getLedgerManager().create(item);
-                        Distribution dist=new Distribution(item);
+                        Distribution dist = new Distribution(item);
                         dist.setCategory(item.getPrimaryCat());
                         distMgr.create(dist);
-                        itemsCreated+=1;
-                        progress=itemsCreated/itemCount;
-                        progressBar.setProgress(progress);
-                        System.out.println(progressBar.getProgress());
+                        itemsCreated += 1;
+                        progress = itemsCreated / itemCount;
+                        sdp.set(progress);
+                        //System.out.println(progressBar.getProgress() + " (" + itemsCreated + " of " + itemCount + ")");
                     }
-                    VBox labels=new VBox();
+                    VBox labels = new VBox();
                     labels.getChildren().add(new Label("Beginning balance on " + importer.startDate + ": " + importer.beginningBalance.toString()));
                     labels.getChildren().add(new Label("Total deposits: " + importer.totalDeposits.toString()));
                     labels.getChildren().add(new Label("Total withdrawals: " + importer.totalWithdrawals.toString()));
@@ -148,7 +154,10 @@ public class Bank extends Application {
                     labels.getChildren().add(new Label("Total fees: " + importer.totalFees.toString()));
                     labels.getChildren().add(new Label("Ending balance on " + importer.endDate + ": " + importer.endingBalance.toString()));
                     summary.getChildren().add(labels);
+                    ledgerView.getTable().getItems().clear();
                     ledgerView.getList().addAll(importer.getItemList());
+                    ledgerView.getList().sort(LedgerView.LedgerComparator);
+                    ledgerView.getTable().setItems(ledgerView.getList());
                 }
             }
         });
@@ -188,7 +197,7 @@ public class Bank extends Application {
         //statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
         statusPanel.setPadding(new Insets(1, 5, 1, 5));
         statusPanel.getChildren().add(progressBar);
-        progressBar.setPrefWidth(scene.getWidth()/2);
+        progressBar.setPrefWidth(scene.getWidth() / 2);
         progressBar.setVisible(false);
 
         ((VBox) scene.getRoot()).getChildren().add(menuBar);

@@ -28,6 +28,10 @@ public final class DateConvertor {
         return lDate.toString();
     }
     
+    /*
+    * @param LocalDate ld
+    * @return java.util.Date
+    */
     public static java.util.Date fromLocalDate(LocalDate ld) {
         java.sql.Date d = java.sql.Date.valueOf(ld);
         long t=d.getTime();
@@ -45,5 +49,16 @@ public final class DateConvertor {
         java.sql.Date dt=new java.sql.Date(time);
         LocalDate ld=dt.toLocalDate();
         return ld;
+    }
+    
+    public static java.util.Date toUtilDate(java.sql.Date sqlDate) {
+        long time=sqlDate.getTime();
+        java.util.Date utilDate = new java.util.Date(time);
+        return utilDate;
+    }
+    
+    public static java.sql.Date toSQLDate(java.util.Date utilDate) {
+        long time=utilDate.getTime();
+        return new java.sql.Date(time);
     }
 }
