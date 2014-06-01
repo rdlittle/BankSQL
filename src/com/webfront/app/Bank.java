@@ -29,8 +29,10 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -181,7 +183,6 @@ public class Bank extends Application {
         importDone.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
-                System.out.println("importDone value has change to "+importDone.getValue());
                 if (importDone.getValue() == false) {
                     FileChooser fileChooser = new FileChooser();
                     fileChooser.setTitle("Select statement to import");
@@ -225,7 +226,6 @@ public class Bank extends Application {
                             protected void succeeded() {
                                 super.succeeded();
                                 updateMessage("Done!");
-                                System.out.println("importTask.succeeded():  Thread is done");
                                 ledgerView.getTable().getItems().clear();
                                 ledgerView.getList().addAll(importer.getItemList());
                                 ledgerView.getList().sort(LedgerView.LedgerComparator);
@@ -252,15 +252,42 @@ public class Bank extends Application {
                         new Thread(importTask).start();
                     }
                 } else {
-                    VBox labels = new VBox();
                     Group summary = new Group();
-                    labels.getChildren().add(new Label("Beginning balance on " + importer.startDate + ": " + importer.beginningBalance.toString()));
-                    labels.getChildren().add(new Label("Total deposits: " + importer.totalDeposits.toString()));
-                    labels.getChildren().add(new Label("Total withdrawals: " + importer.totalWithdrawals.toString()));
-                    labels.getChildren().add(new Label("Total checks: " + importer.totalChecks.toString()));
-                    labels.getChildren().add(new Label("Total fees: " + importer.totalFees.toString()));
-                    labels.getChildren().add(new Label("Ending balance on " + importer.endDate + ": " + importer.endingBalance.toString()));
-                    summary.getChildren().add(labels);
+                    HBox hbox = new HBox();
+                    VBox labelsBox = new VBox();
+                    VBox valuesBox = new VBox();
+                    ArrayList<Label> labels=new ArrayList<>();
+                    ArrayList<Label> values=new ArrayList<>();
+                    
+                    labels.add(new Label("Start date :"));
+                    labels.add(new Label("End date :"));
+                    labels.add(new Label("Beginning balance : "));
+                    labels.add(new Label("Ending balance : "));
+                    labels.add(new Label("Total deposits : "));
+                    labels.add(new Label("Total withdrawals : "));
+                    labels.add(new Label("Total checks : "));
+                    labels.add(new Label("Total fees :"));
+                    
+                    values.add(new Label(importer.startDate));
+                    values.add(new Label(importer.beginningBalance.toString()));
+                    values.add(new Label(importer.totalDeposits.toString()));
+                    values.add(new Label(importer.totalWithdrawals.toString()));
+                    values.add(new Label(importer.totalChecks.toString()));
+                    values.add(new Label(importer.totalFees.toString()));
+                    values.add(new Label(importer.endDate));
+                    values.add(new Label(importer.endingBalance.toString()));
+                    
+                    labelsBox.getChildren().addAll(labels);
+                    valuesBox.getChildren().addAll(values);
+                    
+                    labelsBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
+                    valuesBox.setAlignment(Pos.CENTER_RIGHT);
+                    valuesBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
+                    
+                    hbox.getChildren().addAll(labelsBox,valuesBox);
+                    hbox.setPadding(new Insets(10.0, 20.0, 0.0, 10.0));
+                    
+                    summary.getChildren().add(hbox);
                     summaryTab.setContent(summary);     
                 }
             }
