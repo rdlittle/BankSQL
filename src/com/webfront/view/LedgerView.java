@@ -216,8 +216,8 @@ public class LedgerView extends Pane {
     public static Comparator<Ledger> LedgerComparator = new Comparator<Ledger>() {
         @Override
         public int compare(Ledger ledger1, Ledger ledger2) {
-            Integer id1  = ledger1.getId();
-            Integer id2  = ledger2.getId();
+            Integer id1 = ledger1.getId();
+            Integer id2 = ledger2.getId();
             return id2.compareTo(id1);
         }
     };

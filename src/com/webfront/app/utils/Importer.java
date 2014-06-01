@@ -45,10 +45,19 @@ public final class Importer implements Runnable {
     public Float totalFees;
     private ArrayList<Ledger> itemList;
 
-    String fileName;
+    private String fileName;
 
     public Importer(String fileName) {
         this.fileName = fileName;
+        this.startDate="";
+        this.endDate="";
+        this.beginningBalance=new Float(0);
+        this.endingBalance=new Float(0);
+        this.totalDeposits=new Float(0);
+        this.totalWithdrawals=new Float(0);
+        this.totalChecks=new Float(0);
+        this.totalFees=new Float(0);
+        this.itemList=new ArrayList<>();
     }
 
     public BufferedReader openFile(String fileName) {
@@ -238,24 +247,15 @@ public final class Importer implements Runnable {
         }
         try {
             config = ResourceBundle.getBundle(configName);
-            in = openFile(fileName);
+            in = openFile(getFileName());
             doImport(in);
             in.close();
-//            System.out.println("Sorting list...");
             doSort();
             balance = beginningBalance;
-
             for (Ledger l : getItemList()) {
                 balance += l.getTransAmt();
                 l.setTransBal(balance);
-//                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
             }
-//            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
-//            System.out.println("Total deposits: " + totalDeposits.toString());
-//            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
-//            System.out.println("Total checks: " + totalChecks.toString());
-//            System.out.println("Total fees: " + totalFees.toString());
-//            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
         } catch (MissingResourceException | NullPointerException e) {
             System.out.println(e.toString());
         } catch (IOException ex) {
@@ -279,6 +279,20 @@ public final class Importer implements Runnable {
      */
     public void setItemList(ArrayList<Ledger> itemList) {
         this.itemList = itemList;
+    }
+
+    /**
+     * @return the fileName
+     */
+    public String getFileName() {
+        return fileName;
+    }
+
+    /**
+     * @param fileName the fileName to set
+     */
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
 }

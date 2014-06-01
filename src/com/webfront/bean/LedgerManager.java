@@ -49,18 +49,4 @@ public class LedgerManager extends DBManager implements Serializable {
         return result.get(0);
     }
 
-//    public void save(Ledger ledger) {
-//        EntityTransaction transaction = em.getTransaction();
-//        transaction.begin();
-//        em.persist(ledger);
-//        transaction.commit();
-//    }
-
-//    @PreDestroy
-//    public void close() {
-//        if (em.isOpen()) {
-//            em.close();
-//        }
-//    }
-
 }

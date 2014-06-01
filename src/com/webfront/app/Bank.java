@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -49,16 +51,21 @@ import javafx.stage.Stage;
 public class Bank extends Application {
 
     final int TAB_BOTTOM_MARGIN = 130;
-    final ProgressBar progressBar = new ProgressBar(0);
+    final ProgressBar progressBar;
     final SimpleDoubleProperty sdp;
+    Thread importThread;
+    SimpleBooleanProperty importDone;
+    Importer importer;
 
     public Bank() {
         this.sdp = new SimpleDoubleProperty();
+        this.progressBar = new ProgressBar(0);
+        importDone = new SimpleBooleanProperty(true);
+        this.importer = new Importer("");
     }
 
     @Override
     public void start(Stage primaryStage) {
-        progressBar.progressProperty().bind(sdp);
         Scene scene = new Scene(new VBox(), 1300, 800);
 
         MenuBar menuBar = new MenuBar();
@@ -99,9 +106,6 @@ public class Bank extends Application {
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
 
-        Group summary = new Group();
-        summary.getChildren().add(new VBox());
-        summaryTab.setContent(summary);
         LedgerView ledgerView = new LedgerView();
         ledgerTab.setContent(ledgerView);
 
@@ -114,51 +118,7 @@ public class Bank extends Application {
         fileImport.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Select statement to import");
-                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
-                File selectedFile = fileChooser.showOpenDialog(primaryStage);
-                if (selectedFile != null) {
-                    progressBar.setVisible(true);
-                    String fileName = selectedFile.getAbsolutePath();
-                    Importer importer = new Importer(fileName);
-                    Thread t = new Thread(importer);
-                    t.start();
-                    while (t.isAlive()) {
-                        try {
-                            t.join(1000);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    ArrayList<Ledger> list = importer.getItemList();
-                    DistributionManager distMgr = new DistributionManager();
-                    Double itemCount = (double) list.size();
-                    Double progress = (double) 0;
-                    Double itemsCreated = (double) 0;
-                    for (Ledger item : list) {
-                        ledgerView.getLedgerManager().create(item);
-                        Distribution dist = new Distribution(item);
-                        dist.setCategory(item.getPrimaryCat());
-                        distMgr.create(dist);
-                        itemsCreated += 1;
-                        progress = itemsCreated / itemCount;
-                        sdp.set(progress);
-                        //System.out.println(progressBar.getProgress() + " (" + itemsCreated + " of " + itemCount + ")");
-                    }
-                    VBox labels = new VBox();
-                    labels.getChildren().add(new Label("Beginning balance on " + importer.startDate + ": " + importer.beginningBalance.toString()));
-                    labels.getChildren().add(new Label("Total deposits: " + importer.totalDeposits.toString()));
-                    labels.getChildren().add(new Label("Total withdrawals: " + importer.totalWithdrawals.toString()));
-                    labels.getChildren().add(new Label("Total checks: " + importer.totalChecks.toString()));
-                    labels.getChildren().add(new Label("Total fees: " + importer.totalFees.toString()));
-                    labels.getChildren().add(new Label("Ending balance on " + importer.endDate + ": " + importer.endingBalance.toString()));
-                    summary.getChildren().add(labels);
-                    ledgerView.getTable().getItems().clear();
-                    ledgerView.getList().addAll(importer.getItemList());
-                    ledgerView.getList().sort(LedgerView.LedgerComparator);
-                    ledgerView.getTable().setItems(ledgerView.getList());
-                }
+                importDone.setValue(Boolean.FALSE);
             }
         });
 
@@ -194,7 +154,6 @@ public class Bank extends Application {
 
         Pane statusPanel = new Pane();
         statusPanel.setPrefSize(scene.getWidth(), 110);
-        //statusPanel.setStyle("-fx-background-color: silver; -fx-border-color: black; -fx-border-width: 1px; -fx-border-radius: 2; -fx-margin: 3px;");
         statusPanel.setPadding(new Insets(1, 5, 1, 5));
         statusPanel.getChildren().add(progressBar);
         progressBar.setPrefWidth(scene.getWidth() / 2);
@@ -218,14 +177,99 @@ public class Bank extends Application {
             receipts.getStoreAdded().setValue(Boolean.FALSE);
             stores.getList().sort(StoresView.StoreComparator);
         });
+
+        importDone.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                System.out.println("importDone value has change to "+importDone.getValue());
+                if (importDone.getValue() == false) {
+                    FileChooser fileChooser = new FileChooser();
+                    fileChooser.setTitle("Select statement to import");
+                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+                    File selectedFile = fileChooser.showOpenDialog(primaryStage);
+                    if (selectedFile != null) {
+                        progressBar.setVisible(true);
+                        String fileName = selectedFile.getAbsolutePath();
+                        importer.setFileName(fileName);
+                        Thread t = new Thread(importer);
+                        t.start();
+                        while (t.isAlive()) {
+                            try {
+                                t.join(1000);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        Task<Void> importTask = new Task<Void>() {
+                            @Override
+                            protected Void call() throws Exception {
+                                ArrayList<Ledger> list = importer.getItemList();
+                                DistributionManager distMgr = new DistributionManager();
+                                Double itemCount = (double) list.size();
+                                Double progress = (double) 0;
+                                Double itemsCreated = (double) 0;
+                                for (Ledger item : list) {
+                                    ledgerView.getLedgerManager().create(item);
+                                    Distribution dist = new Distribution(item);
+                                    dist.setCategory(item.getPrimaryCat());
+                                    distMgr.create(dist);
+                                    itemsCreated += 1;
+                                    progress = itemsCreated / itemCount;
+                                    updateProgress(progress, 1);
+                                    //System.out.println(progressBar.getProgress() + " (" + itemsCreated + " of " + itemCount + ")");
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            protected void succeeded() {
+                                super.succeeded();
+                                updateMessage("Done!");
+                                System.out.println("importTask.succeeded():  Thread is done");
+                                ledgerView.getTable().getItems().clear();
+                                ledgerView.getList().addAll(importer.getItemList());
+                                ledgerView.getList().sort(LedgerView.LedgerComparator);
+                                ledgerView.getTable().setItems(ledgerView.getList());
+                                progressBar.progressProperty().unbind();
+                                progressBar.setProgress(0);
+                                progressBar.setVisible(false);
+                                importDone.setValue(Boolean.TRUE);
+                            }
+
+                            @Override
+                            protected void cancelled() {
+                                super.cancelled();
+                                updateMessage("Cancelled!");
+                            }
+
+                            @Override
+                            protected void failed() {
+                                super.failed();
+                                updateMessage("Failed!");
+                            }
+                        };
+                        progressBar.progressProperty().bind(importTask.progressProperty());
+                        new Thread(importTask).start();
+                    }
+                } else {
+                    VBox labels = new VBox();
+                    Group summary = new Group();
+                    labels.getChildren().add(new Label("Beginning balance on " + importer.startDate + ": " + importer.beginningBalance.toString()));
+                    labels.getChildren().add(new Label("Total deposits: " + importer.totalDeposits.toString()));
+                    labels.getChildren().add(new Label("Total withdrawals: " + importer.totalWithdrawals.toString()));
+                    labels.getChildren().add(new Label("Total checks: " + importer.totalChecks.toString()));
+                    labels.getChildren().add(new Label("Total fees: " + importer.totalFees.toString()));
+                    labels.getChildren().add(new Label("Ending balance on " + importer.endDate + ": " + importer.endingBalance.toString()));
+                    summary.getChildren().add(labels);
+                    summaryTab.setContent(summary);     
+                }
+            }
+        });
+
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    public void doImport() {
-
     }
 
     /**
