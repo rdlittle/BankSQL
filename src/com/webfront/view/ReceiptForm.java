@@ -10,17 +10,16 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Receipts;
 import com.webfront.model.Stores;
-
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -97,7 +96,7 @@ public class ReceiptForm extends AnchorPane {
             cbStores = new ComboBox<>();
 
             URL location = getClass().getResource("/com/webfront/app/fxml/ReceiptForm.fxml");
-            ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
+            ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
             FXMLLoader loader = new FXMLLoader(location, resources);
 
             loader.setRoot(this);
@@ -210,7 +209,7 @@ public class ReceiptForm extends AnchorPane {
                     }
                 }
             });
-
+            
             transId.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
@@ -294,6 +293,8 @@ public class ReceiptForm extends AnchorPane {
             getStoreMap().put(storeKey, store);
             receiptsView.getStoreList().add(store);
             receiptsView.getStoreAdded().set(true);
+            cbStores.getItems().sort(comparator);
+            System.out.println("Store added");
         }
 
         if (oldReceipt.getId() != null) {
@@ -310,7 +311,7 @@ public class ReceiptForm extends AnchorPane {
             oldReceipt.setPrimaryCat(cat1);
             oldReceipt.setSubCat(cat2);
             oldReceipt.setStore(store);
-            receiptsView.receiptsManager.update(oldReceipt);
+            receiptsView.getReceiptsManager().update(oldReceipt);
             int idx = receiptsView.getTable().getSelectionModel().getSelectedIndex();
             receiptsView.getTable().getItems().set(idx, oldReceipt);
             closeForm();
@@ -328,7 +329,7 @@ public class ReceiptForm extends AnchorPane {
             receipt.setPrimaryCat(cat1);
             receipt.setSubCat(cat2);
             receipt.setStore(store);
-            receiptsView.receiptsManager.create(receipt);
+            receiptsView.getReceiptsManager().create(receipt);
             receiptsView.getList().add(receipt);
             newReceipt = new Receipts();
         }
@@ -341,7 +342,7 @@ public class ReceiptForm extends AnchorPane {
     public void deleteItem() {
         if (oldReceipt != null) {
             if (oldReceipt.getId() != null) {
-                receiptsView.receiptsManager.delete(oldReceipt);
+                receiptsView.getReceiptsManager().delete(oldReceipt);
                 receiptsView.getTable().getItems().remove(oldReceipt);
                 closeForm();
             }
@@ -359,6 +360,13 @@ public class ReceiptForm extends AnchorPane {
     public HashMap<String, Stores> getStoreMap() {
         return storeMap;
     }
+    
+    public static Comparator<String> comparator = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return o1.compareTo(o2);
+        }
+    };
 
     
 }

@@ -262,19 +262,20 @@ public class Bank extends Application {
                     labels.add(new Label("Start date :"));
                     labels.add(new Label("End date :"));
                     labels.add(new Label("Beginning balance : "));
-                    labels.add(new Label("Ending balance : "));
                     labels.add(new Label("Total deposits : "));
                     labels.add(new Label("Total withdrawals : "));
                     labels.add(new Label("Total checks : "));
                     labels.add(new Label("Total fees :"));
+                    labels.add(new Label("Ending balance : "));
                     
                     values.add(new Label(importer.startDate));
+                    values.add(new Label(importer.endDate));
                     values.add(new Label(importer.beginningBalance.toString()));
                     values.add(new Label(importer.totalDeposits.toString()));
                     values.add(new Label(importer.totalWithdrawals.toString()));
                     values.add(new Label(importer.totalChecks.toString()));
                     values.add(new Label(importer.totalFees.toString()));
-                    values.add(new Label(importer.endDate));
+                    
                     values.add(new Label(importer.endingBalance.toString()));
                     
                     labelsBox.getChildren().addAll(labels);

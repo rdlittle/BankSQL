@@ -27,6 +27,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -49,9 +50,9 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     ChoiceBox accountNum;
     @FXML
-    ChoiceBox<String> primaryCat;
+    ComboBox<String> primaryCat;
     @FXML
-    ChoiceBox<String> subCat;
+    ComboBox<String> subCat;
     @FXML
     TextField transId;
     @FXML
@@ -85,8 +86,8 @@ public final class LedgerForm extends AnchorPane {
         newItem = new Ledger();
         transDate = new DatePicker();
         accountNum = new ChoiceBox<>();
-        primaryCat = new ChoiceBox<>();
-        subCat = new ChoiceBox<>();
+        primaryCat = new ComboBox<>();
+        subCat = new ComboBox<>();
         transId = new TextField();
         transAmt = new TextField();
         transBalance = new TextField();
@@ -106,7 +107,7 @@ public final class LedgerForm extends AnchorPane {
     public void buildForm() {
         try {
             URL location = getClass().getResource("/com/webfront/app/fxml/LedgerEntryForm.fxml");
-            ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
+            ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
             FXMLLoader loader = new FXMLLoader(location, resources);
 
             stage = new Stage();

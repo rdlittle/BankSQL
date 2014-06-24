@@ -105,7 +105,7 @@ public final class SearchForm extends AnchorPane {
     public void buildForm() {
 
         URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
-        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
+        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         FXMLLoader loader = new FXMLLoader(location, resources);
 
         loader.setRoot(this);

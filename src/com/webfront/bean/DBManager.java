@@ -61,6 +61,13 @@ public abstract class DBManager<T> {
         transaction.commit();
     }
 
+    public void refresh(T obj) {
+        EntityTransaction transaction = em.getTransaction();
+        transaction.begin();
+        em.refresh(obj);
+        transaction.commit();
+    }
+
     @PreDestroy
     public void close() {
         if (em.isOpen()) {

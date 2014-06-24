@@ -48,7 +48,7 @@ public class ReceiptsView extends Pane {
     private TableView<Receipts> table;
     private BooleanProperty storeAdded;
 
-    final ReceiptsManager receiptsManager;
+    private final ReceiptsManager receiptsManager;
     final StoresManager storesManager;
     final CategoryManager categoryManager;
     private final LedgerManager ledgerManager;
@@ -275,5 +275,12 @@ public class ReceiptsView extends Pane {
      */
     public void setStoreAdded(BooleanProperty storeAdded) {
         this.storeAdded = storeAdded;
+    }
+
+    /**
+     * @return the receiptsManager
+     */
+    public ReceiptsManager getReceiptsManager() {
+        return receiptsManager;
     }
 }

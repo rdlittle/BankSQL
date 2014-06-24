@@ -49,15 +49,15 @@ public final class Importer implements Runnable {
 
     public Importer(String fileName) {
         this.fileName = fileName;
-        this.startDate="";
-        this.endDate="";
-        this.beginningBalance=new Float(0);
-        this.endingBalance=new Float(0);
-        this.totalDeposits=new Float(0);
-        this.totalWithdrawals=new Float(0);
-        this.totalChecks=new Float(0);
-        this.totalFees=new Float(0);
-        this.itemList=new ArrayList<>();
+        this.startDate = "";
+        this.endDate = "";
+        this.beginningBalance = new Float(0);
+        this.endingBalance = new Float(0);
+        this.totalDeposits = new Float(0);
+        this.totalWithdrawals = new Float(0);
+        this.totalChecks = new Float(0);
+        this.totalFees = new Float(0);
+        this.itemList = new ArrayList<>();
     }
 
     public BufferedReader openFile(String fileName) {
@@ -162,18 +162,29 @@ public final class Importer implements Runnable {
                     continue;
                 }
                 if (section.equals("checks")) {
-                    line = line.trim();
-                    int lineLen = line.length();
-                    String date = line.substring(0, 8).trim();
-                    String amt;
-                    String checkNum = line.substring(17, 22).trim();
-                    if (lineLen > 80) {
-                        amt = line.substring(72, 80).trim();
-                    } else {
-                        amt = line.substring(72).trim();
-                    }
-                    Ledger item = new Ledger();
+                    int idx;
+                    String lineLeft = line.trim();
                     
+                    idx = lineLeft.indexOf(" ");
+                    String date = lineLeft.substring(0, idx).trim();
+                    lineLeft = lineLeft.substring(idx).trim();
+
+                    idx = lineLeft.indexOf(" ");
+                    String checkNum = lineLeft.substring(0, lineLeft.indexOf(" ")).trim();
+                    lineLeft = lineLeft.substring(idx).trim();
+
+                    idx = lineLeft.indexOf(" ");
+                    String amt;
+                    if(idx == -1) {
+                        amt = lineLeft.substring(0).trim();
+                        lineLeft = "";
+                    } else {
+                        amt = lineLeft.substring(0, idx).trim();
+                        lineLeft = lineLeft.substring(idx).trim();
+                    }
+                    
+                    Ledger item = new Ledger();
+
                     item.setTransDate(stringToDate(date));
                     item.setCheckNum(checkNum);
                     item.setTransDesc("Check# " + checkNum);
@@ -181,10 +192,21 @@ public final class Importer implements Runnable {
                     getItemList().add(item);
 //                    System.out.println(item.getTransDate().toString() + " " + item.getTransDesc() + " " + item.getTransAmt());
 
-                    if (lineLen > 80) {
-                        date = line.substring(102, 111).trim();
-                        checkNum = line.substring(119, 125).trim();
-                        amt = line.substring(163).trim();
+                    if (lineLeft.length() > 0) {
+                        idx = lineLeft.indexOf(" ");
+                        date = lineLeft.substring(0, idx).trim();
+                        lineLeft = lineLeft.substring(idx).trim();
+                        
+                        idx = lineLeft.indexOf(" ");
+                        checkNum = lineLeft.substring(0, idx).trim();
+                        lineLeft = lineLeft.substring(idx).trim();
+
+                        idx = lineLeft.indexOf(" ");
+                        if(idx == -1) {
+                            amt = lineLeft.substring(0).trim();
+                        } else {
+                            amt = lineLeft.substring(0,idx).trim();
+                        }
 
                         item = new Ledger();
                         item.setTransDate(stringToDate(date));
@@ -264,7 +286,7 @@ public final class Importer implements Runnable {
         } catch (ParseException ex) {
             Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
 
     /**

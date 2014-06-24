@@ -58,7 +58,7 @@ public class StoreForm extends AnchorPane {
     public void showForm() {
 
         URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/StoreForm.fxml");
-        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
+        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         FXMLLoader loader = new FXMLLoader(location, resources);
         
         stage.initModality(Modality.APPLICATION_MODAL);

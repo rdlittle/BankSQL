@@ -75,7 +75,7 @@ public class CategoryForm extends AnchorPane {
         cbSubCat = new ComboBox<>();
 
         URL location = getClass().getResource("/com/webfront/app/fxml/CategoryForm.fxml");
-        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.example");
+        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         FXMLLoader loader = new FXMLLoader(location, resources);
         loader.setRoot(this);
         loader.setController(this);

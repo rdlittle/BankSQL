@@ -116,6 +116,7 @@ public class LedgerView extends Pane {
                 if (event.getClickCount() == 2) {
                     Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
                     if (item != null) {
+                        getLedgerManager().refresh(item);
                         LedgerForm form = new LedgerForm(ledgerView, item);
                     }
                 }
