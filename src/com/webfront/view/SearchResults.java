@@ -1,0 +1,152 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.webfront.view;
+
+import com.webfront.model.Category;
+import com.webfront.model.Ledger;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Scene;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
+import javafx.util.Callback;
+
+/**
+ *
+ * @author rlittle
+ */
+public final class SearchResults extends Pane {
+
+    private ObservableList<?> resultsList;
+    private TableView table;
+    Class clzz = null;
+    public String result;
+    public Stage stage;
+
+    /**
+     *
+     */
+    public SearchResults() {
+        table = new TableView();
+        resultsList = FXCollections.observableArrayList();
+    }
+
+    /**
+     *
+     * @param list
+     */
+    public SearchResults(ObservableList<?> list) {
+        this();
+        this.resultsList = list;
+        clzz = this.resultsList.get(0).getClass();
+        createView();
+    }
+
+    /**
+     *
+     * @param list
+     */
+    public void setResultsList(ObservableList<?> list) {
+        this.resultsList = list;
+        clzz = this.resultsList.get(0).getClass();
+        createView();
+    }
+
+    /**
+     *
+     * @return
+     */
+    public ObservableList<?> getResultsList() {
+        return this.resultsList;
+    }
+
+    /**
+     * @return the table
+     */
+    public TableView getTable() {
+        return table;
+    }
+
+    /**
+     * @param table the table to set
+     */
+    public void setTable(TableView table) {
+        this.table = table;
+    }
+
+    public void createView() {
+        if (clzz.getSimpleName().equals("Ledger")) {
+            // Build results for a ledger list
+            TableColumn<Ledger, String> id = new TableColumn<>("ID");
+            TableColumn<Ledger, String> date = new TableColumn<>("Date");
+            TableColumn<Ledger, String> description = new TableColumn<>("Description");
+            TableColumn<Ledger, String> primaryCat = new TableColumn<>("Cat 1");
+            TableColumn<Ledger, String> secondaryCat = new TableColumn<>("Cat 2");
+            TableColumn<Ledger, String> amount = new TableColumn<>("Amount");
+
+            id.setCellValueFactory(new PropertyValueFactory("id"));
+
+            date.setCellValueFactory(new PropertyValueFactory("transDate"));
+            date.setCellFactory(new CellFormatter<>());
+
+            description.setCellValueFactory(new PropertyValueFactory("transDesc"));
+            description.setMinWidth(620.00);
+
+            primaryCat.setCellValueFactory(new PropertyValueFactory("primaryCat"));
+            primaryCat.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
+                @Override
+                public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
+                    if (param.getValue().getPrimaryCat() != null) {
+                        return new SimpleStringProperty(param.getValue().getPrimaryCat().getDescription());
+                    }
+                    return null;
+                }
+            });
+            primaryCat.setMinWidth(150.0);
+
+            secondaryCat.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
+                @Override
+                public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
+                    if (param.getValue().getDistribution() != null) {
+                        if (!param.getValue().getDistribution().isEmpty()) {
+                            Category c = param.getValue().getDistribution().get(0).getCategory();
+                            if (c != null) {
+                                String desc = c.getDescription();
+                                return new SimpleStringProperty(desc);
+                            }
+                        }
+                    }
+                    return null;
+                }
+            });
+            secondaryCat.setMinWidth(215.0);
+
+            amount.setCellValueFactory(new PropertyValueFactory<>("transAmt"));
+            amount.setMinWidth(100.0);
+            amount.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
+
+            table.getColumns().addAll(id, date, description, primaryCat, secondaryCat, amount);
+            table.setItems(resultsList);
+
+            Scene scene = new Scene(this);
+            this.getChildren().add(table);
+            stage = new Stage();
+            stage.setScene(scene);
+            stage.show();
+        } else {
+            if (clzz.getSimpleName().equals("Receipts")) {
+                // Build results for a receipts list;
+            }
+        }
+    }
+
+}

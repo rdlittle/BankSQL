@@ -9,6 +9,7 @@ import com.webfront.bean.StoresManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Receipts;
+import com.webfront.model.SearchCriteria;
 import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
@@ -22,7 +23,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -32,10 +35,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
@@ -71,6 +76,9 @@ public class ReceiptForm extends AnchorPane {
     ComboBox<String> cbStores;
 
     @FXML
+    Hyperlink searchLink;
+
+    @FXML
     Label statusMessage;
 
     Stage stage;
@@ -79,9 +87,11 @@ public class ReceiptForm extends AnchorPane {
     private HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
     Receipts oldReceipt, newReceipt;
+    SearchCriteria searchCriteria;
 
     public ReceiptForm(ReceiptsView parent, Receipts prevReceipt) {
         try {
+
             oldReceipt = prevReceipt;
             newReceipt = new Receipts();
 
@@ -222,17 +232,7 @@ public class ReceiptForm extends AnchorPane {
                     if (event.getCode() == KeyCode.TAB) {
                         String tid = transId.getText();
                         if (tid != null && !tid.isEmpty()) {
-                            int id = Integer.parseInt(tid);
-                            try {
-                                Ledger ledger;
-                                ledger = receiptsView.getLedgerManager().getItem(id);
-                                oldReceipt.setLedgerEntry(ledger);
-                                btnOk.setDisable(false);
-                                statusMessage.setText("");
-                            } catch (javax.persistence.NoResultException ex) {
-                                statusMessage.setText("Ledger ID (" + id + ") not found.");
-                                transId.setText("");
-                            }
+                            updateTrans(tid);
                         }
                     }
                 }
@@ -255,6 +255,11 @@ public class ReceiptForm extends AnchorPane {
                         }
                     }
                 }
+            });
+
+            searchLink = new Hyperlink();
+            searchLink.setOnAction((ActionEvent e) -> {
+                System.out.println("This link is clicked");
             });
 
             // Set default values depending on whether you're editing an existing receipt or creating a new one
@@ -381,4 +386,50 @@ public class ReceiptForm extends AnchorPane {
         }
     };
 
+    @FXML
+    public void doSearch() {
+
+        searchCriteria = new SearchCriteria();
+        String sql = "SELECT * from ledger where transDate >= \"";
+        LocalDate localDate = transDate.getValue();
+        LocalDate startDate = localDate.minusDays(5);
+        LocalDate endDate = localDate.plusDays(5);
+        String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
+        sql += "and transDate <= \"";
+        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\"";
+        ObservableList<Ledger> results;
+        results = receiptsView.getLedgerManager().doSqlQuery(sql);
+        SearchResults searchResults = new SearchResults();
+        EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 2) {
+                    Ledger item = (Ledger) searchResults.getTable().getSelectionModel().getSelectedItem();
+                    if (item != null) {
+                        transId.setText(item.getId().toString());
+                        updateTrans(item.getId().toString());
+                    }
+                    searchResults.stage.close();
+                }
+            }
+        };
+        searchResults.getTable().addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+        searchResults.setResultsList(results);
+    }
+
+    private void updateTrans(String id) {
+        if (id != null && !id.isEmpty()) {
+            try {
+                Ledger ledger;
+                ledger = receiptsView.getLedgerManager().getItem(Integer.parseInt(id));
+                oldReceipt.setLedgerEntry(ledger);
+                btnOk.setDisable(false);
+                statusMessage.setText("");
+            } catch (javax.persistence.NoResultException ex) {
+                statusMessage.setText("Ledger ID (" + id + ") not found.");
+                transId.setText("");
+            }
+        }
+    }
 }

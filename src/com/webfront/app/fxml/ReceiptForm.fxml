@@ -36,5 +36,6 @@
         <Button fx:id="btnCancel" layoutX="515.5" layoutY="289.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
         <ComboBox fx:id="cbStores" layoutX="101.0" layoutY="78.0" prefHeight="25.0" prefWidth="291.0" />
       <Label fx:id="statusMessage" layoutX="17.0" layoutY="330.0" prefHeight="15.0" prefWidth="564.0" text="Label" />
+      <Hyperlink fx:id="searchLink" layoutX="516.0" layoutY="110.0" onAction="#doSearch" text="Find It" />
     </children>
 </fx:root>
