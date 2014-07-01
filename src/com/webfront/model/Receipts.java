@@ -8,6 +8,7 @@ package com.webfront.model;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -53,7 +54,7 @@ public class Receipts implements Serializable {
     @Column(name = "transDesc")
     private String transDesc;
     
-    @ManyToOne(optional=false)
+    @ManyToOne(cascade = CascadeType.ALL, optional=false)
     @JoinColumn(name = "transId", referencedColumnName="id")
     private Ledger ledgerEntry;
 

@@ -13,6 +13,7 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Receipts;
 import com.webfront.model.Stores;
+import java.util.List;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -112,10 +113,20 @@ public class ReceiptsView extends Pane {
                 if (param.getValue().getLedgerEntry() != null) {
                     // From this receipt (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
-                    if (!l.getReceipts().isEmpty()) {
+                    List<Receipts> tmpList = l.getReceipts();
+//                    if(tmpList.size()==0) {
+//                        System.out.println("no receipts");
+//                    }
+                    if (l.getReceipts() != null && l.getReceipts().size()>0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
-                }
+                    if(l.getReceipts()==null) {
+                        System.out.println(param.getValue().getId()+" Ledger.getReceipts() is null when in ReceiptsView.transIdColumn callback");
+                    } else {
+                        System.out.println(param.getValue().getId()+" Ledger.getReceipts() size is "+l.getReceipts().size()+" when in ReceiptsView.transIdColumn callback");
+                    }
+                } 
+                //System.out.println(param.getValue().getId()+" has null ledger entry when in ReceiptsView.transIdColumn callback");
                 return null;
             }
         });

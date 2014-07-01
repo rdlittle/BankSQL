@@ -32,6 +32,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -49,9 +50,9 @@ public class ReceiptForm extends AnchorPane {
     @FXML
     ChoiceBox accountNum;
     @FXML
-    ChoiceBox<String> primaryCat;
+    ComboBox<String> primaryCat;
     @FXML
-    ChoiceBox<String> subCat;
+    ComboBox<String> subCat;
 
     @FXML
     TextField transId;
@@ -69,6 +70,9 @@ public class ReceiptForm extends AnchorPane {
     @FXML
     ComboBox<String> cbStores;
 
+    @FXML
+    Label statusMessage;
+
     Stage stage;
 
     ReceiptsView receiptsView;
@@ -83,9 +87,9 @@ public class ReceiptForm extends AnchorPane {
 
             receiptsView = parent;
             transDate = new DatePicker();
-            primaryCat = new ChoiceBox<>();
+            primaryCat = new ComboBox<>();
 
-            subCat = new ChoiceBox<>();
+            subCat = new ComboBox<>();
 
             storeMap = new HashMap<>();
             categoryMap = new HashMap<>();
@@ -94,6 +98,8 @@ public class ReceiptForm extends AnchorPane {
             btnDelete = new Button();
 
             cbStores = new ComboBox<>();
+
+            statusMessage = new Label();
 
             URL location = getClass().getResource("/com/webfront/app/fxml/ReceiptForm.fxml");
             ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
@@ -129,9 +135,9 @@ public class ReceiptForm extends AnchorPane {
             // Populate category 1 and category 2 lists
             ObservableList<Category> subList = (ObservableList<Category>) receiptsView.getCategoryList();
             subList.stream().forEach((c) -> {
-                
+
                 categoryMap.put(c.getDescription(), c);
-                if (c.getParent() == null || c.getParent()==0) {
+                if (c.getParent() == null || c.getParent() == 0) {
                     primaryCat.getItems().add(c.getDescription());
                 } else {
                     subCat.getItems().add(c.getDescription());
@@ -209,18 +215,23 @@ public class ReceiptForm extends AnchorPane {
                     }
                 }
             });
-            
+
             transId.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
                     if (event.getCode() == KeyCode.TAB) {
-                        if (oldReceipt.getLedgerEntry() == null) {
-                            if (transId.getText() != null) {
+                        String tid = transId.getText();
+                        if (tid != null && !tid.isEmpty()) {
+                            int id = Integer.parseInt(tid);
+                            try {
                                 Ledger ledger;
-                                int id = Integer.parseInt(transId.getText());
                                 ledger = receiptsView.getLedgerManager().getItem(id);
                                 oldReceipt.setLedgerEntry(ledger);
                                 btnOk.setDisable(false);
+                                statusMessage.setText("");
+                            } catch (javax.persistence.NoResultException ex) {
+                                statusMessage.setText("Ledger ID (" + id + ") not found.");
+                                transId.setText("");
                             }
                         }
                     }
@@ -230,6 +241,7 @@ public class ReceiptForm extends AnchorPane {
             transId.textProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+
                     btnOk.setDisable(false);
                 }
             });
@@ -314,6 +326,7 @@ public class ReceiptForm extends AnchorPane {
             receiptsView.getReceiptsManager().update(oldReceipt);
             int idx = receiptsView.getTable().getSelectionModel().getSelectedIndex();
             receiptsView.getTable().getItems().set(idx, oldReceipt);
+            receiptsView.getReceiptsManager().refresh(oldReceipt);
             closeForm();
         } else {
             LocalDate localDate = transDate.getValue();
@@ -360,7 +373,7 @@ public class ReceiptForm extends AnchorPane {
     public HashMap<String, Stores> getStoreMap() {
         return storeMap;
     }
-    
+
     public static Comparator<String> comparator = new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
@@ -368,5 +381,4 @@ public class ReceiptForm extends AnchorPane {
         }
     };
 
-    
 }

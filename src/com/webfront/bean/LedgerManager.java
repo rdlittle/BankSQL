@@ -32,10 +32,11 @@ public class LedgerManager extends DBManager implements Serializable {
         return olist;
     }
 
-    public Ledger getItem(int idx) {
+    public Ledger getItem(int idx) throws javax.persistence.NoResultException {
         Query query = em.createNamedQuery("Ledger.findById");
         query.setParameter("id", idx);
-        Ledger ledger = (Ledger) query.getSingleResult();
+        Ledger ledger;
+        ledger = (Ledger) query.getSingleResult();
         return ledger;
     }
     
