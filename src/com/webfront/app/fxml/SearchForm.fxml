@@ -5,26 +5,28 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" prefHeight="324.0" prefWidth="548.0" xmlns:fx="http://javafx.com/fxml">
+<fx:root prefHeight="386.0" prefWidth="548.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <TextField fx:id="txtSubject" layoutX="102.0" layoutY="14.0" prefHeight="26.0" prefWidth="429.0" />
         <Label layoutX="14.0" layoutY="17.0" text="Description" />
         <DatePicker fx:id="startDate" layoutX="103.0" layoutY="79.0" />
         <DatePicker fx:id="endDate" layoutX="330.0" layoutY="76.0" />
-        <Label layoutX="16.5" layoutY="84.0" text="Date Range" />
+        <Label layoutX="14.0" layoutY="84.0" text="Date Range" />
         <Label layoutX="105.0" layoutY="60.0" text="From" />
         <Label layoutX="344.0" layoutY="60.0" text="To" />
-        <TextField fx:id="minAmount" layoutX="105.8759765625" layoutY="155.0" />
-        <TextField fx:id="maxAmount" layoutX="315.5" layoutY="153.0" />
-        <Label layoutX="17.0" layoutY="160.0" text="Amount" />
-        <Label layoutX="107.464599609375" layoutY="133.0" text="At least" />
+        <TextField fx:id="minAmount" layoutX="105.0" layoutY="153.0" />
+        <TextField fx:id="maxAmount" layoutX="332.5" layoutY="153.0" />
+        <Label layoutX="14.0" layoutY="160.0" text="Amount" />
+        <Label layoutX="107.464599609375" layoutY="128.0" text="At least" />
         <Label layoutX="332.5" layoutY="128.0" text="Not more than" />
-        <Label layoutX="18.464599609375" layoutY="212.0" text="Category" />
-        <ComboBox fx:id="cbPrimary" layoutX="106.0" layoutY="206.0" prefHeight="26.0" prefWidth="171.0" xmlns:fx="http://javafx.com/fxml">
+        <Label layoutX="14.0" layoutY="209.0" text="Category" />
+        <ComboBox fx:id="cbPrimary" layoutX="105.0" layoutY="203.0" prefHeight="26.0" prefWidth="171.0" xmlns:fx="http://javafx.com/fxml">
         </ComboBox>
-        <ComboBox fx:id="cbSecondary" layoutX="107.0" layoutY="249.0" prefHeight="26.0" prefWidth="429.0" xmlns:fx="http://javafx.com/fxml">
+        <ComboBox fx:id="cbSecondary" layoutX="105.0" layoutY="254.0" prefHeight="25.0" prefWidth="171.0" />
+        <Button layoutX="462.5" layoutY="349.0" mnemonicParsing="false" onAction="#closeForm" prefHeight="26.0" prefWidth="71.0" text="Cancel" />
+        <Button layoutX="359.5" layoutY="349.0" mnemonicParsing="false" onAction="#doSearch" prefHeight="26.0" prefWidth="79.0" text="OK" />
+        <Label layoutX="14.0" layoutY="315.0" text="Store" />
+        <ComboBox fx:id="cbStores" layoutX="105.0" layoutY="307.0" prefHeight="26.0" prefWidth="429.0" xmlns:fx="http://javafx.com/fxml">
         </ComboBox>
-        <Button layoutX="454.5" layoutY="284.0" mnemonicParsing="false" onAction="#closeForm" prefHeight="26.0" prefWidth="71.0" text="Cancel" />
-        <Button layoutX="359.5" layoutY="284.0" mnemonicParsing="false" onAction="#doSearch"  prefHeight="26.0" prefWidth="79.0" text="OK" />
     </children>
 </fx:root>

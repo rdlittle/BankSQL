@@ -7,9 +7,11 @@ package com.webfront.view;
 
 import com.webfront.app.utils.DateConvertor;
 import com.webfront.bean.CategoryManager;
+import com.webfront.bean.StoresManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
+import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
@@ -41,14 +43,20 @@ import javafx.stage.Stage;
 public final class SearchForm extends AnchorPane {
 
     SearchCriteria criteria;
+    CategoryManager catManager;
+    
     Stage stage;
     Scene scene;
     private LedgerView view;
     Map<String, Category> primeCatMap;
     Map<String, Category> subCatMap;
 
+    private ObservableList<Stores> stores;
     private ObservableList<String> primaryCats;
     private ObservableList<String> subCats;
+
+    URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
+    ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
 
     @FXML
     TextField txtSubject;
@@ -70,6 +78,9 @@ public final class SearchForm extends AnchorPane {
 
     @FXML
     ComboBox<String> cbSecondary;
+    
+    @FXML
+    ComboBox<String> cbStores;
 
     @FXML
     Button btnOk;
@@ -78,64 +89,83 @@ public final class SearchForm extends AnchorPane {
     Button btnCancel;
 
     public SearchForm() {
+        FXMLLoader loader = new FXMLLoader(location, resources);
+        loader.setRoot(this);
+        loader.setController(this);
+        catManager = new CategoryManager();
+        
         stage = new Stage();
         scene = new Scene(this);
-        criteria = new SearchCriteria();
         txtSubject = new TextField();
         cbPrimary = new ComboBox<>();
         cbSecondary = new ComboBox<>();
+        cbStores = new ComboBox<>();
         btnOk = new Button();
         btnCancel = new Button();
+        
         primaryCats = FXCollections.observableArrayList();
         subCats = FXCollections.observableArrayList();
+        stores = FXCollections.observableArrayList();
+        
         primeCatMap = new HashMap<>();
         subCatMap = new HashMap<>();
-        startDate = new DatePicker();
         endDate = new DatePicker();
-    }
-
-    public SearchForm(LedgerView view, SearchCriteria sc) {
-        this();
-        this.criteria = sc;
-        this.view = view;
-        buildForm();
-        setHandlers();
-    }
-
-    public void buildForm() {
-
-        URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
-        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
-        FXMLLoader loader = new FXMLLoader(location, resources);
-
-        loader.setRoot(this);
-        loader.setController(this);
+        startDate = new DatePicker();
 
         try {
             loader.load();
         } catch (IOException ex) {
             Logger.getLogger(StoreForm.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+    }
 
+    public SearchForm(LedgerView view, SearchCriteria sc) {
+        this();
+        this.criteria = sc;
+        this.view = view;
+        this.catManager = view.getCategoryManager();
         // Set the upper range to the latest available transaction date
         Ledger ledgerItem = (Ledger) view.getTable().getItems().get(0);
         Date date = ledgerItem.getTransDate();
         endDate.valueProperty().set(DateConvertor.toLocalDate(date));
-        // Set the lower range to 60 days before latest date
+        // Set the lower range to 60 days before latest date   
         startDate.valueProperty().set(endDate.getValue().minusDays(60));
-        criteria.setStartDate(startDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
-        criteria.setEndDate(endDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        setForm();
+    }
 
-        CategoryManager cmgr = view.getCategoryManager();
-        ObservableList<Category> list = cmgr.getCategories();
+    public void setForm() {
+        buildForm();
+        setHandlers();
+    }
+
+    public void buildForm() {
+        if (criteria == null) {
+            criteria = new SearchCriteria();
+        }
+
+        if(startDate.getValue()==null) {
+            startDate.setValue(LocalDate.now());
+        }
+        if ("".equals(criteria.getStartDate())) {
+            criteria.setStartDate(startDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+        startDate.setValue(LocalDate.parse(criteria.getStartDate()));
+
+        if(endDate.getValue()==null) {
+            endDate.setValue(startDate.getValue().minusDays(30));
+        }
+        if ("".equals(criteria.getEndDate())) {
+            criteria.setEndDate(endDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+        endDate.setValue(LocalDate.parse(criteria.getEndDate()));
+        
+        ObservableList<Category> list = catManager.getCategories();
         for (Category c : list) {
-            if (null != c.getParent()) {
-                subCatMap.put(c.getDescription(), c);
-            } else {
+            if (null != c.getParent() && c.getParent() == 0) {
                 primeCatMap.put(c.getDescription(), c);
                 getPrimaryCats().add(c.getDescription());
             }
-
         }
 
         cbPrimary.getItems().add("--Select--");
@@ -144,7 +174,13 @@ public final class SearchForm extends AnchorPane {
 
         cbSecondary.getItems().add("--Select--");
         cbSecondary.getSelectionModel().selectFirst();
-
+        
+        StoresManager storeManager=new StoresManager();
+        stores = storeManager.getList("SELECT * FROM stores ORDER BY storeName");
+        for(Stores store : stores) {
+            cbStores.getItems().add(store.getStoreName());
+        }
+        
         setFormData();
         stage.setScene(scene);
         stage.setTitle("Search Form");
@@ -192,7 +228,7 @@ public final class SearchForm extends AnchorPane {
                     criteria.setPrimaryCat(c);
                     String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
                     sqlStmt += " order by description";
-                    ObservableList<Category> subCatList = view.getCategoryManager().getCategories(sqlStmt);
+                    ObservableList<Category> subCatList = catManager.getCategories(sqlStmt);
                     cbSecondary.getItems().clear();
                     subCatMap.clear();
                     for (Category cat2 : subCatList) {
@@ -234,7 +270,7 @@ public final class SearchForm extends AnchorPane {
         // AND l.transDesc like "%SPEED%";
         String sql = "";
 
-        if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId()!=null) {
+        if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
             sql += " INNER join distribution d ON d.transId = l.id ";
         }
 
@@ -242,7 +278,7 @@ public final class SearchForm extends AnchorPane {
             sql += "WHERE l.transDate >= \"";
             sql += criteria.getStartDate() + "\"";
         }
-        
+
         if (criteria.getEndDate() != null) {
             if (criteria.getStartDate() != null && !criteria.getStartDate().isEmpty()) {
                 sql += " AND ";
@@ -252,7 +288,7 @@ public final class SearchForm extends AnchorPane {
             sql += "l.transDate <= \"";
             sql += criteria.getEndDate() + "\"";
         }
-        
+
         if (criteria.getPrimaryCat() != null) {
             if (criteria.getPrimaryCat().getId() != null) {
                 if (sql.isEmpty()) {
@@ -264,7 +300,7 @@ public final class SearchForm extends AnchorPane {
                 sql += criteria.getPrimaryCat().getId();
             }
         }
-        
+
         if (!sql.isEmpty()) {
             if (criteria.getSearchTarget() != null) {
                 sql += " AND l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
@@ -274,13 +310,13 @@ public final class SearchForm extends AnchorPane {
             }
             sql = "SELECT * FROM ledger l " + sql;
         }
-        
+
         criteria.setSqlStmt(sql);
         closeForm();
     }
 
     private void setFormData() {
-
+            
     }
 
     @FXML

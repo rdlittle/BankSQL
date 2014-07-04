@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -400,7 +399,25 @@ public class ReceiptForm extends AnchorPane {
         sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\"";
         ObservableList<Ledger> results;
         results = receiptsView.getLedgerManager().doSqlQuery(sql);
+        
         SearchResults searchResults = new SearchResults();
+        SearchCriteria criteria = new SearchCriteria();
+        criteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        criteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        searchResults.searchCriteria=criteria;
+        
+        searchResults.resultProperty.addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                String id = newValue.toString();
+                if(id!=null && !id.isEmpty() && !id.equals("-1")) {
+                    transId.setText(id);
+                    updateTrans(id);
+                }
+            }
+        });
+        
+        
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -414,6 +431,7 @@ public class ReceiptForm extends AnchorPane {
                 }
             }
         };
+
         searchResults.getTable().addEventHandler(MouseEvent.MOUSE_CLICKED, click);
         searchResults.setResultsList(results);
     }

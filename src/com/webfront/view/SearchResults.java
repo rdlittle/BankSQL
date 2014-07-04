@@ -7,15 +7,24 @@ package com.webfront.view;
 
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
+import com.webfront.model.SearchCriteria;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -32,10 +41,18 @@ public final class SearchResults extends Pane {
     public String result;
     public Stage stage;
 
+    private Button btnOK;
+    private Button btnCancel;
+    private Button btnSearch;
+    SimpleStringProperty resultProperty;
+    SearchCriteria searchCriteria;
+
     /**
      *
      */
     public SearchResults() {
+        resultProperty = new SimpleStringProperty();
+        resultProperty.set("");
         table = new TableView();
         resultsList = FXCollections.observableArrayList();
     }
@@ -84,6 +101,61 @@ public final class SearchResults extends Pane {
     }
 
     public void createView() {
+        VBox vbox = new VBox();
+        btnOK = new Button("OK");
+        btnCancel = new Button("Cancel");
+        btnSearch = new Button("Change Search");
+
+        TilePane tileButtons = new TilePane(Orientation.HORIZONTAL);
+        tileButtons.setPadding(new Insets(20, 10, 20, 0));
+        tileButtons.setHgap(10.0);
+        tileButtons.setVgap(8.0);
+        tileButtons.setAlignment(Pos.CENTER_RIGHT);
+
+        btnOK.setMaxWidth(Double.MAX_VALUE);
+        btnCancel.setMaxWidth(Double.MAX_VALUE);
+        btnSearch.setMaxWidth(Double.MAX_VALUE);
+
+        btnOK.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                int rowNum = getTable().getSelectionModel().getSelectedIndex();
+                if (rowNum != -1) {
+                    if (clzz.getSimpleName().equals("Ledger")) {
+                        Ledger ledgerItem = (Ledger) getTable().getSelectionModel().getSelectedItem();
+                        result = ledgerItem.getId().toString();
+                    }
+                } else {
+                    result = "-1";
+                }
+                resultProperty.set(result);
+                stage.close();
+            }
+        });
+
+        btnCancel.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                resultProperty.set("-1");
+                stage.close();
+            }
+        });
+
+        btnSearch.setOnAction(new EventHandler() {
+
+            @Override
+            public void handle(Event event) {
+                SearchForm searchForm = new SearchForm();
+                searchForm.criteria=searchCriteria;
+                searchForm.setForm();
+                searchForm.showForm();
+            }
+        });
+
+        tileButtons.getChildren().addAll(btnOK, btnCancel, btnSearch);
+
         if (clzz.getSimpleName().equals("Ledger")) {
             // Build results for a ledger list
             TableColumn<Ledger, String> id = new TableColumn<>("ID");
@@ -138,8 +210,10 @@ public final class SearchResults extends Pane {
             table.setItems(resultsList);
 
             Scene scene = new Scene(this);
-            this.getChildren().add(table);
+            vbox.getChildren().addAll(table, tileButtons);
+            this.getChildren().add(vbox);
             stage = new Stage();
+            stage.setTitle("Search Results");
             stage.setScene(scene);
             stage.show();
         } else {
@@ -147,6 +221,27 @@ public final class SearchResults extends Pane {
                 // Build results for a receipts list;
             }
         }
+    }
+
+    /**
+     * @return the btnOK
+     */
+    public Button getBtnOK() {
+        return btnOK;
+    }
+
+    /**
+     * @return the btnCancel
+     */
+    public Button getBtnCancel() {
+        return btnCancel;
+    }
+
+    /**
+     * @return the btnSearch
+     */
+    public Button getBtnSearch() {
+        return btnSearch;
     }
 
 }
