@@ -5,10 +5,12 @@
  */
 package com.webfront.view;
 
+import com.webfront.bean.LedgerManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -144,13 +146,24 @@ public final class SearchResults extends Pane {
         });
 
         btnSearch.setOnAction(new EventHandler() {
-
             @Override
             public void handle(Event event) {
                 SearchForm searchForm = new SearchForm();
                 searchForm.criteria=searchCriteria;
+                searchCriteria.getSqlProperty().addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                        resultsList.clear();
+                        LedgerManager ledgerManager = new LedgerManager();
+                        resultsList=ledgerManager.doSqlQuery(searchCriteria.getSqlStmt());
+                        getTable().getItems().clear();
+                        getTable().setItems(resultsList);                        
+                    }
+                });
+                
                 searchForm.setForm();
                 searchForm.showForm();
+                
             }
         });
 

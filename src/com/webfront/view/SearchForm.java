@@ -302,16 +302,17 @@ public final class SearchForm extends AnchorPane {
         }
 
         if (!sql.isEmpty()) {
-            if (criteria.getSearchTarget() != null) {
+            if (criteria.getSearchTarget() != null && !criteria.getSearchTarget().isEmpty()) {
                 sql += " AND l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
             }
-            if (criteria.getSecondaryCat() != null) {
+            if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
                 sql += " AND d.categoryId = " + criteria.getSecondaryCat().getId().toString();
             }
             sql = "SELECT * FROM ledger l " + sql;
         }
 
         criteria.setSqlStmt(sql);
+        criteria.getSqlProperty().set(sql);
         closeForm();
     }
 

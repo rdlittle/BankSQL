@@ -6,6 +6,7 @@
 package com.webfront.model;
 
 import java.time.LocalDate;
+import javafx.beans.property.SimpleStringProperty;
 
 /**
  *
@@ -21,15 +22,21 @@ public class SearchCriteria {
     private Category primaryCat;
     private Category secondaryCat;
     private String sqlStmt;
+    private SimpleStringProperty sqlProperty;
 
-    public void SearchCriteria() {
+    /**
+     *
+     */
+    public SearchCriteria() {
         searchTarget = new String();
         startDate = new String();
         endDate = new String();
         primaryCat = new Category();
-        setSecondaryCat(new Category());
+        secondaryCat=new Category();
         minAmount = new String();
         maxAmount = new String();
+        sqlProperty = new SimpleStringProperty();
+        sqlProperty.setValue("");
     }
 
     public void validateRange(LocalDate sDate, LocalDate eDate) throws Exception {
@@ -163,5 +170,19 @@ public class SearchCriteria {
      */
     public void setSqlStmt(String sqlStmt) {
         this.sqlStmt = sqlStmt;
+    }
+
+    /**
+     * @return the sqlProperty
+     */
+    public SimpleStringProperty getSqlProperty() {
+        return sqlProperty;
+    }
+
+    /**
+     * @param sqlProperty the sqlProperty to set
+     */
+    public void setSqlProperty(SimpleStringProperty sqlProperty) {
+        this.sqlProperty = sqlProperty;
     }
 }

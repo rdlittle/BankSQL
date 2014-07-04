@@ -86,7 +86,7 @@ public class ReceiptForm extends AnchorPane {
     private HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
     Receipts oldReceipt, newReceipt;
-    SearchCriteria searchCriteria;
+    private SearchCriteria searchCriteria;
 
     public ReceiptForm(ReceiptsView parent, Receipts prevReceipt) {
         try {
@@ -387,7 +387,6 @@ public class ReceiptForm extends AnchorPane {
 
     @FXML
     public void doSearch() {
-
         searchCriteria = new SearchCriteria();
         String sql = "SELECT * from ledger where transDate >= \"";
         LocalDate localDate = transDate.getValue();
@@ -401,10 +400,9 @@ public class ReceiptForm extends AnchorPane {
         results = receiptsView.getLedgerManager().doSqlQuery(sql);
         
         SearchResults searchResults = new SearchResults();
-        SearchCriteria criteria = new SearchCriteria();
-        criteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        criteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        searchResults.searchCriteria=criteria;
+        searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        searchResults.searchCriteria=this.searchCriteria;
         
         searchResults.resultProperty.addListener(new ChangeListener() {
             @Override
