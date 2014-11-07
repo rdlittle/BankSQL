@@ -6,13 +6,29 @@
 
 package com.webfront.view;
 
-import com.webfront.bean.CategoryManager;
+import javafx.scene.chart.PieChart;
+import javafx.scene.layout.Pane;
 
 /**
  *
  * @author rlittle
  */
-public class SummaryView {
+public class SummaryView extends Pane {
     
-    private CategoryManager categoryManager;
+    private final PieChart chart;
+    
+    public SummaryView() {
+        super();
+        chart = new PieChart();
+        chart.setPrefHeight(USE_PREF_SIZE);
+        chart.setPrefWidth(USE_PREF_SIZE);
+        this.getChildren().add(chart);
+    }
+
+    /**
+     * @return the chart
+     */
+    public PieChart getChart() {
+        return chart;
+    }
 }

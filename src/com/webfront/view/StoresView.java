@@ -46,10 +46,9 @@ public class StoresView extends Pane {
     MenuItem delMenu;
     MenuItem editMenu;
 
-    public StoresView() {
+    private StoresView() {
         super();
         storesManager = new StoresManager();
-        view = this;
         VBox vbox = new VBox();
         Button btnAdd;
         btnAdd = new Button("Add store");
@@ -141,6 +140,13 @@ public class StoresView extends Pane {
         buttons.getChildren().add(btnAdd);
         vbox.getChildren().addAll(table, buttons);
         getChildren().addAll(vbox);
+    }
+    
+    public static StoresView getInstance() {
+        if(view==null) {
+            view=new StoresView();
+        }
+        return view;
     }
 
     /**

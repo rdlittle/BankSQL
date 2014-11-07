@@ -50,9 +50,9 @@ public class LedgerView extends Pane {
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
 
-    public LedgerView() {
+    private LedgerView() {
         super();
-        ledgerView = this;
+        
         ledgerManager = new LedgerManager();
         categoryManager = new CategoryManager();
 
@@ -155,6 +155,13 @@ public class LedgerView extends Pane {
         getChildren().addAll(vbox);
     }
 
+    public static LedgerView getInstance() {
+        if (ledgerView == null) {
+            ledgerView = new LedgerView();
+        }
+        return ledgerView;
+    }
+    
     public void doSearch(String sql) {
         SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();

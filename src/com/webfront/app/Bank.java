@@ -5,8 +5,11 @@
  */
 package com.webfront.app;
 
+import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
+import com.webfront.app.utils.StringUtil;
 import com.webfront.bean.DistributionManager;
+import com.webfront.controller.SummaryController;
 import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
@@ -17,6 +20,9 @@ import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -55,15 +61,26 @@ public class Bank extends Application {
     final int TAB_BOTTOM_MARGIN = 130;
     final ProgressBar progressBar;
     final SimpleDoubleProperty sdp;
+    ResourceBundle config;
     Thread importThread;
     SimpleBooleanProperty importDone;
     Importer importer;
+    String bankName;
 
     public Bank() {
         this.sdp = new SimpleDoubleProperty();
         this.progressBar = new ProgressBar(0);
         importDone = new SimpleBooleanProperty(true);
-        this.importer = new Importer("");
+        bankName = "";
+        try {
+            config = ResourceBundle.getBundle("com.webfront.app.bank");
+            if (config.containsKey("bankName")) {
+                bankName = config.getString("bankName");
+            }
+        } catch (MissingResourceException e) {
+            System.out.println("Can't find config file ");
+        }
+        this.importer = new CSVImporter("",bankName);
     }
 
     @Override
@@ -108,13 +125,16 @@ public class Bank extends Application {
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
 
-        LedgerView ledgerView = new LedgerView();
+        List<String> importTypes = new ArrayList<>();
+        importTypes.add(".txt");
+        importTypes.add(".csv");
+        LedgerView ledgerView = LedgerView.getInstance();
         ledgerTab.setContent(ledgerView);
 
-        StoresView stores = new StoresView();
+        StoresView stores = StoresView.getInstance();
         storesTab.setContent(stores);
 
-        ReceiptsView receipts = new ReceiptsView();
+        ReceiptsView receipts = ReceiptsView.getInstance();
         receiptsTab.setContent(receipts);
 
         fileImport.setOnAction(new EventHandler() {
@@ -186,7 +206,7 @@ public class Bank extends Application {
                 if (importDone.getValue() == false) {
                     FileChooser fileChooser = new FileChooser();
                     fileChooser.setTitle("Select statement to import");
-                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
                     File selectedFile = fileChooser.showOpenDialog(primaryStage);
                     if (selectedFile != null) {
                         progressBar.setVisible(true);
@@ -270,13 +290,13 @@ public class Bank extends Application {
                     
                     values.add(new Label(importer.startDate));
                     values.add(new Label(importer.endDate));
-                    values.add(new Label(importer.beginningBalance.toString()));
-                    values.add(new Label(importer.totalDeposits.toString()));
-                    values.add(new Label(importer.totalWithdrawals.toString()));
-                    values.add(new Label(importer.totalChecks.toString()));
-                    values.add(new Label(importer.totalFees.toString()));
+                    values.add(new Label(StringUtil.toCurrency(importer.beginningBalance.toString())));
+                    values.add(new Label(StringUtil.toCurrency(importer.totalDeposits.toString())));
+                    values.add(new Label(StringUtil.toCurrency(importer.totalWithdrawals.toString())));
+                    values.add(new Label(StringUtil.toCurrency(importer.totalChecks.toString())));
+                    values.add(new Label(StringUtil.toCurrency(importer.totalFees.toString())));
                     
-                    values.add(new Label(importer.endingBalance.toString()));
+                    values.add(new Label(StringUtil.toCurrency(importer.endingBalance.toString())));
                     
                     labelsBox.getChildren().addAll(labels);
                     valuesBox.getChildren().addAll(values);
@@ -293,6 +313,12 @@ public class Bank extends Application {
                 }
             }
         });
+        
+        //summaryTab.setContent(stores);
+        SummaryController summaryController = SummaryController.getInstance();
+        summaryController.buildSummary();
+        summaryController.getView().setPrefSize(scene.getWidth(), scene.getHeight());
+        summaryTab.setContent(summaryController.getView());
 
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");

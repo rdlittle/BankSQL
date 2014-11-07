@@ -66,9 +66,8 @@ public class ReceiptsView extends Pane {
 
     Button btnAdd;
 
-    public ReceiptsView() {
+    private ReceiptsView() {
         super();
-        receiptsView = this;
         storeAdded = new SimpleBooleanProperty();
         storeAdded.set(false);
         GridPane grid = new GridPane();
@@ -209,6 +208,13 @@ public class ReceiptsView extends Pane {
         buttons.getChildren().add(btnAdd);
         grid.add(buttons, 0, 1);
         getChildren().add(grid);
+    }
+    
+    public static ReceiptsView getInstance() {
+        if(receiptsView == null) {
+            receiptsView = new ReceiptsView();
+        }
+        return receiptsView;
     }
 
     /**
