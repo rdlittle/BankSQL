@@ -144,7 +144,6 @@ public class ReceiptForm extends AnchorPane {
             // Populate category 1 and category 2 lists
             ObservableList<Category> subList = (ObservableList<Category>) receiptsView.getCategoryList();
             subList.stream().forEach((c) -> {
-
                 categoryMap.put(c.getDescription(), c);
                 if (c.getParent() == null || c.getParent() == 0) {
                     primaryCat.getItems().add(c.getDescription());
@@ -194,6 +193,7 @@ public class ReceiptForm extends AnchorPane {
                             subCatMap.put(cat2.getDescription(), cat2);
                         }
                         subCat.getItems().addAll(subCatMap.keySet());
+                        subCat.getSelectionModel().selectFirst();
                         if (oldReceipt.getId() != null) {
                             if (oldReceipt.getPrimaryCat().getDescription() != primaryCat.getValue()) {
                                 btnOk.setDisable(false);

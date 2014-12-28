@@ -7,21 +7,23 @@ package com.webfront.app;
 
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
+import com.webfront.app.utils.PDFImporter;
 import com.webfront.app.utils.StringUtil;
 import com.webfront.bean.DistributionManager;
 import com.webfront.controller.SummaryController;
+import com.webfront.model.Config;
 import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import com.webfront.view.CategoryForm;
 import com.webfront.view.LedgerView;
+import com.webfront.view.PreferencesForm;
 import com.webfront.view.ReceiptsView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,26 +63,25 @@ public class Bank extends Application {
     final int TAB_BOTTOM_MARGIN = 130;
     final ProgressBar progressBar;
     final SimpleDoubleProperty sdp;
-    ResourceBundle config;
+    ResourceBundle bundle;
     Thread importThread;
     SimpleBooleanProperty importDone;
     Importer importer;
+    Importer pdfImporter;
     String bankName;
+    String tmpDir;
+    private final Config config;
+    private final String defaultConfig = ".bankSQL";
 
     public Bank() {
         this.sdp = new SimpleDoubleProperty();
         this.progressBar = new ProgressBar(0);
         importDone = new SimpleBooleanProperty(true);
         bankName = "";
-        try {
-            config = ResourceBundle.getBundle("com.webfront.app.bank");
-            if (config.containsKey("bankName")) {
-                bankName = config.getString("bankName");
-            }
-        } catch (MissingResourceException e) {
-            System.out.println("Can't find config file ");
-        }
-        this.importer = new CSVImporter("",bankName);
+        config = Config.getInstance();
+        bankName = config.getBankName();
+        this.importer = new CSVImporter("", bankName);
+        config.setConfig();
     }
 
     @Override
@@ -98,6 +99,7 @@ public class Bank extends Application {
         MenuItem fileNewStore = new MenuItem("Sto_re");
         MenuItem fileExit = new MenuItem("E_xit");
         MenuItem editCategories = new MenuItem("Categories");
+        MenuItem editPreferences = new MenuItem("_Preferences");
 
         fileMenu.setMnemonicParsing(true);
         fileImport.setMnemonicParsing(true);
@@ -109,7 +111,7 @@ public class Bank extends Application {
 
         editMenu.setMnemonicParsing(true);
         editMenu.setMnemonicParsing(true);
-        editMenu.getItems().addAll(editCategories);
+        editMenu.getItems().addAll(editCategories, editPreferences);
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
@@ -169,6 +171,20 @@ public class Bank extends Application {
             }
         });
 
+        editPreferences.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                PreferencesForm prefs = PreferencesForm.getInstance(config);
+                prefs.hasChanged.addListener(new InvalidationListener() {
+                    @Override
+                    public void invalidated(Observable observable) {
+                        config.setConfig();
+                    }
+                });
+                prefs.showForm();
+            }
+        });
+
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().add(ledgerTab);
         tabPane.getTabs().add(storesTab);
@@ -207,8 +223,12 @@ public class Bank extends Application {
                     FileChooser fileChooser = new FileChooser();
                     fileChooser.setTitle("Select statement to import");
                     fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
+                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
                     File selectedFile = fileChooser.showOpenDialog(primaryStage);
                     if (selectedFile != null) {
+                        if (selectedFile.getAbsoluteFile().getName().contains("pdf")) {
+                            importer = new PDFImporter(selectedFile.getAbsolutePath());
+                        }
                         progressBar.setVisible(true);
                         String fileName = selectedFile.getAbsolutePath();
                         importer.setFileName(fileName);
@@ -276,9 +296,9 @@ public class Bank extends Application {
                     HBox hbox = new HBox();
                     VBox labelsBox = new VBox();
                     VBox valuesBox = new VBox();
-                    ArrayList<Label> labels=new ArrayList<>();
-                    ArrayList<Label> values=new ArrayList<>();
-                    
+                    ArrayList<Label> labels = new ArrayList<>();
+                    ArrayList<Label> values = new ArrayList<>();
+
                     labels.add(new Label("Start date :"));
                     labels.add(new Label("End date :"));
                     labels.add(new Label("Beginning balance : "));
@@ -287,7 +307,7 @@ public class Bank extends Application {
                     labels.add(new Label("Total checks : "));
                     labels.add(new Label("Total fees :"));
                     labels.add(new Label("Ending balance : "));
-                    
+
                     values.add(new Label(importer.startDate));
                     values.add(new Label(importer.endDate));
                     values.add(new Label(StringUtil.toCurrency(importer.beginningBalance.toString())));
@@ -295,25 +315,25 @@ public class Bank extends Application {
                     values.add(new Label(StringUtil.toCurrency(importer.totalWithdrawals.toString())));
                     values.add(new Label(StringUtil.toCurrency(importer.totalChecks.toString())));
                     values.add(new Label(StringUtil.toCurrency(importer.totalFees.toString())));
-                    
+
                     values.add(new Label(StringUtil.toCurrency(importer.endingBalance.toString())));
-                    
+
                     labelsBox.getChildren().addAll(labels);
                     valuesBox.getChildren().addAll(values);
-                    
+
                     labelsBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
                     valuesBox.setAlignment(Pos.CENTER_RIGHT);
                     valuesBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
-                    
-                    hbox.getChildren().addAll(labelsBox,valuesBox);
+
+                    hbox.getChildren().addAll(labelsBox, valuesBox);
                     hbox.setPadding(new Insets(10.0, 20.0, 0.0, 10.0));
-                    
+
                     summary.getChildren().add(hbox);
-                    summaryTab.setContent(summary);     
+                    summaryTab.setContent(summary);
                 }
             }
         });
-        
+
         //summaryTab.setContent(stores);
         SummaryController summaryController = SummaryController.getInstance();
         summaryController.buildSummary();

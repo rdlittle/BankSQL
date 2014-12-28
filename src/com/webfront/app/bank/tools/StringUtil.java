@@ -4,9 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.webfront.app.utils;
-
-import java.text.DecimalFormat;
+package com.webfront.app.bank.tools;
 
 /**
  *
@@ -17,12 +15,5 @@ public class StringUtil {
         String regex = "^\\s+";
         String newString=str.replaceFirst(regex, "");
         return newString;
-    }
-    
-    public static String toCurrency(String str) {
-        float num = Float.parseFloat(str);
-        double dNum = (double) num;
-        DecimalFormat decFormat=new DecimalFormat("####0.00");
-        return decFormat.format(dNum);
     }
 }

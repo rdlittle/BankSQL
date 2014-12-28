@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.webfront.app.utils;
+package com.webfront.app.bank.tools;
 
 import com.webfront.model.Ledger;
 import java.io.BufferedReader;
@@ -25,23 +25,27 @@ import java.util.logging.Logger;
  *
  * @author rlittle
  */
-public final class AltBankImporter extends Importer implements Runnable {
+public final class Importer implements Runnable {
 
+    static BufferedReader in;
+    ResourceBundle config;
+    static final String configName = "com.webfront.app.bank.tools.bank";
+    boolean headerDone;
+    boolean depositsDone;
+    boolean withdrawalsDone;
+    boolean checksDone;
+    boolean feesDone;
+    String startDate;
+    String endDate;
+    Float beginningBalance;
+    Float endingBalance;
+    Float totalDeposits;
+    Float totalWithdrawals;
+    Float totalChecks;
+    Float totalFees;
     private ArrayList<Ledger> itemList;
 
-    private String fileName;
-    private boolean checksDone;
-    private boolean depositsDone;
-    private boolean withdrawalsDone;
-    private boolean feesDone;
-
-    public AltBankImporter(String fileName, String cfgName) {
-        super(fileName);
-        configName = cfgName;
-        checksDone=false;
-        depositsDone=false;
-        withdrawalsDone=false;
-        feesDone=false;
+    public Importer() {
     }
 
     public BufferedReader openFile(String fileName) {
@@ -49,7 +53,7 @@ public final class AltBankImporter extends Importer implements Runnable {
         try {
             inFile = new BufferedReader(new FileReader(fileName));
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AltBankImporter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
         }
         return inFile;
     }
@@ -79,7 +83,7 @@ public final class AltBankImporter extends Importer implements Runnable {
                     try {
                         startDate = DateConvertor.convert(text);
                     } catch (ParseException ex) {
-                        Logger.getLogger(AltBankImporter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     beginningBalance = Float.parseFloat(amt);
                 }
@@ -118,7 +122,7 @@ public final class AltBankImporter extends Importer implements Runnable {
                     try {
                         endDate = DateConvertor.convert(text);
                     } catch (ParseException ex) {
-                        Logger.getLogger(AltBankImporter.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     endingBalance = Float.parseFloat(amt);
                     headerDone = true;
@@ -146,29 +150,17 @@ public final class AltBankImporter extends Importer implements Runnable {
                     continue;
                 }
                 if (section.equals("checks")) {
-                    int idx;
-                    String lineLeft = line.trim();
-                    
-                    idx = lineLeft.indexOf(" ");
-                    String date = lineLeft.substring(0, idx).trim();
-                    lineLeft = lineLeft.substring(idx).trim();
-
-                    idx = lineLeft.indexOf(" ");
-                    String checkNum = lineLeft.substring(0, lineLeft.indexOf(" ")).trim();
-                    lineLeft = lineLeft.substring(idx).trim();
-
-                    idx = lineLeft.indexOf(" ");
+                    line = line.trim();
+                    int lineLen = line.length();
+                    String date = line.substring(0, 8).trim();
                     String amt;
-                    if(idx == -1) {
-                        amt = lineLeft.substring(0).trim();
-                        lineLeft = "";
+                    String checkNum = line.substring(17, 22).trim();
+                    if (lineLen > 80) {
+                        amt = line.substring(72, 80).trim();
                     } else {
-                        amt = lineLeft.substring(0, idx).trim();
-                        lineLeft = lineLeft.substring(idx).trim();
+                        amt = line.substring(72).trim();
                     }
-                    
                     Ledger item = new Ledger();
-
                     item.setTransDate(stringToDate(date));
                     item.setCheckNum(checkNum);
                     item.setTransDesc("Check# " + checkNum);
@@ -176,21 +168,10 @@ public final class AltBankImporter extends Importer implements Runnable {
                     getItemList().add(item);
 //                    System.out.println(item.getTransDate().toString() + " " + item.getTransDesc() + " " + item.getTransAmt());
 
-                    if (lineLeft.length() > 0) {
-                        idx = lineLeft.indexOf(" ");
-                        date = lineLeft.substring(0, idx).trim();
-                        lineLeft = lineLeft.substring(idx).trim();
-                        
-                        idx = lineLeft.indexOf(" ");
-                        checkNum = lineLeft.substring(0, idx).trim();
-                        lineLeft = lineLeft.substring(idx).trim();
-
-                        idx = lineLeft.indexOf(" ");
-                        if(idx == -1) {
-                            amt = lineLeft.substring(0).trim();
-                        } else {
-                            amt = lineLeft.substring(0,idx).trim();
-                        }
+                    if (lineLen > 80) {
+                        date = line.substring(102, 111).trim();
+                        checkNum = line.substring(119, 125).trim();
+                        amt = line.substring(163).trim();
 
                         item = new Ledger();
                         item.setTransDate(stringToDate(date));
@@ -222,4 +203,74 @@ public final class AltBankImporter extends Importer implements Runnable {
         }
     }
 
+    private void doSort() {
+        if (!itemList.isEmpty()) {
+            getItemList().sort(ledgerComparator);
+        }
+    }
+
+    private Date stringToDate(String str) throws ParseException {
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("mm/dd/yy");
+        Date inDate = inputDateFormat.parse(str);
+        return inDate;
+    }
+
+    public static Comparator<Ledger> ledgerComparator = new Comparator<Ledger>() {
+        @Override
+        public int compare(Ledger ledger1, Ledger ledger2) {
+            Date date1 = ledger1.getTransDate();
+            Date date2 = ledger2.getTransDate();
+            return date1.compareTo(date2);
+        }
+    };
+
+    @Override
+    public void run() {
+        setItemList(new ArrayList<>());
+        try {
+            config = ResourceBundle.getBundle(configName);
+            in = openFile("/home/rlittle/statement.txt");
+            doImport(in);
+            in.close();
+//            System.out.println("Beginning balance on " + startDate + ": " + beginningBalance.toString());
+//            System.out.println("Total deposits: " + totalDeposits.toString());
+//            System.out.println("Total withdrawals: " + totalWithdrawals.toString());
+//            System.out.println("Total checks: " + totalChecks.toString());
+//            System.out.println("Total fees: " + totalFees.toString());
+//            System.out.println("Ending balance on " + endDate + ": " + endingBalance.toString());
+//            System.out.println("Sorting list...");
+            doSort();
+            Float balance = beginningBalance;
+            DecimalFormat f = new DecimalFormat("#####.00");
+            if (f instanceof DecimalFormat) {
+                ((DecimalFormat) f).setDecimalSeparatorAlwaysShown(true);
+            }
+            for (Ledger l : getItemList()) {
+                balance += l.getTransAmt();
+                l.setTransBal(balance);
+//                System.out.println(l.getTransDate().toString() + " " + l.getTransDesc() + " " + f.format(l.getTransAmt()) + " " + f.format(balance));
+            }
+        } catch (MissingResourceException | NullPointerException e) {
+            System.out.println(e.toString());
+        } catch (IOException ex) {
+            System.out.println(ex.toString());
+            Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ParseException ex) {
+            Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * @return the itemList
+     */
+    public ArrayList<Ledger> getItemList() {
+        return itemList;
+    }
+
+    /**
+     * @param itemList the itemList to set
+     */
+    public void setItemList(ArrayList<Ledger> itemList) {
+        this.itemList = itemList;
+    }
 }

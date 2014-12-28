@@ -44,7 +44,7 @@ public final class SearchForm extends AnchorPane {
 
     SearchCriteria criteria;
     CategoryManager catManager;
-    
+
     Stage stage;
     Scene scene;
     private LedgerView view;
@@ -78,7 +78,7 @@ public final class SearchForm extends AnchorPane {
 
     @FXML
     ComboBox<String> cbSecondary;
-    
+
     @FXML
     ComboBox<String> cbStores;
 
@@ -93,7 +93,7 @@ public final class SearchForm extends AnchorPane {
         loader.setRoot(this);
         loader.setController(this);
         catManager = new CategoryManager();
-        
+
         stage = new Stage();
         scene = new Scene(this);
         txtSubject = new TextField();
@@ -102,22 +102,24 @@ public final class SearchForm extends AnchorPane {
         cbStores = new ComboBox<>();
         btnOk = new Button();
         btnCancel = new Button();
-        
+
         primaryCats = FXCollections.observableArrayList();
         subCats = FXCollections.observableArrayList();
         stores = FXCollections.observableArrayList();
-        
+
         primeCatMap = new HashMap<>();
         subCatMap = new HashMap<>();
         endDate = new DatePicker();
         startDate = new DatePicker();
+        minAmount = new TextField();
+        maxAmount = new TextField();
 
         try {
             loader.load();
         } catch (IOException ex) {
             Logger.getLogger(StoreForm.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
 
     public SearchForm(LedgerView view, SearchCriteria sc) {
@@ -144,7 +146,7 @@ public final class SearchForm extends AnchorPane {
             criteria = new SearchCriteria();
         }
 
-        if(startDate.getValue()==null) {
+        if (startDate.getValue() == null) {
             startDate.setValue(LocalDate.now());
         }
         if ("".equals(criteria.getStartDate())) {
@@ -152,14 +154,14 @@ public final class SearchForm extends AnchorPane {
         }
         startDate.setValue(LocalDate.parse(criteria.getStartDate()));
 
-        if(endDate.getValue()==null) {
+        if (endDate.getValue() == null) {
             endDate.setValue(startDate.getValue().minusDays(30));
         }
         if ("".equals(criteria.getEndDate())) {
             criteria.setEndDate(endDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
         endDate.setValue(LocalDate.parse(criteria.getEndDate()));
-        
+
         ObservableList<Category> list = catManager.getCategories();
         for (Category c : list) {
             if (null != c.getParent() && c.getParent() == 0) {
@@ -174,13 +176,13 @@ public final class SearchForm extends AnchorPane {
 
         cbSecondary.getItems().add("--Select--");
         cbSecondary.getSelectionModel().selectFirst();
-        
-        StoresManager storeManager=new StoresManager();
+
+        StoresManager storeManager = new StoresManager();
         stores = storeManager.getList("SELECT * FROM stores ORDER BY storeName");
-        for(Stores store : stores) {
+        for (Stores store : stores) {
             cbStores.getItems().add(store.getStoreName());
         }
-        
+
         setFormData();
         stage.setScene(scene);
         stage.setTitle("Search Form");
@@ -258,6 +260,23 @@ public final class SearchForm extends AnchorPane {
                 criteria.setSearchTarget(newValue.toString());
             }
         });
+
+        minAmount.textProperty().addListener(new ChangeListener() {
+
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                criteria.setMinAmount(newValue.toString());
+            }
+        });
+
+        maxAmount.textProperty().addListener(new ChangeListener() {
+
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                criteria.setMaxAmount(newValue.toString());
+            }
+        });
+
     }
 
     @FXML
@@ -269,6 +288,7 @@ public final class SearchForm extends AnchorPane {
         // AND l.transDate >= "2014-04-07" AND l.transDate <= "2014-04-21" 
         // AND l.transDesc like "%SPEED%";
         String sql = "";
+        float min, max;
 
         if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
             sql += " INNER join distribution d ON d.transId = l.id ";
@@ -301,6 +321,33 @@ public final class SearchForm extends AnchorPane {
             }
         }
 
+        min = 0;
+        max = 0;
+
+        if (criteria.getMinAmount() != null && !criteria.getMinAmount().isEmpty()) {
+            min = Float.parseFloat(criteria.getMinAmount());
+            if (sql.isEmpty()) {
+                sql += "WHERE ";
+            } else {
+                sql += " AND ";
+            }
+            sql += "l.transAmt >= ";
+            sql += criteria.getMinAmount();
+        }
+
+        if (criteria.getMaxAmount() != null && !criteria.getMaxAmount().isEmpty()) {
+            max = Float.parseFloat(criteria.getMaxAmount());
+            if (max >= min) {
+                if (sql.isEmpty()) {
+                    sql += "WHERE ";
+                } else {
+                    sql += " AND ";
+                }
+                sql += "l.transAmt <= ";
+                sql += criteria.getMaxAmount();
+            }
+        }
+
         if (!sql.isEmpty()) {
             if (criteria.getSearchTarget() != null && !criteria.getSearchTarget().isEmpty()) {
                 sql += " AND l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
@@ -311,13 +358,17 @@ public final class SearchForm extends AnchorPane {
             sql = "SELECT * FROM ledger l " + sql;
         }
 
+        System.out.println(
+                "SELECT statement: " + sql);
         criteria.setSqlStmt(sql);
-        criteria.getSqlProperty().set(sql);
+
+        criteria.getSqlProperty()
+                .set(sql);
         closeForm();
     }
 
     private void setFormData() {
-            
+
     }
 
     @FXML
