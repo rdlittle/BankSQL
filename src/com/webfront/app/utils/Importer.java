@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -32,9 +33,13 @@ public abstract class Importer implements Runnable {
     public static String configName;
     boolean headerDone;
  
+    public String accountNumber;
+    public String statementPeriod;
     public String startDate;
     public String endDate;
  
+    public HashMap<String,String> summary;
+    
     public Float beginningBalance;
     public Float endingBalance;
     public Float totalDeposits;
@@ -59,6 +64,18 @@ public abstract class Importer implements Runnable {
         this.totalFees = new Float(0);
         this.totalTransfers = new Float(0);
         this.itemList = new ArrayList<>();
+        summary = new HashMap<>();
+        summary.put("accountNumber", "");
+        summary.put("startDate","");
+        summary.put("endDate", "");
+        summary.put("beginningBalance", "");
+        summary.put("endingBalance", "");
+        summary.put("totalDeposits", "");
+        summary.put("totalWithdrawals", "");
+        summary.put("totalChecks", "");
+        summary.put("totalFees", "");
+        summary.put("totalTransfers", "");
+        summary.put("totalInterest", "");
     }
 
     public BufferedReader openFile(String fileName) {
@@ -151,5 +168,4 @@ public abstract class Importer implements Runnable {
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
-
 }

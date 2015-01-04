@@ -222,6 +222,7 @@ public class Bank extends Application {
                 if (importDone.getValue() == false) {
                     FileChooser fileChooser = new FileChooser();
                     fileChooser.setTitle("Select statement to import");
+                    fileChooser.setInitialDirectory(new File(config.getInstallDir()));
                     fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
                     fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
                     File selectedFile = fileChooser.showOpenDialog(primaryStage);
