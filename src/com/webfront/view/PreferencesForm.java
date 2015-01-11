@@ -8,10 +8,10 @@ package com.webfront.view;
 import com.webfront.app.utils.States;
 import com.webfront.bean.AccountManager;
 import com.webfront.model.Account;
+import com.webfront.model.Account.AccountStatus;
 import com.webfront.model.Account.AccountType;
 import com.webfront.model.Account.StatementFormat;
 import com.webfront.model.Config;
-import java.awt.event.FocusEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -27,8 +27,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -37,8 +35,8 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -48,24 +46,24 @@ import javafx.stage.Stage;
  * @author rlittle
  */
 public class PreferencesForm extends AnchorPane {
-    
+
     Stage stage;
     Scene scene;
     private static PreferencesForm form = null;
     private FXMLLoader loader = null;
-    
+
     @FXML
     TextField txtInstallLocation;
     @FXML
     Button btnBrowse;
     @FXML
     TextField txtTmpLoc;
-    
+
     @FXML
     ComboBox<String> cbAccounts;
     @FXML
     Button btnNew;
-    
+
     @FXML
     TextField txtAccountName;
     @FXML
@@ -86,10 +84,10 @@ public class PreferencesForm extends AnchorPane {
     TextField txtPostalCode;
     @FXML
     TextField txtPhone;
-    
+
     @FXML
     ComboBox<String> cbStates;
-    
+
     @FXML
     RadioButton rbChecking;
     @FXML
@@ -98,36 +96,45 @@ public class PreferencesForm extends AnchorPane {
     RadioButton rbCreditCard;
     @FXML
     ToggleGroup accountTypes;
-    
+
+    @FXML
+    RadioButton rbActive;
+    @FXML
+    RadioButton rbInactive;
+    @FXML
+    RadioButton rbClosed;
+    @FXML
+    ToggleGroup accountStatus;
+
     @FXML
     Button btnOk;
     @FXML
     Button btnCancel;
-    
+
     private final AccountManager acctMgr;
     private final ObservableList<Account> accountList;
     private final HashMap<String, Integer> accountMap;
     private Config config;
-    
+
     public SimpleBooleanProperty hasChanged;
-    public SimpleBooleanProperty accountChanged;
+    public SimpleBooleanProperty accountSelected;
     public SimpleStringProperty installDirProperty;
     public boolean isNewAccount;
     public Account account;
-    
+
     private PreferencesForm() {
         URL location = getClass().getResource("/com/webfront/app/fxml/SetupForm.fxml");
         ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         hasChanged = new SimpleBooleanProperty(false);
-        accountChanged = new SimpleBooleanProperty(false);
-        
+        accountSelected = new SimpleBooleanProperty(false);
+
         installDirProperty = new SimpleStringProperty();
         loader = new FXMLLoader(location, resources);
         stage = new Stage();
         scene = new Scene(this);
         stage.setScene(scene);
         stage.setTitle("Preferences");
-        
+
         txtInstallLocation = new TextField();
         txtTmpLoc = new TextField();
         txtAccountNumber = new TextField();
@@ -138,26 +145,30 @@ public class PreferencesForm extends AnchorPane {
         txtCity = new TextField();
         txtPhone = new TextField();
         txtPostalCode = new TextField();
-        
+
         cbAccounts = new ComboBox<>();
         cbStates = new ComboBox<>();
         cbStatementFormat = new ChoiceBox();
         btnBrowse = new Button();
-        
+
         rbChecking = new RadioButton();
         rbSavings = new RadioButton();
         rbCreditCard = new RadioButton();
-        
+
+        rbActive = new RadioButton();
+        rbInactive = new RadioButton();
+        rbClosed = new RadioButton();
+
         acctMgr = new AccountManager();
         accountList = FXCollections.observableArrayList(acctMgr.getAccounts());
         accountMap = new HashMap<>();
         accountList.stream().forEach((a) -> {
             accountMap.put(a.getAccountName(), a.getId());
         });
-        
+
         btnOk = new Button();
     }
-    
+
     @FXML
     public void btnBrowseOnAction() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -168,7 +179,7 @@ public class PreferencesForm extends AnchorPane {
         config.setInstallDir(installDir);
         hasChanged.set(true);
     }
-    
+
     @FXML
     public void btnBrowseTmpOnAction() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -179,7 +190,7 @@ public class PreferencesForm extends AnchorPane {
         config.setTmpDir(tmpDir);
         hasChanged.set(true);
     }
-    
+
     @FXML
     public void btnNewOnAction() {
         form.account = new Account();
@@ -187,30 +198,36 @@ public class PreferencesForm extends AnchorPane {
         form.cbAccounts.getSelectionModel().selectLast();
         form.loadAccount();
         form.txtBankName.requestFocus();
-        form.accountChanged.set(true);
+        form.accountSelected.set(true);
         form.isNewAccount = true;
     }
-    
+
     @FXML
     public void saveConfig() {
         config.setConfig();
     }
-    
+
     public static PreferencesForm getInstance(Config cfg) {
         if (form == null) {
             form = new PreferencesForm();
             form.config = cfg;
             form.loader.setRoot(form);
             form.loader.setController(form);
-            form.rbChecking.setUserData(AccountType.CHECKING.ordinal());
-            form.rbSavings.setUserData(AccountType.SAVINGS.ordinal());
-            form.rbCreditCard.setUserData(AccountType.CREDIT.ordinal());
+
             try {
                 form.loader.load();
                 form.cbAccounts.getItems().addAll(form.accountMap.keySet());
                 form.txtInstallLocation.setText(form.config.getInstallDir());
                 form.txtTmpLoc.setText(form.config.getTmpDir());
-                
+
+                form.rbChecking.setUserData(AccountType.CHECKING);
+                form.rbSavings.setUserData(AccountType.SAVINGS);
+                form.rbCreditCard.setUserData(AccountType.CREDIT);
+
+                form.rbActive.setUserData(AccountStatus.ACTIVE);
+                form.rbInactive.setUserData(AccountStatus.INACTIVE);
+                form.rbClosed.setUserData(AccountStatus.CLOSED);
+
                 form.cbAccounts.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
                     @Override
                     public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -221,21 +238,30 @@ public class PreferencesForm extends AnchorPane {
                         }
                     }
                 });
-                
+
                 form.cbAccounts.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
                     form.account.setAccountName(newValue);
                 });
-                
+
                 form.cbStates.getItems().addAll(new States().names.values());
                 form.cbStatementFormat.getItems().addAll(Account.StatementFormat.values());
-                
-                form.accountChanged.addListener(new InvalidationListener() {
+
+                form.accountSelected.addListener(new InvalidationListener() {
                     @Override
                     public void invalidated(Observable observable) {
+                        form.hasChanged.set(false);
                         form.btnOk.setDisable(false);
                     }
                 });
-                
+
+                form.hasChanged.addListener(new InvalidationListener() {
+                    @Override
+                    public void invalidated(Observable observable) {
+                        String value = observable.toString();
+                        form.btnOk.setDisable(false);
+                    }
+                });
+
                 form.txtBankName.focusedProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
@@ -244,17 +270,44 @@ public class PreferencesForm extends AnchorPane {
                         }
                     }
                 });
-                
+
                 form.txtAccountName.focusedProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         if (oldValue.equals(true) && newValue.equals(false)) {
                             form.account.setAccountName(form.txtAccountName.getText());
-                            System.out.println(form.txtAccountName.getText());
-                        }                
+                        }
+                    }
+                });
+
+                form.accountStatus.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+                    public void changed(ObservableValue<? extends Toggle> ov,
+                            Toggle old_toggle, Toggle new_toggle) {
+                        if (form.accountStatus.getSelectedToggle() != null) {
+                            Object obj = form.accountStatus.getSelectedToggle().getUserData();
+                            if (obj != null) {
+                                AccountStatus status = (AccountStatus) obj;
+                                form.account.setAccountStatus(status);
+                                form.hasChanged.set(true);
+                            }
+                        }
                     }
                 });
                 
+                form.accountTypes.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+                    public void changed(ObservableValue<? extends Toggle> ov,
+                            Toggle old_toggle, Toggle new_toggle) {
+                        if (form.accountTypes.getSelectedToggle() != null) {
+                            Object obj = form.accountTypes.getSelectedToggle().getUserData();
+                            if (obj != null) {
+                                AccountType type = (AccountType) obj;
+                                form.account.setAccountType(type);
+                                form.hasChanged.set(true);
+                            }
+                        }
+                    }
+                });                
+
                 form.btnOk.setDisable(true);
             } catch (IOException ex) {
                 Logger.getLogger(PreferencesForm.class.getName()).log(Level.SEVERE, null, ex);
@@ -262,13 +315,7 @@ public class PreferencesForm extends AnchorPane {
         }
         return form;
     }
-    
-    @FXML
-    public void changeAccountType(ActionEvent evt) {
-        System.out.println(evt.getSource().toString());
-        form.accountChanged.set(true);
-    }
-    
+
     private void loadAccount() {
         form.txtAccountName.setText(form.account.getAccountName());
         form.txtAccountNumber.setText(form.account.getAccountNumber());
@@ -293,32 +340,48 @@ public class PreferencesForm extends AnchorPane {
                     break;
             }
         }
+        if (form.account.getAccountStatus() != null) {
+            switch (form.account.getAccountStatus()) {
+                case ACTIVE:
+                    form.rbActive.setSelected(true);
+                    break;
+                case INACTIVE:
+                    form.rbInactive.setSelected(true);
+                    break;
+                case CLOSED:
+                    form.rbClosed.setSelected(true);
+                    break;
+            }
+        }
         StatementFormat stmFmt = form.account.getStatementFormat();
         if (stmFmt != null) {
             form.cbStatementFormat.selectionModelProperty().setValue(stmFmt.toString());
         }
         hasChanged.set(false);
-        form.accountChanged.set(false);
+        form.accountSelected.set(false);
         form.btnOk.setDisable(true);
     }
-    
+
     @FXML
     private void saveAccount() {
         AccountManager mgr = new AccountManager();
         if (isNewAccount) {
+            System.out.println("PreferencesForm.saveAccount() : new account " + form.account.toString());
             mgr.create(form.account);
             form.accountList.add(form.account);
         } else {
+            System.out.println("PreferencesForm.saveAccount() : update account " + form.account.toString());
             mgr.update(form.account);
         }
-        form.accountChanged.set(false);
+        form.accountSelected.set(false);
+        form.hasChanged.set(false);
         isNewAccount = false;
     }
-    
+
     public void showForm() {
         stage.showAndWait();
     }
-    
+
     @FXML
     public void closeForm() {
         form.stage.close();

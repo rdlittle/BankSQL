@@ -35,8 +35,8 @@ public final class AltBankImporter extends Importer implements Runnable {
     private boolean withdrawalsDone;
     private boolean feesDone;
 
-    public AltBankImporter(String fileName, String cfgName) {
-        super(fileName);
+    public AltBankImporter(String fileName, String cfgName, int accountId) {
+        super(fileName,accountId);
         configName = cfgName;
         checksDone=false;
         depositsDone=false;

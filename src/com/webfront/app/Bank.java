@@ -9,20 +9,24 @@ import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
 import com.webfront.app.utils.StringUtil;
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.DistributionManager;
 import com.webfront.controller.SummaryController;
+import com.webfront.model.Account;
+import com.webfront.model.Account.AccountStatus;
 import com.webfront.model.Config;
 import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import com.webfront.view.CategoryForm;
+import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PreferencesForm;
 import com.webfront.view.ReceiptsView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
-import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -32,6 +36,8 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -51,7 +57,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
@@ -72,6 +77,10 @@ public class Bank extends Application {
     String tmpDir;
     private final Config config;
     private final String defaultConfig = ".bankSQL";
+    ArrayList<Account> accountList;
+    final HashMap<Integer,LedgerView> viewList;
+    TabPane tabPane;
+    int accountId;
 
     public Bank() {
         this.sdp = new SimpleDoubleProperty();
@@ -80,7 +89,7 @@ public class Bank extends Application {
         bankName = "";
         config = Config.getInstance();
         bankName = config.getBankName();
-        this.importer = new CSVImporter("", bankName);
+        viewList = new HashMap<>();
         config.setConfig();
     }
 
@@ -115,23 +124,32 @@ public class Bank extends Application {
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
-        TabPane tabPane = new TabPane();
+        tabPane = new TabPane();
 
         Tab summaryTab = new Tab("Summary");
-        Tab ledgerTab = new Tab("Ledger");
         Tab storesTab = new Tab("Stores");
         Tab receiptsTab = new Tab("Receipts");
 
         summaryTab.setClosable(false);
-        ledgerTab.setClosable(false);
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
+
+        List<Tab> ledgers = new ArrayList<>();
+        setAccounts();
+        for (Account acct : accountList) {
+            LedgerView lv = LedgerView.newInstance(acct.getId());
+            lv.setPrefSize(scene.getWidth(), scene.getHeight());
+            lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+            viewList.put(acct.getId(), lv);
+            Tab t = new Tab(acct.getBankName());
+            t.setClosable(true);
+            t.setContent(lv);
+            ledgers.add(t);
+        }
 
         List<String> importTypes = new ArrayList<>();
         importTypes.add(".txt");
         importTypes.add(".csv");
-        LedgerView ledgerView = LedgerView.getInstance();
-        ledgerTab.setContent(ledgerView);
 
         StoresView stores = StoresView.getInstance();
         storesTab.setContent(stores);
@@ -186,7 +204,7 @@ public class Bank extends Application {
         });
 
         tabPane.getTabs().add(summaryTab);
-        tabPane.getTabs().add(ledgerTab);
+        tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
         tabPane.getTabs().add(receiptsTab);
 
@@ -200,9 +218,6 @@ public class Bank extends Application {
         ((VBox) scene.getRoot()).getChildren().add(menuBar);
         ((VBox) scene.getRoot()).getChildren().add(tabPane);
         ((VBox) scene.getRoot()).getChildren().add(statusPanel);
-
-        ledgerView.setPrefSize(scene.getWidth(), scene.getHeight());
-        ledgerView.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
 
         receipts.setPrefSize(scene.getWidth(), scene.getHeight());
         receipts.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
@@ -220,19 +235,21 @@ public class Bank extends Application {
             @Override
             public void invalidated(Observable observable) {
                 if (importDone.getValue() == false) {
-                    FileChooser fileChooser = new FileChooser();
-                    fileChooser.setTitle("Select statement to import");
-                    fileChooser.setInitialDirectory(new File(config.getInstallDir()));
-                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
-                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
-                    File selectedFile = fileChooser.showOpenDialog(primaryStage);
-                    if (selectedFile != null) {
-                        if (selectedFile.getAbsoluteFile().getName().contains("pdf")) {
-                            importer = new PDFImporter(selectedFile.getAbsolutePath());
+                    accountId = -1;
+                    ImportForm importForm = ImportForm.getInstance(accountList);
+                    if (importForm.selectedAccount >= 0) {
+                        accountId = importForm.selectedAccount;
+                    }
+                    if (importForm.fileName != null) {
+                        if (importForm.fileName.contains("pdf")) {
+                            importer = new PDFImporter(importForm.fileName, accountId);
+                        } else {
+                            importer = new CSVImporter(importForm.fileName, bankName, accountId);
                         }
+                    }
+                    if (accountId > 0 && !importForm.fileName.isEmpty()) {
                         progressBar.setVisible(true);
-                        String fileName = selectedFile.getAbsolutePath();
-                        importer.setFileName(fileName);
+                        importer.setFileName(importForm.fileName);
                         Thread t = new Thread(importer);
                         t.start();
                         while (t.isAlive()) {
@@ -250,8 +267,9 @@ public class Bank extends Application {
                                 Double itemCount = (double) list.size();
                                 Double progress = (double) 0;
                                 Double itemsCreated = (double) 0;
+                                LedgerView view = viewList.get(Integer.valueOf(accountId));
                                 for (Ledger item : list) {
-                                    ledgerView.getLedgerManager().create(item);
+                                    view.getLedgerManager().create(item);
                                     Distribution dist = new Distribution(item);
                                     dist.setCategory(item.getPrimaryCat());
                                     distMgr.create(dist);
@@ -267,10 +285,11 @@ public class Bank extends Application {
                             protected void succeeded() {
                                 super.succeeded();
                                 updateMessage("Done!");
-                                ledgerView.getTable().getItems().clear();
-                                ledgerView.getList().addAll(importer.getItemList());
-                                ledgerView.getList().sort(LedgerView.LedgerComparator);
-                                ledgerView.getTable().setItems(ledgerView.getList());
+                                LedgerView view = viewList.get(Integer.valueOf(accountId));
+                                view.getTable().getItems().clear();
+                                view.getList().addAll(importer.getItemList());
+                                view.getList().sort(LedgerView.LedgerComparator);
+                                view.getTable().setItems(view.getList());
                                 progressBar.progressProperty().unbind();
                                 progressBar.setProgress(0);
                                 progressBar.setVisible(false);
@@ -335,7 +354,6 @@ public class Bank extends Application {
             }
         });
 
-        //summaryTab.setContent(stores);
         SummaryController summaryController = SummaryController.getInstance();
         summaryController.buildSummary();
         summaryController.getView().setPrefSize(scene.getWidth(), scene.getHeight());
@@ -345,6 +363,15 @@ public class Bank extends Application {
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    public void setAccounts() {
+        accountList = new ArrayList<>();
+        AccountManager am = new AccountManager();
+        ObservableList<Account> l = FXCollections.observableArrayList(am.getList("Account.findAll"));
+        l.stream().filter((acct) -> (acct.getAccountStatus() != AccountStatus.CLOSED)).forEach((acct) -> {
+            accountList.add(acct);
+        });
     }
 
     /**

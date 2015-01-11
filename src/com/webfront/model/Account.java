@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "account")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Account.findAll", query = "SELECT acct FROM Account acct ORDER BY acct.bankName,acct.accountName"),
+    @NamedQuery(name = "Account.findAll", query = "SELECT acct FROM Account acct"),
     @NamedQuery(name = "Account.findById", query = "SELECT acct FROM Account acct WHERE acct.id = :id"),
     @NamedQuery(name = "Account.findByAccountName", query = "SELECT acct FROM Account acct WHERE acct.accountName = :accountName"),
     @NamedQuery(name = "Account.findByBankName", query = "SELECT acct FROM Account acct WHERE acct.bankName = :bankName"),
@@ -60,8 +60,11 @@ public class Account implements Serializable {
     private String postalCode;
     @Column
     private String phoneNumber;
+    
     @Column
-    private int accountStatus;
+    @Enumerated(EnumType.ORDINAL)
+    private AccountStatus accountStatus;
+    
     @Column
     @Enumerated(EnumType.ORDINAL)
     private AccountType accountType;
@@ -71,12 +74,10 @@ public class Account implements Serializable {
     private StatementFormat statementFormat;
 
     public static enum AccountType {
-
         CHECKING, SAVINGS, CREDIT;
     }
 
     public static enum StatementFormat {
-
         CSV, TAB, FIXED, PDF;
     }
     
@@ -229,14 +230,14 @@ public class Account implements Serializable {
     /**
      * @return the accountStatus
      */
-    public int getAccountStatus() {
+    public AccountStatus getAccountStatus() {
         return accountStatus;
     }
 
     /**
      * @param accountStatus the accountStatus to set
      */
-    public void setAccountStatus(int accountStatus) {
+    public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
     }
 
@@ -280,6 +281,25 @@ public class Account implements Serializable {
      */
     public void setStatementFormat(StatementFormat statementFormat) {
         this.statementFormat = statementFormat;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.id.toString());
+        sb.append(" ");
+        sb.append(this.accountName);
+        sb.append(" ");
+        sb.append(this.accountNumber);
+        sb.append(" ");
+        sb.append(this.bankName);
+        sb.append(" ");
+        sb.append(this.routingNumber);
+        sb.append(" ");
+        sb.append(this.accountType.toString());
+        sb.append(" ");
+        sb.append(this.accountStatus.toString());
+        return sb.toString();
     }
 
 }

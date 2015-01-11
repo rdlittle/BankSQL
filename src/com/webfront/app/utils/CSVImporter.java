@@ -32,8 +32,8 @@ public final class CSVImporter extends Importer {
     Pattern currencyPattern;
     Matcher currencyMatcher;
 
-    public CSVImporter(String fileName, String cfgName) {
-        super(fileName);
+    public CSVImporter(String fileName, String cfgName, int accountId) {
+        super(fileName,accountId);
         configName = cfgName;
         currencyPattern = Pattern.compile(currencyString);
     }
@@ -62,8 +62,9 @@ public final class CSVImporter extends Importer {
         Float amount;
         Float balance;
 
-        int lastId = LedgerView.getInstance().getLedgerManager().getLastId();
-        Ledger item = LedgerView.getInstance().getLedgerManager().getItem(lastId);
+        LedgerView view = LedgerView.newInstance(accountId);
+        int lastId = view.getLedgerManager().getLastId();
+        Ledger item = view.getLedgerManager().getItem(lastId);
         this.beginningBalance = item.getTransBal();
         this.endingBalance = this.beginningBalance;
         String[] fields;

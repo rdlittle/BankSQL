@@ -51,8 +51,10 @@ public abstract class Importer implements Runnable {
     private ArrayList<Ledger> itemList;
 
     private String fileName;
+    public int accountId;
 
-    public Importer(String fileName) {
+    public Importer(String fileName, int accountId) {
+        this.accountId = accountId;
         this.fileName = fileName;
         this.startDate = "";
         this.endDate = "";

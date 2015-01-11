@@ -35,6 +35,7 @@ import javafx.util.Callback;
  */
 public class LedgerView extends Pane {
 
+    public int accountNumber;
     static LedgerView ledgerView;
     private TableView<Ledger> table;
     private ObservableList<Ledger> list;
@@ -50,13 +51,14 @@ public class LedgerView extends Pane {
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
 
-    private LedgerView() {
+    private LedgerView(int acctNum) {
         super();
         
+        accountNumber = acctNum;
         ledgerManager = new LedgerManager();
         categoryManager = new CategoryManager();
 
-        list = ledgerManager.getList("Ledger.findAll");
+        list = ledgerManager.getList(Integer.toString(acctNum));
 
         table = new TableView<>();
         table.setMaxWidth(USE_PREF_SIZE);
@@ -155,11 +157,18 @@ public class LedgerView extends Pane {
         getChildren().addAll(vbox);
     }
 
-    public static LedgerView getInstance() {
+    public static LedgerView getInstance(int acctNum) {
         if (ledgerView == null) {
-            ledgerView = new LedgerView();
+            ledgerView = new LedgerView(acctNum);
         }
         return ledgerView;
+    }
+    
+    public static LedgerView newInstance(int acctNum) {
+        LedgerView view = new LedgerView(acctNum);
+        view.accountNumber=acctNum;
+        ledgerView = view;
+        return view;
     }
     
     public void doSearch(String sql) {

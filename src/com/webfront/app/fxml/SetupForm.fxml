@@ -19,13 +19,13 @@
                               <children>
                                   <TextField fx:id="txtBankName" layoutY="19.0" prefHeight="25.0" prefWidth="404.0" />
                                   <Label layoutX="2.0" layoutY="-3.0" text="Bank name" />
-                                  <RadioButton fx:id="rbSavings" layoutX="344.0" layoutY="106.0" mnemonicParsing="false" onAction="#changeAccountType" text="Savings">
+                                  <RadioButton fx:id="rbSavings" layoutX="344.0" layoutY="106.0" mnemonicParsing="false" text="Savings">
                                  <toggleGroup>
                                     <ToggleGroup fx:id="accountTypes" />
                                  </toggleGroup>
                               </RadioButton>
-                                  <RadioButton fx:id="rbChecking" layoutX="344.0" layoutY="81.0" mnemonicParsing="false" onAction="#changeAccountType" text="Checking" toggleGroup="$accountTypes" />
-                                  <RadioButton fx:id="rbCreditCard" layoutX="344.0" layoutY="131.0" mnemonicParsing="false" onAction="#changeAccountType" text="Credit Card" toggleGroup="$accountTypes" />
+                                  <RadioButton fx:id="rbChecking" layoutX="344.0" layoutY="81.0" mnemonicParsing="false" text="Checking" toggleGroup="$accountTypes" />
+                                  <RadioButton fx:id="rbCreditCard" layoutX="344.0" layoutY="131.0" mnemonicParsing="false" text="Credit Card" toggleGroup="$accountTypes" />
                                   <Label layoutX="1.2724609375" layoutY="103.5" text="Account number" />
                                   <TextField fx:id="txtAccountNumber" layoutY="122.0" prefHeight="25.0" prefWidth="239.0" />
                               <Label layoutX="349.0" layoutY="58.0" text="Account Type" />
@@ -51,6 +51,14 @@
                           </Pane>
                           <ComboBox fx:id="cbAccounts" layoutX="14.0" layoutY="18.0" prefHeight="25.0" prefWidth="261.0" />
                           <Button fx:id="btnNew" layoutX="283.0" layoutY="18.0" mnemonicParsing="false" onAction="#btnNewOnAction" prefHeight="25.0" prefWidth="66.0" text="New" />
+                        <RadioButton fx:id="rbActive" layoutX="142.0" layoutY="423.0" mnemonicParsing="false" text="Active">
+                           <toggleGroup>
+                              <ToggleGroup fx:id="accountStatus" />
+                           </toggleGroup>
+                        </RadioButton>
+                        <Label layoutX="14.0" layoutY="424.0" text="Account Status" />
+                        <RadioButton fx:id="rbInactive" layoutX="221.0" layoutY="423.0" mnemonicParsing="false" text="Inactive" toggleGroup="$accountStatus" />
+                        <RadioButton fx:id="rbClosed" layoutX="312.0" layoutY="423.0" mnemonicParsing="false" text="Closed" toggleGroup="$accountStatus" />
                      </children>
                   </AnchorPane>
             </content>

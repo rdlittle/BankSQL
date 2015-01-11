@@ -5,7 +5,9 @@
  */
 package com.webfront.app.utils;
 
+import com.webfront.bean.LedgerManager;
 import com.webfront.model.Config;
+import com.webfront.model.Ledger;
 import com.webfront.model.LedgerEntry;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -41,71 +43,100 @@ public class PDFImporter extends Importer {
     private String txtOutput;
     private final Config cfg = Config.getInstance();
     private BufferedReader txtReader;
+    Float lastBalance;
 
     ArrayList<LedgerEntry> entries;
 
-    public PDFImporter(String fileName) {
-        super(fileName);
+    public PDFImporter(String fileName, int accountId) {
+        super(fileName,accountId);
         this.fileName = fileName;
         entries = new ArrayList<>();
+        LedgerManager mgr = new LedgerManager();
+        Ledger item = mgr.getItem(mgr.getLastId());
+        lastBalance = item.getTransBal();
     }
 
     @Override
     public void doImport(BufferedReader reader) throws IOException, ParseException {
         PDFTextStripper pdfStripper = new PDFTextStripper();
         BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(fileName));
-        PDDocument document = PDDocument.load(inStream);
-        txtOutput = pdfStripper.getText(document);
-        try (FileWriter writer = new FileWriter(cfg.getTmpDir() + cfg.getFileSep() + "pdfOut.txt")) {
-            writer.write(txtOutput);
-            writer.close();
-            txtReader = new BufferedReader(new FileReader(cfg.getTmpDir() + cfg.getFileSep() + "pdfOut.txt"));
-        }
-        getConfig();
-        Element root = xmlDoc.getRootElement();
-        for (Element element : root.getChildren()) {
-            int lines = 1;
-            try {
-                if (element.getAttribute("lines") != null) {
-                    lines = element.getAttribute("lines").getIntValue();
-                }
-                switch (element.getName()) {
-                    case ("ignore"):
-                        String str;
-                        for (int l = 1; l <= lines; l++) {
-                            str = txtReader.readLine();
-                        }
-                        break;
-                    case ("header"):
-                        for (Element section : element.getChildren()) {
-                            processHeader(section);
-                        }
-                        break;
-                    case ("summary"):
-                        processElement(element, lines);
-                        break;
-                    case ("detail"):
-                        for (Element section : element.getChildren()) {
-                            if (section.getName().equals("ignore")) {
-                                if (section.getAttribute("lines") != null) {
-                                    lines = Integer.parseInt(section.getAttributeValue("lines"));
-                                    for (int l = 1; l <= lines; l++) {
-                                        str = txtReader.readLine();
-                                    }
-                                }
-                            } else {
-                                processSection(section);
+        try (PDDocument document = PDDocument.load(inStream)) {
+            txtOutput = pdfStripper.getText(document);
+            try (FileWriter writer = new FileWriter(cfg.getTmpDir() + cfg.getFileSep() + "pdfOut.txt")) {
+                writer.write(txtOutput);
+                writer.close();
+                txtReader = new BufferedReader(new FileReader(cfg.getTmpDir() + cfg.getFileSep() + "pdfOut.txt"));
+            }
+            getConfig();
+            Element root = xmlDoc.getRootElement();
+            for (Element element : root.getChildren()) {
+                int lines = 1;
+                try {
+                    if (element.getAttribute("lines") != null) {
+                        lines = element.getAttribute("lines").getIntValue();
+                    }
+                    switch (element.getName()) {
+                        case ("ignore"):
+                            String str;
+                            for (int l = 1; l <= lines; l++) {
+                                str = txtReader.readLine();
                             }
-                        }
-                        break;
-                    case ("footer"):
-                        break;
+                            break;
+                        case ("header"):
+                            for (Element section : element.getChildren()) {
+                                processHeader(section);
+                            }
+                            break;
+                        case ("summary"):
+                            processElement(element, lines);
+                            break;
+                        case ("detail"):
+                            for (Element section : element.getChildren()) {
+                                if (section.getName().equals("ignore")) {
+                                    if (section.getAttribute("lines") != null) {
+                                        lines = Integer.parseInt(section.getAttributeValue("lines"));
+                                        for (int l = 1; l <= lines; l++) {
+                                            str = txtReader.readLine();
+                                        }
+                                    }
+                                } else {
+                                    processSection(section);
+                                }
+                            }
+                            break;
+                        case ("footer"):
+                            break;
+                    }
+                } catch (DataConversionException ex) {
+                    Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } catch (DataConversionException ex) {
-                Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        document.close();
+        entries.sort(LedgerEntry.LedgerComparator);
+        for(LedgerEntry item : entries) {
+            java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
+            String amountString = item.getAmount();
+            boolean isCredit = true;
+            if(item.getAmount().startsWith("-")) {
+                isCredit = false;
+                String amt = item.getAmount().replaceFirst("-", "");
+                item.setAmount(amt);
+            }
+            float amount = Float.parseFloat(amountString);
+            if (isCredit) {
+                lastBalance += amount;
+                totalDeposits+=amount;
+            } else {
+                lastBalance -= amount;
+                totalWithdrawals+=amount;
+            }
+            Ledger ledger = new Ledger(null,date,amount,lastBalance,accountId);
+            if(item.getDescription().length()>120) {
+                item.setDescription(item.getDescription().substring(0,119));
+            }
+            ledger.setTransDesc(item.getDescription());
+            getItemList().add(ledger);
+        }
     }
 
     public void processElement(Element e, int lines) {
@@ -138,6 +169,21 @@ public class PDFImporter extends Importer {
                             String tag = dataLine.getAttributeValue("content");
                             summary.put(tag, data[fieldNum]);
                             System.out.println(tag + " " + data[fieldNum]);
+                            data[fieldNum]=data[fieldNum].replaceAll(",", "");
+                            switch(tag) {
+                                case "beginningBalance":
+                                    beginningBalance=Float.parseFloat(data[fieldNum]);
+                                    break;
+                                case "totalDeposits":
+                                    totalDeposits=Float.parseFloat(data[fieldNum]);
+                                    break;
+                                case "totalWithdrawals":
+                                    totalWithdrawals=Float.parseFloat(data[fieldNum]);
+                                    break;
+                                case "endingBalance":
+                                    endingBalance=Float.parseFloat(data[fieldNum]);
+                                    break;                                    
+                            }
                         }
                     }
                 }
@@ -184,8 +230,10 @@ public class PDFImporter extends Importer {
                 } else if (contentDesc.equals("statementInfo")) {
                     if (summary.get("startDate").isEmpty() || summary.get("startDate") == "") {
                         summary.put("startDate", text);
+                        this.startDate=text;
                     } else {
                         summary.put("endDate", text);
+                        this.endDate=text;
                     }
                 }
                 System.out.println(text);
@@ -248,11 +296,17 @@ public class PDFImporter extends Importer {
                                 text = matcher.replaceFirst("");
                             }
                             if (tag.equals("amount")) {
-                                if(sign.equals("-")) {
-                                    value = sign+value;
+                                if (sign.equals("-")) {
+                                    value = sign + value;
                                 }
                                 entry.setAmount(value);
                                 text = matcher.replaceFirst("");
+                                if(section.getAttributeValue("content").equals("fees")) {
+                                    String amt = entry.getAmount();
+                                    amt=amt.replaceAll("-", "");
+                                    amt=amt.replaceAll(",", "");
+                                    totalFees+=Float.parseFloat(amt);
+                                }
                             }
                             if (tag.equals("description")) {
                                 entry.setDescription(value);

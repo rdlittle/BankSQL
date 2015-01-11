@@ -54,8 +54,8 @@ public class SummaryController {
                 pieChartData.put(c.getId(), new PieChart.Data(c.getDescription(), 0));
             }
         }
-        stmt = "SELECT * FROM LEDGER ";
-        ObservableList<Ledger> ledgerList = ledgerMgr.getList(stmt);
+        stmt = "SELECT * FROM ledger";
+        ObservableList<Ledger> ledgerList = ledgerMgr.doSqlQuery(stmt);
         for (Ledger l : ledgerList) {
             if (l.getPrimaryCat() != null) {
                 int idx = l.getPrimaryCat().getId();

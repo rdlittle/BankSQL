@@ -19,7 +19,8 @@ public class LedgerManager extends DBManager implements Serializable {
 
     @Override
     public ObservableList<Ledger> getList(String q) {
-        Query query = em.createNamedQuery("Ledger.findAll");
+        Query query = em.createNamedQuery("Ledger.findByAccountNum");
+        query.setParameter("accountNum", Integer.parseInt(q));
         List<Ledger> list = query.getResultList();
         ObservableList olist = FXCollections.observableList(list);
         return olist;
