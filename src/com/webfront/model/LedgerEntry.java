@@ -22,6 +22,7 @@ public class LedgerEntry {
     private String date;
     private String description;
     private String refNumber;
+    private String checkNumber;
     private String amount;
     private float balance;
     private String dateFormat;
@@ -32,6 +33,7 @@ public class LedgerEntry {
         refNumber = "";
         amount = "";
         balance = 0;
+        checkNumber = "";
         dateFormat = "MM/dd/yyyy";
     }
 
@@ -82,6 +84,8 @@ public class LedgerEntry {
             int dateMonth = Integer.parseInt(date.substring(0,date.indexOf("/")));
             if(dateMonth>currMonth) {
                 date += date.indexOf("-") > 0 ? "-" : "/"+Integer.toString(currYear-1);
+            } else {
+                date += date.indexOf("-") > 0 ? "-" : "/"+Integer.toString(currYear);
             }
         }
         this.date = date;
@@ -141,5 +145,19 @@ public class LedgerEntry {
      */
     public void setBalance(float balance) {
         this.balance = balance;
+    }
+
+    /**
+     * @return the checkNumber
+     */
+    public String getCheckNumber() {
+        return checkNumber;
+    }
+
+    /**
+     * @param checkNumber the checkNumber to set
+     */
+    public void setCheckNumber(String checkNumber) {
+        this.checkNumber = checkNumber;
     }
 }

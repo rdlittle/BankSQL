@@ -17,7 +17,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -44,16 +48,30 @@ public class PDFImporter extends Importer {
     private final Config cfg = Config.getInstance();
     private BufferedReader txtReader;
     Float lastBalance;
+    Integer currentLine;
+
+    class ElementNotFoundException extends Exception {
+
+        public ElementNotFoundException(String msg) {
+            super(msg);
+        }
+    };
 
     ArrayList<LedgerEntry> entries;
+    HashMap<Integer, String> buffer;
+    HashMap<String, Integer> markers;
+    TreeSet sectionMarks;
 
     public PDFImporter(String fileName, int accountId) {
-        super(fileName,accountId);
+        super(fileName, accountId);
         this.fileName = fileName;
         entries = new ArrayList<>();
         LedgerManager mgr = new LedgerManager();
-        Ledger item = mgr.getItem(mgr.getLastId());
+        Ledger item = mgr.getItem(mgr.getLastId(accountId));
         lastBalance = item.getTransBal();
+        buffer = new HashMap<>();
+        markers = new HashMap<>();
+        currentLine = 0;
     }
 
     @Override
@@ -66,58 +84,87 @@ public class PDFImporter extends Importer {
                 writer.write(txtOutput);
                 writer.close();
                 txtReader = new BufferedReader(new FileReader(cfg.getTmpDir() + cfg.getFileSep() + "pdfOut.txt"));
-            }
-            getConfig();
-            Element root = xmlDoc.getRootElement();
-            for (Element element : root.getChildren()) {
-                int lines = 1;
-                try {
-                    if (element.getAttribute("lines") != null) {
-                        lines = element.getAttribute("lines").getIntValue();
-                    }
-                    switch (element.getName()) {
-                        case ("ignore"):
-                            String str;
-                            for (int l = 1; l <= lines; l++) {
-                                str = txtReader.readLine();
-                            }
-                            break;
-                        case ("header"):
-                            for (Element section : element.getChildren()) {
-                                processHeader(section);
-                            }
-                            break;
-                        case ("summary"):
-                            processElement(element, lines);
-                            break;
-                        case ("detail"):
-                            for (Element section : element.getChildren()) {
-                                if (section.getName().equals("ignore")) {
-                                    if (section.getAttribute("lines") != null) {
-                                        lines = Integer.parseInt(section.getAttributeValue("lines"));
-                                        for (int l = 1; l <= lines; l++) {
-                                            str = txtReader.readLine();
-                                        }
-                                    }
-                                } else {
-                                    processSection(section);
-                                }
-                            }
-                            break;
-                        case ("footer"):
-                            break;
-                    }
-                } catch (DataConversionException ex) {
-                    Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
+                String text = "";
+                while (text != null) {
+                    text = txtReader.readLine();
+                    buffer.put(currentLine++, text);
                 }
             }
+            getConfig();
+            currentLine = 0;
+            Element root = xmlDoc.getRootElement();
+            int maxLines = buffer.size() - 3;
+            int markedLine = 0;
+            // Scan the output and mark the start of each section
+            for (Element el : root.getChildren()) {
+                for (Element section : el.getChildren()) {
+                    String sectionName = section.getAttributeValue("content");
+                    Element startElement = section.getChild("start");
+                    Element endElement = section.getChild("end");
+                    if (startElement != null) {
+                        boolean endHasBounds = true;
+                        if (endElement.getAttribute("bounded") != null) {
+                            String bounds = endElement.getAttributeValue("bounded");
+                            if (bounds.equals("false")) {
+                                endHasBounds = false;
+                            }
+                        }
+                        Pattern linePattern = Pattern.compile(startElement.getText());
+                        String text = "";
+                        boolean elementFound = false;
+                        while (currentLine < maxLines) {
+                            text = buffer.get(currentLine++);
+                            if (linePattern.matcher(text).matches()) {
+                                markedLine = currentLine - 1;
+                                markers.put(sectionName, markedLine);
+                                elementFound = true;
+                                if(!endHasBounds) {
+                                    currentLine--;
+                                }
+                                break;
+                            }
+                        }
+                        if (!elementFound) {
+                            currentLine = markedLine;
+                        }
+                    }
+                }
+            }
+
+            ArrayList<Integer> lineNumbers = new ArrayList<>(markers.values());
+            lineNumbers.sort(new Comparator<Integer>() {
+                @Override
+                public int compare(Integer o1, Integer o2) {
+                    return o1.compareTo(o2);
+                }
+            });
+            sectionMarks = new TreeSet(markers.values());
+            currentLine = 0;
+            for (Element element : root.getChildren()) {
+                int lines = 0;
+                if (element.getAttribute("lines") != null) {
+                    lines = element.getAttribute("lines").getIntValue();
+                }
+                for (Element section : element.getChildren()) {
+                    String contentDesc;
+                    contentDesc = (section.getAttribute("content") == null ? "" : section.getAttributeValue("content"));
+                    if (markers.containsKey(contentDesc)) {
+                        currentLine = markers.get(contentDesc);
+                        processSection(section);
+                    }
+                }
+            }
+        } catch (DataConversionException ex) {
+            Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ElementNotFoundException ex) {
+            Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
         }
         entries.sort(LedgerEntry.LedgerComparator);
-        for(LedgerEntry item : entries) {
+        for (LedgerEntry item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
             String amountString = item.getAmount();
             boolean isCredit = true;
-            if(item.getAmount().startsWith("-")) {
+            if (item.getAmount().startsWith("-")) {
                 isCredit = false;
                 String amt = item.getAmount().replaceFirst("-", "");
                 item.setAmount(amt);
@@ -125,208 +172,168 @@ public class PDFImporter extends Importer {
             float amount = Float.parseFloat(amountString);
             if (isCredit) {
                 lastBalance += amount;
-                totalDeposits+=amount;
+                totalDeposits += amount;
             } else {
                 lastBalance -= amount;
-                totalWithdrawals+=amount;
+                totalWithdrawals += amount;
             }
-            Ledger ledger = new Ledger(null,date,amount,lastBalance,accountId);
-            if(item.getDescription().length()>120) {
-                item.setDescription(item.getDescription().substring(0,119));
+            Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);
+            if (item.getDescription().length() > 120) {
+                item.setDescription(item.getDescription().substring(0, 119));
+            }
+            if (item.getCheckNumber() != null && !item.getCheckNumber().isEmpty()) {
+                ledger.setCheckNum(item.getCheckNumber());
+                totalChecks -= amount;
             }
             ledger.setTransDesc(item.getDescription());
             getItemList().add(ledger);
         }
     }
 
-    public void processElement(Element e, int lines) {
-        List<Element> children = e.getChildren();
-        int currLine = 0;
-        for (Element child : children) {
-            boolean hasFormat = false;
-            String content = child.getAttributeValue("content");
-            String format = child.getAttributeValue("format");
-            String text = child.getText();
-            if (format != null && format.equals("regex")) {
-                hasFormat = true;
-            }
-            try {
-                String str = txtReader.readLine().trim();
-                if (hasFormat) {
-                    Pattern p = Pattern.compile(text);
-                    Matcher m = p.matcher(str);
-                    if (m.matches()) {
-                        System.out.println(str);
-                    }
-                }
-                if (content.equals("data")) {
-                    int fields = Integer.parseInt(child.getAttributeValue("fields"));
-                    String delimiter = child.getAttributeValue("delimiter");
-                    String[] data = str.split(delimiter);
-                    for (Element dataLine : child.getChildren()) {
-                        if (dataLine.getName().equals("field")) {
-                            int fieldNum = Integer.parseInt(dataLine.getAttributeValue("number"));
-                            String tag = dataLine.getAttributeValue("content");
-                            summary.put(tag, data[fieldNum]);
-                            System.out.println(tag + " " + data[fieldNum]);
-                            data[fieldNum]=data[fieldNum].replaceAll(",", "");
-                            switch(tag) {
-                                case "beginningBalance":
-                                    beginningBalance=Float.parseFloat(data[fieldNum]);
-                                    break;
-                                case "totalDeposits":
-                                    totalDeposits=Float.parseFloat(data[fieldNum]);
-                                    break;
-                                case "totalWithdrawals":
-                                    totalWithdrawals=Float.parseFloat(data[fieldNum]);
-                                    break;
-                                case "endingBalance":
-                                    endingBalance=Float.parseFloat(data[fieldNum]);
-                                    break;                                    
-                            }
-                        }
-                    }
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-
-    public void processHeader(Element section) {
-        String contentDesc = (section.getAttribute("content") == null ? "" : section.getAttributeValue("content"));
-        Element startElement = section.getChild("start");
-        Element endElement = section.getChild("end");
-        Element lineDefinition = section.getChild("line");
-        Pattern linePattern = Pattern.compile(lineDefinition.getText());
-        Pattern endPattern = Pattern.compile(endElement.getText());
-
-        int lines = 1;
-        String text = "";
-
-        if (startElement.getAttributeValue("lines") != null) {
-            lines = Integer.parseInt(startElement.getAttributeValue("lines"));
-            for (int l = 1; l <= lines; l++) {
-                try {
-                    text = txtReader.readLine().trim();
-                } catch (IOException ex) {
-                    Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-
-        Matcher endMatcher = endPattern.matcher(text);
-        Matcher lineMatcher = linePattern.matcher(text);
-
-        if (endMatcher.matches()) {
-            return;
-        }
-
-        if (lineMatcher != null) {
-            while (lineMatcher.find()) {
-                text = lineMatcher.group();
-                if (contentDesc.equals("accountInfo")) {
-                    summary.put("accountNumber", text);
-                } else if (contentDesc.equals("statementInfo")) {
-                    if (summary.get("startDate").isEmpty() || summary.get("startDate") == "") {
-                        summary.put("startDate", text);
-                        this.startDate=text;
-                    } else {
-                        summary.put("endDate", text);
-                        this.endDate=text;
-                    }
-                }
-                System.out.println(text);
-            }
-        }
-    }
-
-    public void processSection(Element section) {
+    public void processSection(Element section) throws ElementNotFoundException {
         String name = section.getName();
+        boolean hasEntry = false;
         String contentDesc = (section.getAttribute("content") == null ? "" : section.getAttributeValue("content"));
         int lines = 1;
+        int maxLines = 0;
+        int linesProcessed = 0;
+        boolean endHasBounds = true;
         Element startElement = section.getChild("start");
         Element endElement = section.getChild("end");
         Element dataDefinition = section.getChild("data");
         Element lineDefinition = section.getChild("line");
         Pattern dataPattern = null;
         Pattern linePattern = null;
-        String sign = (section.getAttribute("sign") == null ? "+" : section.getAttributeValue("sign"));
+        String transType = (section.getAttribute("type") == null ? "info" : section.getAttributeValue("type"));
+        String prevLine = "";
+        int nextSection = buffer.size() - 1;
+        if (sectionMarks.higher(currentLine) != null) {
+            nextSection = (int) sectionMarks.higher(currentLine);
+        }
 
         if (startElement.getAttributeValue("lines") != null) {
             lines = Integer.parseInt(startElement.getAttributeValue("lines"));
-            String text;
-            for (int l = 1; l <= lines; l++) {
-                try {
-                    text = txtReader.readLine().trim();
-                } catch (IOException ex) {
-                    Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            currentLine += lines;
         }
         if (lineDefinition != null) {
             linePattern = Pattern.compile(lineDefinition.getText());
+            if (lineDefinition.getAttribute("lines") != null) {
+                String l = lineDefinition.getAttributeValue("lines");
+                if (!l.equals("+")) {
+                    maxLines = Integer.parseInt(lineDefinition.getAttributeValue("lines"));
+                }
+            }
+        }
+        if (endElement.getAttribute("bounded") != null) {
+            String bounds = endElement.getAttributeValue("bounded");
+            if (bounds.equals("false")) {
+                endHasBounds = false;
+            }
         }
         Pattern endPattern = Pattern.compile(endElement.getText());
-        while (true) {
-            try {
-                String text = txtReader.readLine().trim();
-                Matcher lineMatcher = null;
-                if (lineDefinition != null) {
-                    lineMatcher = linePattern.matcher(text);
+        while (currentLine<nextSection) {
+            prevLine = buffer.get(currentLine - 1);
+            String text = buffer.get(currentLine++);
+            Matcher lineMatcher = null;
+            if (lineDefinition != null) {
+                lineMatcher = linePattern.matcher(text);
+            }
+            Matcher endMatcher = endPattern.matcher(text);
+            if (endMatcher.matches()) {
+                if (!endHasBounds) {
+                    currentLine -= 1;
                 }
-                Matcher endMatcher = endPattern.matcher(text);
-                if (endMatcher.matches()) {
-                    break;
+                break;
+            } else {
+                if (currentLine >= buffer.size()) {
+                    throw new ElementNotFoundException("Not found");
                 }
-                if (lineMatcher != null && lineMatcher.matches()) {
+            }
+            if (lineMatcher != null && lineMatcher.matches()) {
+                if (!contentDesc.equals("discard")) {
                     System.out.println(text);
-                    if (dataDefinition != null) {
-                        LedgerEntry entry = new LedgerEntry();
-                        for (Element dataLine : dataDefinition.getChildren()) {
-                            String tag = dataLine.getAttributeValue("content");
-                            String regex = dataLine.getText();
-                            Matcher matcher = Pattern.compile(regex).matcher(text);
-                            String value = "";
-                            if (matcher.find()) {
-                                value = matcher.group();
-                            }
-                            if (tag.equals("date")) {
+                }
+                hasEntry = false;
+                if (dataDefinition != null) {
+                    LedgerEntry entry = new LedgerEntry();
+                    for (Element dataLine : dataDefinition.getChildren()) {
+                        String tag = dataLine.getAttributeValue("content");
+                        String regex = dataLine.getText();
+                        Matcher matcher = Pattern.compile(regex).matcher(text);
+                        String value = "";
+                        if (matcher.find()) {
+                            value = matcher.group();
+                        }
+                        switch (tag) {
+                            case "beginningBalance":
+                                beginningBalance = Float.parseFloat(value.replaceAll(",", ""));
+                                break;
+                            case "totalDeposits":
+                                value.replaceAll(",", "");
+                                totalDeposits = Float.parseFloat(value.replaceAll(",", ""));
+                                break;
+                            case "totalWithdrawals":
+                                value.replaceAll(",", "");
+                                totalWithdrawals = Float.parseFloat(value.replaceAll(",", ""));
+                                break;
+                            case "endingBalance":
+                                value.replaceAll(",", "");
+                                endingBalance = Float.parseFloat(value.replaceAll(",", ""));
+                                break;
+                            case "accountNumber":
+                                summary.put("accountNumber", value);
+                                break;
+                            case "periodFrom":
+                                summary.put("startDate", value);
+                                break;
+                            case "periodTo":
+                                summary.put("endDate", value);
+                                break;
+                            case "date":
                                 entry.setDate(value);
                                 text = matcher.replaceFirst("");
-                            }
-                            if (tag.equals("amount")) {
-                                if (sign.equals("-")) {
-                                    value = sign + value;
+                                break;
+                            case "check":
+                                entry.setCheckNumber(value);
+                                break;
+                            case "amount":
+                                if (transType.equals("debit")) {
+                                    value = "-" + value;
                                 }
                                 entry.setAmount(value);
                                 text = matcher.replaceFirst("");
-                                if(section.getAttributeValue("content").equals("fees")) {
+                                if (section.getAttributeValue("content").equals("fees")) {
                                     String amt = entry.getAmount();
-                                    amt=amt.replaceAll("-", "");
-                                    amt=amt.replaceAll(",", "");
-                                    totalFees+=Float.parseFloat(amt);
+                                    amt = amt.replaceAll("-", "");
+                                    amt = amt.replaceAll(",", "");
+                                    totalFees += Float.parseFloat(amt);
                                 }
-                            }
-                            if (tag.equals("description")) {
+                                break;
+                            case "description":
                                 entry.setDescription(value);
-                            }
-                        }
-                        if (!contentDesc.equals("dailyBalance")) {
-                            entries.add(entry);
+                                break;
                         }
                     }
-                } else {
+                    if (maxLines > 0 && ++linesProcessed == maxLines) {
+                        return;
+                    }
+                    if (!contentDesc.equals("dailyBalance") && !contentDesc.endsWith("Info")) {
+                        entries.add(entry);
+                        hasEntry = true;
+                    }
+                }
+            } else {
+                if (linePattern.matcher(prevLine).matches() && hasEntry) {
                     if (!contentDesc.equals("dailyBalance")) {
                         int lastEntry = entries.size() - 1;
                         LedgerEntry entry = entries.get(lastEntry);
                         entry.setDescription(entry.getDescription() + " " + text);
                         entries.set(lastEntry, entry);
+                        hasEntry = false;
                     }
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
             }
+
         }
     }
 

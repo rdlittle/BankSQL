@@ -45,10 +45,17 @@ public class LedgerManager extends DBManager implements Serializable {
      *
      * @return most recent entry in the ledger
      */
-    public int getLastId() {
-        Query query=em.createNativeQuery("SELECT id FROM ledger ORDER BY id DESC LIMIT 0,1");
+    public int getLastId(int accountNum) {
+        String queryString="SELECT id FROM ledger WHERE accountNum = ";
+        queryString += Integer.toString(accountNum);
+        queryString += " ORDER BY id DESC LIMIT 0,1";
+        Query query=em.createNativeQuery(queryString);
         List<Integer> result=query.getResultList();
         return result.get(0);
     }
+    
+    public int getLastId() {
+        return 1;
+    }    
 
 }

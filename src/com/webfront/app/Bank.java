@@ -237,10 +237,14 @@ public class Bank extends Application {
                 if (importDone.getValue() == false) {
                     accountId = -1;
                     ImportForm importForm = ImportForm.getInstance(accountList);
+                    if(importForm.selectedAccount<0 && importForm.fileName.isEmpty()) {
+                        ImportForm.setForm(null);
+                        return;
+                    }
                     if (importForm.selectedAccount >= 0) {
                         accountId = importForm.selectedAccount;
                     }
-                    if (importForm.fileName != null) {
+                    if (importForm.fileName != null && !importForm.fileName.isEmpty()) {
                         if (importForm.fileName.contains("pdf")) {
                             importer = new PDFImporter(importForm.fileName, accountId);
                         } else {
@@ -251,6 +255,9 @@ public class Bank extends Application {
                         progressBar.setVisible(true);
                         importer.setFileName(importForm.fileName);
                         Thread t = new Thread(importer);
+                        importForm.fileName="";
+                        importForm.selectedAccount=0;
+                        ImportForm.setForm(null);
                         t.start();
                         while (t.isAlive()) {
                             try {
@@ -276,7 +283,6 @@ public class Bank extends Application {
                                     itemsCreated += 1;
                                     progress = itemsCreated / itemCount;
                                     updateProgress(progress, 1);
-                                    //System.out.println(progressBar.getProgress() + " (" + itemsCreated + " of " + itemCount + ")");
                                 }
                                 return null;
                             }

@@ -122,7 +122,7 @@ public abstract class Importer implements Runnable {
             ((DecimalFormat) f).setDecimalSeparatorAlwaysShown(true);
         }
         try {
-            config = ResourceBundle.getBundle(configName);
+//            config = ResourceBundle.getBundle(configName);
             in = openFile(getFileName());
             doImport(in);
             in.close();
