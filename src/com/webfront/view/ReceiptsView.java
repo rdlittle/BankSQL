@@ -41,7 +41,7 @@ import javafx.util.Callback;
  */
 public class ReceiptsView extends Pane {
 
-    static ReceiptsView receiptsView;
+    private static ReceiptsView receiptsView;
 
     private ObservableList<Receipts> list;
     private ObservableList<Stores> storeList;
@@ -66,7 +66,7 @@ public class ReceiptsView extends Pane {
 
     Button btnAdd;
 
-    private ReceiptsView() {
+    public ReceiptsView() {
         super();
         storeAdded = new SimpleBooleanProperty();
         storeAdded.set(false);
@@ -80,11 +80,6 @@ public class ReceiptsView extends Pane {
         storeList = FXCollections.observableArrayList();
         categoryList = (ObservableList<Category>) categoryManager.getCategories();
         list = receiptsManager.getList("SELECT * FROM receipts ORDER BY transDate DESC");
-
-        btnAdd = new Button("Add Receipt");
-        btnAdd.setOnAction((ActionEvent event) -> {
-            ReceiptForm receiptForm = new ReceiptForm(receiptsView, new Receipts());
-        });
 
         table = new TableView<>();
         table.setMinWidth(1300.0);
@@ -116,15 +111,15 @@ public class ReceiptsView extends Pane {
 //                    if(tmpList.size()==0) {
 //                        System.out.println("no receipts");
 //                    }
-                    if (l.getReceipts() != null && l.getReceipts().size()>0) {
+                    if (l.getReceipts() != null && l.getReceipts().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
-                    if(l.getReceipts()==null) {
-                        System.out.println(param.getValue().getId()+" Ledger.getReceipts() is null when in ReceiptsView.transIdColumn callback");
+                    if (l.getReceipts() == null) {
+                        System.out.println(param.getValue().getId() + " Ledger.getReceipts() is null when in ReceiptsView.transIdColumn callback");
                     } else {
-                        System.out.println(param.getValue().getId()+" Ledger.getReceipts() size is "+l.getReceipts().size()+" when in ReceiptsView.transIdColumn callback");
+                        System.out.println(param.getValue().getId() + " Ledger.getReceipts() size is " + l.getReceipts().size() + " when in ReceiptsView.transIdColumn callback");
                     }
-                } 
+                }
                 //System.out.println(param.getValue().getId()+" has null ledger entry when in ReceiptsView.transIdColumn callback");
                 return null;
             }
@@ -176,6 +171,7 @@ public class ReceiptsView extends Pane {
         transAmtColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transAmtColumn.setMinWidth(100.0);
 
+        table.getItems().addAll(list);
         table.getColumns().add(idColumn);
         table.getColumns().add(transDateColumn);
         table.getColumns().add(transDescColumn);
@@ -185,6 +181,11 @@ public class ReceiptsView extends Pane {
         table.getColumns().add(accountNumColumn);
         table.getColumns().add(transIdColumn);
         table.getColumns().add(transAmtColumn);
+
+        btnAdd = new Button("Add Receipt");
+        btnAdd.setOnAction((ActionEvent event) -> {
+            ReceiptForm receiptForm = new ReceiptForm(getInstance(), new Receipts());
+        });
 
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
@@ -197,7 +198,6 @@ public class ReceiptsView extends Pane {
         };
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-        table.setItems(list);
 
         grid.setHgap(10.0);
         grid.add(table, 0, 0);
@@ -209,9 +209,9 @@ public class ReceiptsView extends Pane {
         grid.add(buttons, 0, 1);
         getChildren().add(grid);
     }
-    
+
     public static ReceiptsView getInstance() {
-        if(receiptsView == null) {
+        if (receiptsView == null) {
             receiptsView = new ReceiptsView();
         }
         return receiptsView;

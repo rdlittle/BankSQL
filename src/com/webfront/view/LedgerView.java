@@ -36,7 +36,7 @@ import javafx.util.Callback;
 public class LedgerView extends Pane {
 
     public int accountNumber;
-    static LedgerView ledgerView;
+    private static LedgerView ledgerView;
     private TableView<Ledger> table;
     private ObservableList<Ledger> list;
     private final LedgerManager ledgerManager;
@@ -50,8 +50,8 @@ public class LedgerView extends Pane {
     TableColumn<Ledger, String> subCatColumn;
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
-
-    private LedgerView(int acctNum) {
+    
+    public LedgerView(int acctNum) {
         super();
         
         accountNumber = acctNum;
@@ -119,7 +119,7 @@ public class LedgerView extends Pane {
                     Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
                     if (item != null) {
                         getLedgerManager().refresh(item);
-                        LedgerForm form = new LedgerForm(ledgerView, item);
+                        LedgerForm form = new LedgerForm(LedgerView.this, item);
                     }
                 }
             }
@@ -155,16 +155,17 @@ public class LedgerView extends Pane {
         vbox.getChildren().addAll(table, buttons);
 
         getChildren().addAll(vbox);
+        ledgerView = this;
     }
 
-    public static LedgerView getInstance(int acctNum) {
+    public LedgerView getInstance(int acctNum) {
         if (ledgerView == null) {
             ledgerView = new LedgerView(acctNum);
         }
         return ledgerView;
     }
     
-    public static LedgerView newInstance(int acctNum) {
+    public LedgerView newInstance(int acctNum) {
         LedgerView view = new LedgerView(acctNum);
         view.accountNumber=acctNum;
         ledgerView = view;

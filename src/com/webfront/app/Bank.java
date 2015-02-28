@@ -137,7 +137,7 @@ public class Bank extends Application {
         List<Tab> ledgers = new ArrayList<>();
         setAccounts();
         for (Account acct : accountList) {
-            LedgerView lv = LedgerView.newInstance(acct.getId());
+            LedgerView lv = new LedgerView(acct.getId());
             lv.setPrefSize(scene.getWidth(), scene.getHeight());
             lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
             viewList.put(acct.getId(), lv);

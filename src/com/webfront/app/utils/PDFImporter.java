@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,12 +65,18 @@ public class PDFImporter extends Importer {
         super(fileName, accountId);
         this.fileName = fileName;
         entries = new ArrayList<>();
-        LedgerManager mgr = new LedgerManager();
-        Ledger item = mgr.getItem(mgr.getLastId(accountId));
-        lastBalance = item.getTransBal();
+        lastBalance = new Float(0.0);
         buffer = new HashMap<>();
         markers = new HashMap<>();
         currentLine = 0;
+        LedgerManager mgr = new LedgerManager();
+        int lastId = mgr.getLastId(accountId);
+        if (lastId > 0) {
+            Ledger item = mgr.getItem(lastId);
+            if (item != null) {
+                lastBalance += item.getTransBal();
+            }
+        }
     }
 
     @Override
@@ -118,7 +123,7 @@ public class PDFImporter extends Importer {
                                 markedLine = currentLine - 1;
                                 markers.put(sectionName, markedLine);
                                 elementFound = true;
-                                if(!endHasBounds) {
+                                if (!endHasBounds) {
                                     currentLine--;
                                 }
                                 break;
@@ -231,7 +236,7 @@ public class PDFImporter extends Importer {
             }
         }
         Pattern endPattern = Pattern.compile(endElement.getText());
-        while (currentLine<nextSection) {
+        while (currentLine < nextSection) {
             prevLine = buffer.get(currentLine - 1);
             String text = buffer.get(currentLine++);
             Matcher lineMatcher = null;
@@ -251,7 +256,7 @@ public class PDFImporter extends Importer {
             }
             if (lineMatcher != null && lineMatcher.matches()) {
                 if (!contentDesc.equals("discard")) {
-                    System.out.println(text);
+//                    System.out.println(text);
                 }
                 hasEntry = false;
                 if (dataDefinition != null) {

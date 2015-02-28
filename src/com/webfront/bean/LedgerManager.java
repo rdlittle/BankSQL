@@ -51,6 +51,9 @@ public class LedgerManager extends DBManager implements Serializable {
         queryString += " ORDER BY id DESC LIMIT 0,1";
         Query query=em.createNativeQuery(queryString);
         List<Integer> result=query.getResultList();
+        if(result.isEmpty()) {
+            return 0;
+        }
         return result.get(0);
     }
     

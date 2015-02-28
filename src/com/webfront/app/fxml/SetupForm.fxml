@@ -46,7 +46,9 @@
                               <TextField fx:id="txtPhone" layoutX="287.0" layoutY="269.0" />
                               <ComboBox fx:id="cbStates" layoutX="192.0" layoutY="316.0" prefHeight="25.0" prefWidth="77.0" />
                               <Label layoutX="171.0" layoutY="155.0" text="Statement Format" />
-                              <ChoiceBox fx:id="cbStatementFormat" layoutX="171.0" layoutY="172.0" prefWidth="150.0" />
+                              <ChoiceBox fx:id="cbStatementFormat" layoutX="171.0" layoutY="172.0" prefHeight="25.0" prefWidth="123.0" />
+                              <TextField fx:id="configName" layoutX="308.0" layoutY="172.0" prefHeight="25.0" prefWidth="170.0" />
+                              <Label layoutX="308.0" layoutY="155.0" text="Config name" />
                               </children>
                           </Pane>
                           <ComboBox fx:id="cbAccounts" layoutX="14.0" layoutY="18.0" prefHeight="25.0" prefWidth="261.0" />

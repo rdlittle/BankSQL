@@ -6,6 +6,7 @@
 package com.webfront.model;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -161,6 +162,15 @@ public class Receipts implements Serializable {
         return hash;
     }
 
+    public static Comparator<Receipts> ReceiptsComparator = new Comparator<Receipts>() {
+        @Override
+        public int compare(Receipts receipt1, Receipts receipt2) {
+            Long entry1 = receipt1.transDate.getTime();
+            Long entry2 = receipt2.transDate.getTime();
+            return entry2.compareTo(entry1);
+        }
+    };
+    
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set

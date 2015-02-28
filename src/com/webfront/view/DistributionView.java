@@ -6,7 +6,7 @@
 package com.webfront.view;
 
 import com.webfront.model.Receipts;
-import static com.webfront.view.ReceiptsView.receiptsView;
+import com.webfront.view.ReceiptsView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -87,7 +87,7 @@ public class DistributionView extends TableView {
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     Receipts receipt = (Receipts) getSelectionModel().getSelectedItem();
-                    ReceiptForm receiptForm = new ReceiptForm(receiptsView, receipt);
+                    ReceiptForm receiptForm = new ReceiptForm(ReceiptsView.getInstance(), receipt);
                 }
             }
         };

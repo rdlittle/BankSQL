@@ -366,11 +366,12 @@ public class PreferencesForm extends AnchorPane {
     private void saveAccount() {
         AccountManager mgr = new AccountManager();
         if (isNewAccount) {
-            System.out.println("PreferencesForm.saveAccount() : new account " + form.account.toString());
             mgr.create(form.account);
             form.accountList.add(form.account);
+            form.accountMap.put(form.account.getAccountName(), form.account.getId());
+            int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
+            form.cbAccounts.getItems().set(idx, form.account.getAccountName());
         } else {
-            System.out.println("PreferencesForm.saveAccount() : update account " + form.account.toString());
             mgr.update(form.account);
         }
         form.accountSelected.set(false);

@@ -62,7 +62,7 @@ public final class CSVImporter extends Importer {
         Float amount;
         Float balance;
 
-        LedgerView view = LedgerView.newInstance(accountId);
+        LedgerView view = new LedgerView(accountId);
         int lastId = view.getLedgerManager().getLastId();
         Ledger item = view.getLedgerManager().getItem(lastId);
         this.beginningBalance = item.getTransBal();

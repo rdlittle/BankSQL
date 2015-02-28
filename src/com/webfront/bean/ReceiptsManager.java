@@ -6,6 +6,7 @@
 package com.webfront.bean;
 
 import com.webfront.model.Receipts;
+import java.io.Serializable;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,8 +16,11 @@ import javax.persistence.Query;
  *
  * @author rlittle
  */
-public class ReceiptsManager extends DBManager<Receipts> {
+public class ReceiptsManager extends DBManager<Receipts> implements Serializable {
 
+    public ReceiptsManager() {
+    }
+    
     @Override
     public ObservableList<Receipts> getList(String q) {
         Query query = em.createNamedQuery("Receipts.findAll");
