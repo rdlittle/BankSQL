@@ -67,7 +67,7 @@ public abstract class DBManager<T> {
         em.refresh(obj);
         transaction.commit();
     }
-
+    
     @PreDestroy
     public void close() {
         if (em.isOpen()) {

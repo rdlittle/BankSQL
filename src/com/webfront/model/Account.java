@@ -72,6 +72,9 @@ public class Account implements Serializable {
     @Column
     @Enumerated(EnumType.STRING)
     private StatementFormat statementFormat;
+    
+    @Column
+    private String configName;
 
     public static enum AccountType {
         CHECKING, SAVINGS, CREDIT;
@@ -84,6 +87,7 @@ public class Account implements Serializable {
     public static enum AccountStatus {
         ACTIVE,INACTIVE,CLOSED;
     }
+    
 
     /**
      *
@@ -300,6 +304,20 @@ public class Account implements Serializable {
         sb.append(" ");
         sb.append(this.accountStatus.toString());
         return sb.toString();
+    }
+
+    /**
+     * @return the configName
+     */
+    public String getConfigName() {
+        return configName;
+    }
+
+    /**
+     * @param configName the configName to set
+     */
+    public void setConfigName(String configName) {
+        this.configName = configName;
     }
 
 }

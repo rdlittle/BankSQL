@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -73,6 +74,8 @@ public class PreferencesForm extends AnchorPane {
     @FXML
     ChoiceBox cbStatementFormat;
     @FXML
+    TextField txtConfigName;
+    @FXML
     TextField txtBankName;
     @FXML
     TextField txtAddress1;
@@ -119,6 +122,17 @@ public class PreferencesForm extends AnchorPane {
     public SimpleBooleanProperty hasChanged;
     public SimpleBooleanProperty accountSelected;
     public SimpleStringProperty installDirProperty;
+
+    public SimpleStringProperty bankNameProperty;
+    public SimpleStringProperty accountNumberProperty;
+    public SimpleStringProperty accountNameProperty;
+    public SimpleStringProperty routingNumberProperty;
+    public SimpleStringProperty address1Property;
+    public SimpleStringProperty cityProperty;
+    public SimpleStringProperty phoneProperty;
+    public SimpleStringProperty postalCodeProperty;
+    public SimpleStringProperty configNameProperty;
+
     public boolean isNewAccount;
     public Account account;
 
@@ -145,6 +159,7 @@ public class PreferencesForm extends AnchorPane {
         txtCity = new TextField();
         txtPhone = new TextField();
         txtPostalCode = new TextField();
+        txtConfigName = new TextField();
 
         cbAccounts = new ComboBox<>();
         cbStates = new ComboBox<>();
@@ -167,6 +182,27 @@ public class PreferencesForm extends AnchorPane {
         });
 
         btnOk = new Button();
+    }
+
+    private void addHandlers() {
+        bankNameProperty = new SimpleStringProperty(form.account, "bankName");
+        accountNameProperty = new SimpleStringProperty(form.account, "accountName");
+        accountNumberProperty = new SimpleStringProperty(form.account, "accountNumber");
+        routingNumberProperty = new SimpleStringProperty(form.account, "routingNumber");
+        address1Property = new SimpleStringProperty(form.account, "address1");
+        cityProperty = new SimpleStringProperty(form.account, "city");
+        phoneProperty = new SimpleStringProperty(form.account, "phoneNumber");
+        postalCodeProperty = new SimpleStringProperty(form.account, "postalCode");
+        configNameProperty = new SimpleStringProperty(form.account, "configName");
+
+        txtAccountName.textProperty().bindBidirectional(accountNameProperty);
+        txtAccountNumber.textProperty().bindBidirectional(accountNumberProperty);
+        txtRoutingNumber.textProperty().bindBidirectional(routingNumberProperty);
+        txtAddress1.textProperty().bindBidirectional(address1Property);
+        txtCity.textProperty().bindBidirectional(cityProperty);
+        txtPhone.textProperty().bindBidirectional(phoneProperty);
+        txtPostalCode.textProperty().bindBidirectional(postalCodeProperty);
+        txtConfigName.textProperty().bindBidirectional(configNameProperty);
     }
 
     @FXML
@@ -216,6 +252,7 @@ public class PreferencesForm extends AnchorPane {
 
             try {
                 form.loader.load();
+                form.addHandlers();
                 form.cbAccounts.getItems().addAll(form.accountMap.keySet());
                 form.txtInstallLocation.setText(form.config.getInstallDir());
                 form.txtTmpLoc.setText(form.config.getTmpDir());
@@ -232,8 +269,13 @@ public class PreferencesForm extends AnchorPane {
                     @Override
                     public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                         if (form.accountMap.containsKey(newValue)) {
-                            int i = form.accountMap.get(newValue) - 1;
-                            form.account = form.accountList.get(i);
+                            int i = form.accountMap.get(newValue);
+                            for (Account a : form.accountList) {
+                                if (i == a.getId().intValue()) {
+                                    form.account = a;
+                                    break;
+                                }
+                            }
                             form.loadAccount();
                         }
                     }
@@ -245,6 +287,14 @@ public class PreferencesForm extends AnchorPane {
 
                 form.cbStates.getItems().addAll(new States().names.values());
                 form.cbStatementFormat.getItems().addAll(Account.StatementFormat.values());
+                form.cbStatementFormat.selectionModelProperty().addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                        StatementFormat fmt = (StatementFormat) newValue;
+                        form.account.setStatementFormat(fmt);
+                        form.hasChanged.set(true);
+                    }
+                });
 
                 form.accountSelected.addListener(new InvalidationListener() {
                     @Override
@@ -262,20 +312,26 @@ public class PreferencesForm extends AnchorPane {
                     }
                 });
 
-                form.txtBankName.focusedProperty().addListener(new ChangeListener() {
+                form.txtBankName.textProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                        if (oldValue.equals(true) && newValue.equals(false)) {
-                            form.account.setBankName(form.txtBankName.getText());
+                        if (newValue != null) {
+                            if (!newValue.equals(oldValue)) {
+                                form.account.setBankName(form.txtBankName.getText());
+                                form.hasChanged.set(true);
+                            }
                         }
                     }
                 });
 
-                form.txtAccountName.focusedProperty().addListener(new ChangeListener() {
+                form.txtAccountName.textProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                        if (oldValue.equals(true) && newValue.equals(false)) {
-                            form.account.setAccountName(form.txtAccountName.getText());
+                        if (newValue != null) {
+                            if (!newValue.equals(oldValue)) {
+                                form.account.setAccountName(form.txtAccountName.getText());
+                                form.hasChanged.set(true);
+                            }
                         }
                     }
                 });
@@ -293,7 +349,7 @@ public class PreferencesForm extends AnchorPane {
                         }
                     }
                 });
-                
+
                 form.accountTypes.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
                     public void changed(ObservableValue<? extends Toggle> ov,
                             Toggle old_toggle, Toggle new_toggle) {
@@ -306,7 +362,19 @@ public class PreferencesForm extends AnchorPane {
                             }
                         }
                     }
-                });                
+                });
+
+                form.txtConfigName.textProperty().addListener(new ChangeListener() {
+                    @Override
+                    public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                        if (newValue != null) {
+                            if (!newValue.equals(oldValue)) {
+                                form.account.setConfigName((String)newValue);
+                                form.hasChanged.set(true);
+                            }
+                        }
+                    }
+                });
 
                 form.btnOk.setDisable(true);
             } catch (IOException ex) {
@@ -357,6 +425,7 @@ public class PreferencesForm extends AnchorPane {
         if (stmFmt != null) {
             form.cbStatementFormat.selectionModelProperty().setValue(stmFmt.toString());
         }
+        form.txtConfigName.setText(form.account.getConfigName());
         hasChanged.set(false);
         form.accountSelected.set(false);
         form.btnOk.setDisable(true);
@@ -372,6 +441,16 @@ public class PreferencesForm extends AnchorPane {
             int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
             form.cbAccounts.getItems().set(idx, form.account.getAccountName());
         } else {
+            form.account.setBankName(form.txtBankName.getText());
+            form.account.setAccountName(form.txtAccountName.getText());
+            form.account.setAccountNumber(form.txtAccountNumber.getText());
+            form.account.setRoutingNumber(form.txtRoutingNumber.getText());
+            form.account.setAddress1(form.txtAddress1.getText());
+            form.account.setCity(form.txtCity.getText());
+            form.account.setAccountName(form.cbStates.getValue());
+            form.account.setPostalCode(form.txtPostalCode.getText());
+            form.account.setPhoneNumber(form.txtPhone.getText());
+            form.account.setConfigName(form.txtConfigName.getText());
             mgr.update(form.account);
         }
         form.accountSelected.set(false);
