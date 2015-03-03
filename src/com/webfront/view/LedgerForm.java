@@ -29,6 +29,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -306,7 +308,10 @@ public final class LedgerForm extends AnchorPane {
     public void submitItem() {
         if (oldItem != null) {
             view.getLedgerManager().update(oldItem);
+            TableView tv =(TableView)view.getTable();
+            TableViewSelectionModel sm = tv.getSelectionModel();
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
+            idx = sm.getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {
             Ledger ledger;
