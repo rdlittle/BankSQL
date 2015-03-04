@@ -5,15 +5,29 @@
  */
 package com.webfront.view;
 
-import com.webfront.model.Charges;
+import com.webfront.bean.DBManager;
+import java.util.List;
 
 /**
  *
  * @author rlittle
  */
-public class CreditCardLedgerView extends TransactionView<Charges> {
+public class CreditCardLedgerView extends TransactionView{
     
-    public CreditCardLedgerView(int accountId) {
+    public CreditCardLedgerView(int id) {
         super();
+        accountId = id;
     }
+
+    @Override
+    public void setDbManager() {
+        dbManager = new DBManager() {
+
+            @Override
+            public List getList(String s) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        };
+    }
+    
 }
