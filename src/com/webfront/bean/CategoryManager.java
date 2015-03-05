@@ -53,5 +53,10 @@ public class CategoryManager extends DBManager<Category> {
         categories = (ObservableList<Category>) FXCollections.observableList(list);
         return categories;
     }
+
+    @Override
+    public ObservableList<Category> doSqlQuery(String q) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

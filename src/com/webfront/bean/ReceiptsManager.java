@@ -29,4 +29,9 @@ public class ReceiptsManager extends DBManager<Receipts> implements Serializable
         return olist;
     }
 
+    @Override
+    public ObservableList<Receipts> doSqlQuery(String q) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
