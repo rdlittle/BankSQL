@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  *
  * @author rlittle
  */
-public class LedgerEntry {
+public class LedgerItem {
 
     private String date;
     private String description;
@@ -27,7 +27,7 @@ public class LedgerEntry {
     private float balance;
     private String dateFormat;
 
-    public LedgerEntry() {
+    public LedgerItem() {
         date = "";
         description = "";
         refNumber = "";
@@ -37,7 +37,7 @@ public class LedgerEntry {
         dateFormat = "MM/dd/yyyy";
     }
 
-    public LedgerEntry(String d, String desc, String amt) {
+    public LedgerItem(String d, String desc, String amt) {
         date = d;
         description = desc;
         amount = amt;
@@ -45,14 +45,14 @@ public class LedgerEntry {
         balance = 0;
     }
 
-    public static Comparator<LedgerEntry> LedgerComparator = new Comparator<LedgerEntry>() {
+    public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
         @Override
-        public int compare(LedgerEntry ledger1, LedgerEntry ledger2) {
+        public int compare(LedgerItem ledger1, LedgerItem ledger2) {
             Long d1 = ledger1.getDateValue();
             Long d2 = ledger2.getDateValue();
             return d1.compareTo(d2);
         }
-  
+
     };
 
     /**
@@ -64,9 +64,9 @@ public class LedgerEntry {
 
     public Long getDateValue() {
         try {
-            return DateConvertor.toLong(date,dateFormat);
+            return DateConvertor.toLong(date, dateFormat);
         } catch (ParseException ex) {
-            Logger.getLogger(LedgerEntry.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(LedgerItem.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -77,15 +77,16 @@ public class LedgerEntry {
     public void setDate(String date) {
         Calendar cal = Calendar.getInstance(Locale.getDefault());
         int currYear = cal.get(Calendar.YEAR);
-        int currMonth = cal.get(Calendar.MONTH)+1;
+        int currMonth = cal.get(Calendar.MONTH) + 1;
         date = date.replaceAll("-", "/");
-        if(date.matches("\\d{1,2}(/|-)\\d{1,2}")) {
-            dateFormat = "MM/dd/yyyy";
-            int dateMonth = Integer.parseInt(date.substring(0,date.indexOf("/")));
-            if(dateMonth>currMonth) {
-                date += date.indexOf("-") > 0 ? "-" : "/"+Integer.toString(currYear-1);
-            } else {
-                date += date.indexOf("-") > 0 ? "-" : "/"+Integer.toString(currYear);
+        if (date.matches("\\d{1,2}(/|-)\\d{1,2}((/|-)\\d{2,4}){1}")) {
+            if (date.matches("\\d{1,2}(/|-)\\d{1,2}")) {
+                int dateMonth = Integer.parseInt(date.substring(0, date.indexOf("/")));
+                if (dateMonth > currMonth) {
+                    date += date.indexOf("-") > 0 ? "-" : "/" + Integer.toString(currYear - 1);
+                } else {
+                    date += date.indexOf("-") > 0 ? "-" : "/" + Integer.toString(currYear);
+                }
             }
         }
         this.date = date;
@@ -159,5 +160,9 @@ public class LedgerEntry {
      */
     public void setCheckNumber(String checkNumber) {
         this.checkNumber = checkNumber;
+    }
+
+    public void setDateFormat(String dFmt) {
+        this.dateFormat = dFmt;
     }
 }
