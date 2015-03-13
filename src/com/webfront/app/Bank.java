@@ -79,7 +79,7 @@ public class Bank extends Application {
     private final Config config;
     private final String defaultConfig = ".bankSQL";
     public static ArrayList<Account> accountList;
-    final HashMap<Integer, LedgerView> viewList;
+    public static HashMap<Integer, LedgerView> viewList;
     TabPane tabPane;
     int accountId;
 
@@ -147,7 +147,7 @@ public class Bank extends Application {
                 lv.setPrefSize(scene.getWidth(), scene.getHeight());
                 lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
                 viewList.put(acct.getId(), lv);
-                Tab t = new LedgerTab(acct.getBankName());
+                Tab t = new LedgerTab(acct.getBankName(),acct.getId());
                 t.setClosable(true);
                 t.setContent(lv);
                 ledgers.add(t);
@@ -177,11 +177,12 @@ public class Bank extends Application {
                             lv.setPrefSize(scene.getWidth(), scene.getHeight());
                             lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
                             viewList.put(acct.getId(), lv);
-                            Tab t = new LedgerTab(acct.getBankName());
+                            Tab t = new LedgerTab(acct.getBankName(),newId);
                             t.setClosable(true);
                             t.setContent(lv);
                             ledgers.add(t);
                             tabPane.getTabs().add(t);
+                            tabPane.getSelectionModel().select(t);
                         }
                     }
 
@@ -439,13 +440,15 @@ public class Bank extends Application {
     }
     
     static class LedgerTab extends Tab {
+        private Integer accountId;
         
-        public LedgerTab(String name) {
+        public LedgerTab(String name,Integer id) {
             super(name);
+            this.accountId=id;
             this.setOnClosed(new EventHandler() {
                 @Override
                 public void handle(Event event) {
-                    System.out.println("Tab closed");
+                    viewList.remove(LedgerTab.this.accountId);
                 }
             });
             
