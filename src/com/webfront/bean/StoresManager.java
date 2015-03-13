@@ -42,4 +42,9 @@ public class StoresManager extends DBManager {
         return null;
     }
 
+    @Override
+    public ObservableList doSqlQuery(String q) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

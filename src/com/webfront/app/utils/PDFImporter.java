@@ -8,7 +8,7 @@ package com.webfront.app.utils;
 import com.webfront.bean.LedgerManager;
 import com.webfront.model.Config;
 import com.webfront.model.Ledger;
-import com.webfront.model.LedgerEntry;
+import com.webfront.model.LedgerItem;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -29,7 +29,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.jdom2.Content;
 import org.jdom2.DataConversionException;
-import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -40,9 +39,9 @@ import org.jdom2.input.SAXBuilder;
  */
 public class PDFImporter extends Importer {
 
-    protected String fileName;
-    SAXBuilder jdomBuilder;
-    Document xmlDoc;
+//    protected String fileName;
+//    SAXBuilder jdomBuilder;
+//    Document xmlDoc;
     private String txtOutput;
     private final Config cfg = Config.getInstance();
     private BufferedReader txtReader;
@@ -56,7 +55,7 @@ public class PDFImporter extends Importer {
         }
     };
 
-    ArrayList<LedgerEntry> entries;
+    ArrayList<LedgerItem> entries;
     HashMap<Integer, String> buffer;
     HashMap<String, Integer> markers;
     TreeSet sectionMarks;
@@ -79,6 +78,12 @@ public class PDFImporter extends Importer {
         }
     }
 
+    /**
+     * 
+     * @param reader BufferedReader pointing to the file being imported
+     * @throws IOException
+     * @throws ParseException 
+     */
     @Override
     public void doImport(BufferedReader reader) throws IOException, ParseException {
         PDFTextStripper pdfStripper = new PDFTextStripper();
@@ -95,9 +100,9 @@ public class PDFImporter extends Importer {
                     buffer.put(currentLine++, text);
                 }
             }
-            getConfig();
+            getAccountConfig();
             currentLine = 0;
-            Element root = xmlDoc.getRootElement();
+            Element root = accountConfigXml.getRootElement();
             int maxLines = buffer.size() - 3;
             int markedLine = 0;
             // Scan the output and mark the start of each section
@@ -164,8 +169,8 @@ public class PDFImporter extends Importer {
         } catch (ElementNotFoundException ex) {
             Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        entries.sort(LedgerEntry.LedgerComparator);
-        for (LedgerEntry item : entries) {
+        entries.sort(LedgerItem.LedgerComparator);
+        for (LedgerItem item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
             String amountString = item.getAmount();
             boolean isCredit = true;
@@ -260,7 +265,7 @@ public class PDFImporter extends Importer {
                 }
                 hasEntry = false;
                 if (dataDefinition != null) {
-                    LedgerEntry entry = new LedgerEntry();
+                    LedgerItem entry = new LedgerItem();
                     for (Element dataLine : dataDefinition.getChildren()) {
                         String tag = dataLine.getAttributeValue("content");
                         String regex = dataLine.getText();
@@ -331,7 +336,7 @@ public class PDFImporter extends Importer {
                 if (linePattern.matcher(prevLine).matches() && hasEntry) {
                     if (!contentDesc.equals("dailyBalance")) {
                         int lastEntry = entries.size() - 1;
-                        LedgerEntry entry = entries.get(lastEntry);
+                        LedgerItem entry = entries.get(lastEntry);
                         entry.setDescription(entry.getDescription() + " " + text);
                         entries.set(lastEntry, entry);
                         hasEntry = false;
@@ -342,12 +347,13 @@ public class PDFImporter extends Importer {
         }
     }
 
-    private void getConfig() {
+    @Override
+    public void getAccountConfig() {
         jdomBuilder = new SAXBuilder();
         String xmlSource = cfg.getInstallDir() + cfg.getFileSep() + "pnc.xml";
         try {
-            xmlDoc = jdomBuilder.build(xmlSource);
-            Element root = xmlDoc.getRootElement();
+            accountConfigXml = jdomBuilder.build(xmlSource);
+            Element root = accountConfigXml.getRootElement();
             List<Content> configContent = root.getContent();
             List<Element> childElements = root.getChildren();
             Element header = root.getChild("header");

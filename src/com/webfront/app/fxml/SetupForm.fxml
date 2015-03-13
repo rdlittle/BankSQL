@@ -9,9 +9,9 @@
     <children>
         <Button fx:id="btnOk" layoutX="441.0" layoutY="503.0" mnemonicParsing="false" onAction="#saveAccount" prefHeight="25.0" prefWidth="66.0" text="OK" />
         <Button layoutX="361.0" layoutY="503.0" mnemonicParsing="false" onAction="#closeForm" prefHeight="25.0" prefWidth="66.0" text="Cancel" />
-      <TabPane layoutY="-1.0" prefHeight="496.0" prefWidth="520.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane fx:id="tabPane" layoutY="-1.0" prefHeight="496.0" prefWidth="520.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Accounts">
+          <Tab fx:id="accountTab" text="Accounts">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="436.0" prefWidth="520.0">
                      <children>
@@ -65,7 +65,7 @@
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="General">
+          <Tab fx:id="generalTab" text="General">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="316.0" prefWidth="520.0">
                      <children>

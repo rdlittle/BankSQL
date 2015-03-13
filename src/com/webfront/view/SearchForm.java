@@ -48,6 +48,7 @@ public final class SearchForm extends AnchorPane {
     Stage stage;
     Scene scene;
     private LedgerView view;
+    //private TransactionView tView;
     Map<String, Category> primeCatMap;
     Map<String, Category> subCatMap;
 
@@ -135,6 +136,20 @@ public final class SearchForm extends AnchorPane {
         startDate.valueProperty().set(endDate.getValue().minusDays(60));
         setForm();
     }
+    
+//    public SearchForm(TransactionView view, SearchCriteria sc) {
+//        this();
+//        this.criteria = sc;
+//        this.tView = view;
+//        this.catManager = view.getCategoryManager();
+//        // Set the upper range to the latest available transaction date
+//        Ledger ledgerItem = (Ledger) view.getTable().getItems().get(0);
+//        Date date = ledgerItem.getTransDate();
+//        endDate.valueProperty().set(DateConvertor.toLocalDate(date));
+//        // Set the lower range to 60 days before latest date   
+//        startDate.valueProperty().set(endDate.getValue().minusDays(60));
+//        setForm();
+//    }    
 
     public void setForm() {
         buildForm();

@@ -5,7 +5,7 @@
  */
 package com.webfront.app;
 
-import com.webfront.app.utils.CSVImporter;
+import com.webfront.app.utils.CCImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
 import com.webfront.app.utils.StringUtil;
@@ -18,6 +18,7 @@ import com.webfront.model.Config;
 import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
+import com.webfront.view.AccountPickerForm;
 import com.webfront.view.CategoryForm;
 import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
@@ -77,8 +78,8 @@ public class Bank extends Application {
     String tmpDir;
     private final Config config;
     private final String defaultConfig = ".bankSQL";
-    ArrayList<Account> accountList;
-    final HashMap<Integer,LedgerView> viewList;
+    public static ArrayList<Account> accountList;
+    final HashMap<Integer, LedgerView> viewList;
     TabPane tabPane;
     int accountId;
 
@@ -104,23 +105,27 @@ public class Bank extends Application {
         Menu editMenu = new Menu("_Edit");
 
         MenuItem fileImport = new MenuItem("_Import");
+        MenuItem fileOpen = new MenuItem("_Open");
         MenuItem fileNewCategory = new MenuItem("_Category");
         MenuItem fileNewStore = new MenuItem("Sto_re");
         MenuItem fileExit = new MenuItem("E_xit");
+
+        MenuItem editAccounts = new MenuItem("Accounts");
         MenuItem editCategories = new MenuItem("Categories");
         MenuItem editPreferences = new MenuItem("_Preferences");
 
         fileMenu.setMnemonicParsing(true);
+        fileOpen.setMnemonicParsing(true);
         fileImport.setMnemonicParsing(true);
         fileNewMenu.setMnemonicParsing(true);
         fileExit.setMnemonicParsing(true);
         fileNewMenu.getItems().addAll(fileNewCategory, fileNewStore);
 
-        fileMenu.getItems().addAll(fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
+        fileMenu.getItems().addAll(fileOpen, fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
 
         editMenu.setMnemonicParsing(true);
         editMenu.setMnemonicParsing(true);
-        editMenu.getItems().addAll(editCategories, editPreferences);
+        editMenu.getItems().addAll(editAccounts, editCategories, editPreferences);
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
@@ -137,14 +142,16 @@ public class Bank extends Application {
         List<Tab> ledgers = new ArrayList<>();
         setAccounts();
         for (Account acct : accountList) {
-            LedgerView lv = new LedgerView(acct.getId());
-            lv.setPrefSize(scene.getWidth(), scene.getHeight());
-            lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-            viewList.put(acct.getId(), lv);
-            Tab t = new Tab(acct.getBankName());
-            t.setClosable(true);
-            t.setContent(lv);
-            ledgers.add(t);
+            if (acct.getAccountStatus() != AccountStatus.CLOSED) {
+                LedgerView lv = new LedgerView(acct.getId());
+                lv.setPrefSize(scene.getWidth(), scene.getHeight());
+                lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+                viewList.put(acct.getId(), lv);
+                Tab t = new LedgerTab(acct.getBankName());
+                t.setClosable(true);
+                t.setContent(lv);
+                ledgers.add(t);
+            }
         }
 
         List<String> importTypes = new ArrayList<>();
@@ -156,6 +163,31 @@ public class Bank extends Application {
 
         ReceiptsView receipts = ReceiptsView.getInstance();
         receiptsTab.setContent(receipts);
+
+        fileOpen.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                AccountPickerForm picker = new AccountPickerForm();
+                picker.showForm();
+                int newId = picker.accountId;
+                if (!viewList.containsKey(newId)) {
+                    for (Account acct : accountList) {
+                        if (acct.getId() == newId) {
+                            LedgerView lv = new LedgerView(newId);
+                            lv.setPrefSize(scene.getWidth(), scene.getHeight());
+                            lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+                            viewList.put(acct.getId(), lv);
+                            Tab t = new LedgerTab(acct.getBankName());
+                            t.setClosable(true);
+                            t.setContent(lv);
+                            ledgers.add(t);
+                            tabPane.getTabs().add(t);
+                        }
+                    }
+
+                }
+            }
+        });
 
         fileImport.setOnAction(new EventHandler() {
             @Override
@@ -203,6 +235,20 @@ public class Bank extends Application {
             }
         });
 
+        editAccounts.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                PreferencesForm prefs = PreferencesForm.getInstance(config);
+                prefs.hasChanged.addListener(new InvalidationListener() {
+                    @Override
+                    public void invalidated(Observable observable) {
+                        config.setConfig();
+                    }
+                });
+                prefs.showForm();
+            }
+        });
+
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
@@ -237,7 +283,7 @@ public class Bank extends Application {
                 if (importDone.getValue() == false) {
                     accountId = -1;
                     ImportForm importForm = ImportForm.getInstance(accountList);
-                    if(importForm.selectedAccount<0 && importForm.fileName.isEmpty()) {
+                    if (importForm.selectedAccount < 0 && importForm.fileName.isEmpty()) {
                         ImportForm.setForm(null);
                         return;
                     }
@@ -248,15 +294,16 @@ public class Bank extends Application {
                         if (importForm.fileName.contains("pdf")) {
                             importer = new PDFImporter(importForm.fileName, accountId);
                         } else {
-                            importer = new CSVImporter(importForm.fileName, bankName, accountId);
+                            //importer = new CSVImporter(importForm.fileName, bankName, accountId);
+                            importer = new CCImporter(importForm.fileName, accountId);
                         }
                     }
                     if (accountId > 0 && !importForm.fileName.isEmpty()) {
                         progressBar.setVisible(true);
                         importer.setFileName(importForm.fileName);
                         Thread t = new Thread(importer);
-                        importForm.fileName="";
-                        importForm.selectedAccount=0;
+                        importForm.fileName = "";
+                        importForm.selectedAccount = 0;
                         ImportForm.setForm(null);
                         t.start();
                         while (t.isAlive()) {
@@ -375,9 +422,13 @@ public class Bank extends Application {
         accountList = new ArrayList<>();
         AccountManager am = new AccountManager();
         ObservableList<Account> l = FXCollections.observableArrayList(am.getList("Account.findAll"));
-        l.stream().filter((acct) -> (acct.getAccountStatus() != AccountStatus.CLOSED)).forEach((acct) -> {
+        l.stream().forEach((acct) -> {
             accountList.add(acct);
         });
+    }
+
+    public ArrayList<Account> getAccountList() {
+        return accountList;
     }
 
     /**
@@ -385,6 +436,20 @@ public class Bank extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+    }
+    
+    static class LedgerTab extends Tab {
+        
+        public LedgerTab(String name) {
+            super(name);
+            this.setOnClosed(new EventHandler() {
+                @Override
+                public void handle(Event event) {
+                    System.out.println("Tab closed");
+                }
+            });
+            
+        }
     }
 
 }

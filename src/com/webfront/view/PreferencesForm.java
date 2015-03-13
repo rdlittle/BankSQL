@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -35,6 +34,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
@@ -53,6 +54,15 @@ public class PreferencesForm extends AnchorPane {
     private static PreferencesForm form = null;
     private FXMLLoader loader = null;
 
+    @FXML
+    TabPane tabPane;
+    
+    @FXML
+    Tab accountTab;
+    
+    @FXML
+    Tab generalTab;
+    
     @FXML
     TextField txtInstallLocation;
     @FXML
@@ -433,9 +443,8 @@ public class PreferencesForm extends AnchorPane {
 
     @FXML
     private void saveAccount() {
-        AccountManager mgr = new AccountManager();
         if (isNewAccount) {
-            mgr.create(form.account);
+            acctMgr.create(form.account);
             form.accountList.add(form.account);
             form.accountMap.put(form.account.getAccountName(), form.account.getId());
             int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
@@ -447,11 +456,14 @@ public class PreferencesForm extends AnchorPane {
             form.account.setRoutingNumber(form.txtRoutingNumber.getText());
             form.account.setAddress1(form.txtAddress1.getText());
             form.account.setCity(form.txtCity.getText());
-            form.account.setAccountName(form.cbStates.getValue());
+            form.account.setStateAbbr(form.cbStates.getValue());
             form.account.setPostalCode(form.txtPostalCode.getText());
             form.account.setPhoneNumber(form.txtPhone.getText());
             form.account.setConfigName(form.txtConfigName.getText());
-            mgr.update(form.account);
+            if(form.account.getAccountName()==null || form.account.getAccountName().isEmpty()) {
+                form.account.setAccountName(form.account.getId().toString());
+            }
+            acctMgr.update(form.account);
         }
         form.accountSelected.set(false);
         form.hasChanged.set(false);

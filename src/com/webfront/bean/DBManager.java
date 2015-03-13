@@ -6,6 +6,7 @@
 package com.webfront.bean;
 
 import java.util.List;
+import javafx.collections.ObservableList;
 import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -35,6 +36,7 @@ public abstract class DBManager<T> {
     }
 
     public abstract List<T> getList(String s);
+    public abstract ObservableList<T> doSqlQuery(String q);
 
     /**
      *

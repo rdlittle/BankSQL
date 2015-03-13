@@ -5,6 +5,9 @@
  */
 package com.webfront.app.utils;
 
+import com.webfront.bean.AccountManager;
+import com.webfront.model.Account;
+import com.webfront.model.Config;
 import com.webfront.model.Ledger;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -21,6 +24,9 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jdom2.Document;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 
 /**
  *
@@ -32,14 +38,14 @@ public abstract class Importer implements Runnable {
     ResourceBundle config;
     public static String configName;
     boolean headerDone;
- 
+
     public String accountNumber;
     public String statementPeriod;
     public String startDate;
     public String endDate;
- 
-    public HashMap<String,String> summary;
-    
+
+    public HashMap<String, String> summary;
+
     public Float beginningBalance;
     public Float endingBalance;
     public Float totalDeposits;
@@ -47,12 +53,22 @@ public abstract class Importer implements Runnable {
     public Float totalChecks;
     public Float totalFees;
     public Float totalTransfers;
-    
+
     private ArrayList<Ledger> itemList;
 
-    private String fileName;
+    String fileName;
     public int accountId;
 
+    SAXBuilder jdomBuilder;
+    Document accountConfigXml;
+
+    private final Config cfg = Config.getInstance();
+
+    /**
+    * @param fileName The full path to the file being imported
+    * @param accountId The value of the id column from the bank.account table for this account
+    */
+   
     public Importer(String fileName, int accountId) {
         this.accountId = accountId;
         this.fileName = fileName;
@@ -68,7 +84,7 @@ public abstract class Importer implements Runnable {
         this.itemList = new ArrayList<>();
         summary = new HashMap<>();
         summary.put("accountNumber", "");
-        summary.put("startDate","");
+        summary.put("startDate", "");
         summary.put("endDate", "");
         summary.put("beginningBalance", "");
         summary.put("endingBalance", "");
@@ -80,6 +96,10 @@ public abstract class Importer implements Runnable {
         summary.put("totalInterest", "");
     }
 
+    /**
+    * @param fileName The full path of the data file being imported
+    * @return BufferedReader for the opened file
+    */
     public BufferedReader openFile(String fileName) {
         BufferedReader inFile = null;
         try {
@@ -95,6 +115,27 @@ public abstract class Importer implements Runnable {
     public void doSort() {
         if (!itemList.isEmpty()) {
             getItemList().sort(ledgerComparator);
+        }
+    }
+
+    public void getAccountConfig() {
+        AccountManager mgr = new AccountManager();
+        for (Account acct : mgr.getAccounts()) {
+            if (acct.getId() == accountId) {
+                configName = acct.getConfigName() + ".xml";
+                break;
+            }
+        }
+        if (!configName.isEmpty()) {
+            jdomBuilder = new SAXBuilder();
+            String xmlSource = cfg.getInstallDir() + cfg.getFileSep() + configName;
+            try {
+                accountConfigXml = jdomBuilder.build(xmlSource);
+            } catch (JDOMException ex) {
+                Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(PDFImporter.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -122,7 +163,6 @@ public abstract class Importer implements Runnable {
             ((DecimalFormat) f).setDecimalSeparatorAlwaysShown(true);
         }
         try {
-//            config = ResourceBundle.getBundle(configName);
             in = openFile(getFileName());
             doImport(in);
             in.close();
