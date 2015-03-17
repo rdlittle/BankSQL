@@ -5,130 +5,154 @@
  */
 package com.webfront.app.utils;
 
+import com.webfront.bean.LedgerManager;
 import com.webfront.model.Ledger;
-import com.webfront.view.LedgerView;
+import com.webfront.model.LedgerItem;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jdom2.Element;
 
 /**
  *
  * @author rlittle
  */
-public final class CSVImporter extends Importer {
+public class CSVImporter extends Importer {
 
-    ArrayList<Ledger> itemList;
+    HashMap<Integer, String> buffer;
+    ArrayList<LedgerItem> entries;
+    Float lastBalance;
 
-    private String fileName;
-    String currencyString = "^.*\\,\\\"\\-{0,1}\\d{0,3}\\,{0,1}\\d{3}\\.{1}\\d{2}\\\".*";
-    //String currencyString = "^.*\\,\\\"\\-{0,1}\\d{0,3}\\,{0,1}\\d{3}\\.{1}\\d{2}\\\"";
-    Pattern currencyPattern;
-    Matcher currencyMatcher;
-
-    public CSVImporter(String fileName, String cfgName, int accountId) {
-        super(fileName,accountId);
-        configName = cfgName;
-        currencyPattern = Pattern.compile(currencyString);
-    }
-
-    public BufferedReader openFile(String fileName) {
-        BufferedReader inFile = null;
-        try {
-            inFile = new BufferedReader(new FileReader(fileName));
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(CSVImporter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return inFile;
-    }
-
-    public void doImport(BufferedReader reader) throws IOException, ParseException {
-        String text;
-        String line;
-
-        String date;
-        String reference;
-        String payee;
-        String memo;
-        String amt;
-        String category;
-
-        Float amount;
-        Float balance;
-
-        LedgerView view = new LedgerView(accountId);
-        int lastId = view.getLedgerManager().getLastId();
-        Ledger item = view.getLedgerManager().getItem(lastId);
-        this.beginningBalance = item.getTransBal();
-        this.endingBalance = this.beginningBalance;
-        String[] fields;
-        headerDone = false;
-        boolean isCheck;
-        boolean isDeposit;
-        boolean isWithdrawal;
-        boolean isTransfer;
-        boolean isFee;
-        int lineNum = 0;
-
-        while ((text = reader.readLine()) != null) {
-            line = text.trim();
-            if (!headerDone) {
-                if (line.startsWith((String) config.getString("header"))) {
-                    headerDone = true;
-                }
-            } else {
-                lineNum += 1;
-
-                text = line.trim();
-                currencyMatcher = currencyPattern.matcher(text);
-
-                fields = text.split(",", 5);
-                date = fields[0];
-                reference = fields[1];
-                payee = fields[2].replaceAll("\"", "");
-                memo = fields[3].replaceAll("\"", "");;
-                amt = fields[4].replaceAll("\\\"", "");
-                amt = amt.replaceAll("\\,", "");
-                amount = Float.valueOf(amt);
-                isCheck = memo.equals("CHECK");
-                isDeposit = memo.contains("DEPOSIT");
-                isTransfer = (memo.contains("TRANSFER") || memo.startsWith("\"INTERNET TFR\""));
-                isWithdrawal = (amount < 0);
-
-                this.endDate=date;
-                if (lineNum == 1) {
-                    this.startDate = date;
-                }
-                if (isCheck) {
-                    this.totalChecks += (-1 * amount);
-                }
-                if (isDeposit) {
-                    this.totalDeposits += amount;
-                }
-                if (isTransfer) {
-                    this.totalTransfers += amount;
-                }
-                if (isWithdrawal) {
-                    this.totalWithdrawals -= amount;
-                }
-
-                this.endingBalance += amount;
-
-                item = new Ledger();
-                item.setTransDate(stringToDate(date));
-                item.setTransDesc(payee);
-                item.setTransAmt(amount);
-                item.setTransBal(this.endingBalance);
-//                    System.out.println(item.getTransDate().toString() + " " + item.getTransDesc() + " " + item.getTransAmt());
-                getItemList().add(item);
+    public CSVImporter(String fileName, int accountId) {
+        super(fileName, accountId);
+        getAccountConfig();
+        buffer = new HashMap<>();
+        entries = new ArrayList<>();
+        lastBalance = new Float(0.0);
+        LedgerManager mgr = new LedgerManager();
+        int lastId = mgr.getLastId(accountId);
+        if (lastId > 0) {
+            Ledger item = mgr.getItem(lastId);
+            if (item != null) {
+                lastBalance += item.getTransBal();
             }
         }
+    }
+
+    @Override
+    public void doImport(BufferedReader reader) throws IOException, ParseException {
+        loadImportFile(reader);
+        Element root = accountConfigXml.getRootElement(); // <statement>
+        for (Element el : root.getChildren()) { //    <detail>
+            for (Element section : el.getChildren()) { // <section> 
+                String sectionName = section.getAttributeValue("content");
+                if (sectionName == null) {
+                    continue;
+                }
+                switch (sectionName) {
+                    case "transactions":
+                        processSection(section);
+                        break;
+                }
+            }
+
+        }
+    }
+
+    public void processSection(Element section) throws ParseException {
+        int bufferSize = buffer.size();
+        int lineNum;
+        String line;
+
+        Matcher lineMatcher = null;
+        Element dataDefinition = section.getChild("data");
+        if (dataDefinition == null) {
+            return;
+        }
+        Element lineDefinition = section.getChild("line");
+
+        for (lineNum = 1; lineNum <= bufferSize; lineNum++) {
+            line = buffer.get(lineNum);
+            if (line == null || line.isEmpty()) {
+                continue;
+            }
+
+            Float amount;
+            LedgerItem item = new LedgerItem();
+            if (lineDefinition != null) {
+                lineMatcher = Pattern.compile(lineDefinition.getText()).matcher(line);
+                if (lineMatcher.matches()) {
+                    int groups = lineMatcher.groupCount();
+                    for (int g = 1; g <= groups; g++) {
+                        System.out.println(g + ") " + lineMatcher.group(g));
+                    }
+                    item.setDate(lineMatcher.group(1).replaceAll("\"", ""));
+                    item.setDescription(lineMatcher.group(3).replaceAll("\"", ""));
+                    if (lineMatcher.group(4) != null) {
+                        String charge = lineMatcher.group(4).replaceAll("\"", "");
+                        item.setAmount(charge.replaceAll(",", ""));
+                    }
+                    if (lineMatcher.group(6) != null) {
+                        String payment = lineMatcher.group(6).replaceAll("\"", "");
+                        amount = Float.parseFloat(payment.replaceAll(",", ""));
+                        amount = amount * -1;
+                        item.setAmount(amount.toString());
+                    }
+                }
+            }
+            entries.add(item);
+        }
+        entries.sort(LedgerItem.LedgerComparator);
+        for (LedgerItem item : entries) {
+            java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
+            String amountString = item.getAmount();
+            boolean isCredit = false;
+            if (item.getAmount().startsWith("-")) {
+                isCredit = true;
+                String amt = item.getAmount().replaceFirst("-", "");
+                item.setAmount(amt);
+            }
+            float amount = Float.parseFloat(amountString);
+            if (isCredit) {
+                lastBalance += amount;
+                totalDeposits += amount;
+            } else {
+                lastBalance -= amount;
+                totalWithdrawals += amount;
+            }
+            Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);
+            if (item.getDescription().length() > 120) {
+                item.setDescription(item.getDescription().substring(0, 119));
+            }
+            if (item.getCheckNumber() != null && !item.getCheckNumber().isEmpty()) {
+                ledger.setCheckNum(item.getCheckNumber());
+                totalChecks -= amount;
+            }
+            ledger.setTransDesc(item.getDescription());
+            getItemList().add(ledger);
+        }
+    }
+
+    public void loadImportFile(BufferedReader reader) throws IOException {
+        int lineNum = 0;
+        String line;
+        while (true) {
+            try {
+                line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                buffer.put(lineNum, line);
+                lineNum++;
+            } catch (IOException ex) {
+                break;
+            }
+        }
+        reader.close();
     }
 
 }

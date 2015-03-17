@@ -5,7 +5,7 @@
  */
 package com.webfront.app;
 
-import com.webfront.app.utils.CCImporter;
+import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
 import com.webfront.app.utils.StringUtil;
@@ -297,7 +297,7 @@ public class Bank extends Application {
                             importer = new PDFImporter(importForm.fileName, accountId);
                         } else {
                             //importer = new CSVImporter(importForm.fileName, bankName, accountId);
-                            importer = new CCImporter(importForm.fileName, accountId);
+                            importer = new CSVImporter(importForm.fileName, accountId);
                         }
                     }
                     if (accountId > 0 && !importForm.fileName.isEmpty()) {
