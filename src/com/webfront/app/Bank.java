@@ -296,7 +296,6 @@ public class Bank extends Application {
                         if (importForm.fileName.contains("pdf")) {
                             importer = new PDFImporter(importForm.fileName, accountId);
                         } else {
-                            //importer = new CSVImporter(importForm.fileName, bankName, accountId);
                             importer = new CSVImporter(importForm.fileName, accountId);
                         }
                     }
