@@ -79,10 +79,12 @@ public class Bank extends Application {
     private final Config config;
     private final String defaultConfig = ".bankSQL";
     public static ArrayList<Account> accountList;
+    ObservableList observableAccounts;
     public static HashMap<Integer, LedgerView> viewList;
     TabPane tabPane;
     private static List<Tab> ledgers;
     int accountId;
+    public Scene scene;
 
     public Bank() {
         this.sdp = new SimpleDoubleProperty();
@@ -93,11 +95,12 @@ public class Bank extends Application {
         bankName = config.getBankName();
         viewList = new HashMap<>();
         config.setConfig();
+        observableAccounts = javafx.collections.FXCollections.observableArrayList();
     }
 
     @Override
     public void start(Stage primaryStage) {
-        Scene scene = new Scene(new VBox(), 1300, 800);
+        scene = new Scene(new VBox(), 1300, 800);
 
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("_File");
@@ -144,14 +147,7 @@ public class Bank extends Application {
         setAccounts();
         for (Account acct : accountList) {
             if (acct.getAccountStatus() != AccountStatus.CLOSED) {
-                LedgerView lv = new LedgerView(acct.getId());
-                lv.setPrefSize(scene.getWidth(), scene.getHeight());
-                lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-                viewList.put(acct.getId(), lv);
-                Tab t = new LedgerTab(acct.getBankName(),acct.getId());
-                t.setClosable(true);
-                t.setContent(lv);
-                getLedgers().add(t);
+                addLedger(acct);
             }
         }
 
@@ -174,16 +170,19 @@ public class Bank extends Application {
                 if (!viewList.containsKey(newId)) {
                     for (Account acct : accountList) {
                         if (acct.getId() == newId) {
-                            LedgerView lv = new LedgerView(newId);
-                            lv.setPrefSize(scene.getWidth(), scene.getHeight());
-                            lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-                            viewList.put(acct.getId(), lv);
-                            Tab t = new LedgerTab(acct.getBankName(),newId);
-                            t.setClosable(true);
-                            t.setContent(lv);
-                            getLedgers().add(t);
-                            tabPane.getTabs().add(t);
-                            tabPane.getSelectionModel().select(t);
+                            addLedger(acct);
+                            int pos = 1;
+                            for (Tab t : getLedgers()) {
+                                if (tabPane.getTabs().indexOf(t)>-1) {
+                                    pos+=1;
+                                }
+                                if (t.getId().equals(acct.getId().toString())) {
+                                    tabPane.getTabs().add(pos, t);
+                                    tabPane.getSelectionModel().select(t);
+                                    break;
+                                }
+                            }
+
                         }
                     }
                 } else {
@@ -432,6 +431,17 @@ public class Bank extends Application {
         return accountList;
     }
 
+    private void addLedger(Account acct) {
+        LedgerView lv = new LedgerView(acct.getId());
+        lv.setPrefSize(scene.getWidth(), scene.getHeight());
+        lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+        viewList.put(acct.getId(), lv);
+        Tab t = new LedgerTab(acct.getBankName(), acct.getId());
+        t.setClosable(true);
+        t.setContent(lv);
+        getLedgers().add(t);
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -452,13 +462,15 @@ public class Bank extends Application {
     public void setLedgers(List<Tab> ledgers) {
         this.ledgers = ledgers;
     }
-    
+
     static class LedgerTab extends Tab {
+
         private Integer accountId;
-        
-        public LedgerTab(String name,Integer id) {
+
+        public LedgerTab(String name, Integer id) {
             super(name);
-            this.accountId=id;
+            this.setId(id.toString());
+            this.accountId = id;
             this.setOnClosed(new EventHandler() {
                 @Override
                 public void handle(Event event) {
@@ -466,7 +478,7 @@ public class Bank extends Application {
                     getLedgers().remove(LedgerTab.this);
                 }
             });
-            
+
         }
     }
 
