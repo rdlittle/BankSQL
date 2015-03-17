@@ -81,6 +81,7 @@ public class Bank extends Application {
     public static ArrayList<Account> accountList;
     public static HashMap<Integer, LedgerView> viewList;
     TabPane tabPane;
+    private static List<Tab> ledgers;
     int accountId;
 
     public Bank() {
@@ -139,7 +140,7 @@ public class Bank extends Application {
         storesTab.setClosable(false);
         receiptsTab.setClosable(false);
 
-        List<Tab> ledgers = new ArrayList<>();
+        setLedgers(new ArrayList<>());
         setAccounts();
         for (Account acct : accountList) {
             if (acct.getAccountStatus() != AccountStatus.CLOSED) {
@@ -150,7 +151,7 @@ public class Bank extends Application {
                 Tab t = new LedgerTab(acct.getBankName(),acct.getId());
                 t.setClosable(true);
                 t.setContent(lv);
-                ledgers.add(t);
+                getLedgers().add(t);
             }
         }
 
@@ -180,12 +181,12 @@ public class Bank extends Application {
                             Tab t = new LedgerTab(acct.getBankName(),newId);
                             t.setClosable(true);
                             t.setContent(lv);
-                            ledgers.add(t);
+                            getLedgers().add(t);
                             tabPane.getTabs().add(t);
                             tabPane.getSelectionModel().select(t);
                         }
                     }
-
+                } else {
                 }
             }
         });
@@ -438,6 +439,20 @@ public class Bank extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
+    /**
+     * @return the ledgers
+     */
+    public static List<Tab> getLedgers() {
+        return ledgers;
+    }
+
+    /**
+     * @param ledgers the ledgers to set
+     */
+    public void setLedgers(List<Tab> ledgers) {
+        this.ledgers = ledgers;
+    }
     
     static class LedgerTab extends Tab {
         private Integer accountId;
@@ -449,6 +464,7 @@ public class Bank extends Application {
                 @Override
                 public void handle(Event event) {
                     viewList.remove(LedgerTab.this.accountId);
+                    getLedgers().remove(LedgerTab.this);
                 }
             });
             

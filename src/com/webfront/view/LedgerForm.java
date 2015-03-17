@@ -5,6 +5,8 @@
  */
 package com.webfront.view;
 
+import com.webfront.app.Bank;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
@@ -48,7 +50,7 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     DatePicker transDate;
     @FXML
-    ChoiceBox accountNum;
+    ChoiceBox<Integer> accountNum;
     @FXML
     ComboBox<String> primaryCat;
     @FXML
@@ -67,16 +69,16 @@ public final class LedgerForm extends AnchorPane {
     Button btnOk;
     @FXML
     Button btnCancel;
-    
+
     @FXML
     Pane distView;
-    
+
     Stage stage;
     Scene scene;
 
     HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
-    
+
     @FXML
     DistributionView distTable;
 
@@ -118,9 +120,14 @@ public final class LedgerForm extends AnchorPane {
             loader.setRoot(this);
             loader.setController(this);
             loader.load();
-            
+
             ObservableList<Category> cList = view.getCategoryManager().getCategories();
 
+            ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(Bank.accountList);
+            accountList.stream().forEach((acct) -> {
+                accountNum.getItems().add(acct.getId());
+            });
+            
             for (Category c : cList) {
                 //Category parent = c.getParent();
                 Integer parent = c.getParent();
@@ -196,10 +203,14 @@ public final class LedgerForm extends AnchorPane {
                                 dist.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
                                 dist.setCategory(subCatMap.get(newCat));
                                 dist.setLedger(oldItem);
-                                if (oldItem.getDistribution().get(0).getId() != null) {
-                                    oldItem.getDistribution().get(0).setCategory(subCatMap.get(newCat));
+                                if (oldItem.getDistribution() == null || oldItem.getDistribution().isEmpty()) {
+                                    oldItem.getDistribution().add(dist);
                                 } else {
-                                    oldItem.getDistribution().set(0, dist);
+                                    if (oldItem.getDistribution().get(0).getId() != null) {
+                                        oldItem.getDistribution().get(0).setCategory(subCatMap.get(newCat));
+                                    } else {
+                                        oldItem.getDistribution().set(0, dist);
+                                    }
                                 }
                                 btnOk.setDisable(false);
                             }
@@ -251,11 +262,10 @@ public final class LedgerForm extends AnchorPane {
             transDescription.setText(oldItem.getTransDesc());
             transAmt.setText(Float.toString(oldItem.getTransAmt()));
             transBalance.setText(Float.toString(oldItem.getTransBal()));
-            String str = Integer.toString(oldItem.getAccountNum());
-            accountNum.setValue(str);
+            accountNum.setValue(oldItem.getAccountNum());
             transId.setText(oldItem.getId().toString());
             if (oldItem.getPrimaryCat() != null) {
-                str = oldItem.getPrimaryCat().getDescription();
+                String str = oldItem.getPrimaryCat().getDescription();
                 primaryCat.setValue(str);
             }
             if (oldItem.getDistribution() != null && oldItem.getDistribution().size() > 0) {
@@ -280,7 +290,7 @@ public final class LedgerForm extends AnchorPane {
             transDate.setValue(date.toLocalDate());
             transAmt.setText(Float.toString(newItem.getTransAmt()));
             transDescription.setText(newItem.getTransDesc());
-            accountNum.setValue(Integer.toString(newItem.getAccountNum()));
+            accountNum.setValue(newItem.getAccountNum());
             transId.setText(newItem.getId().toString());
             primaryCat.setValue(newItem.getPrimaryCat().getDescription());
         }
