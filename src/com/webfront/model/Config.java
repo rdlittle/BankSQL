@@ -17,6 +17,7 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.ObservableList;
+import javafx.geometry.Rectangle2D;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -46,18 +47,22 @@ public class Config {
     Document xmlDoc;
     private final String configFileName = "config.xml";
     private final String defaultConfigFileName = ".bankSQL";
-    private double x,y,w,h;
+    private String x, y, w, h;
+    private String width;
+    private String height;
+    private Rectangle2D dimensions;
 
     private Config() {
-        try {
-            ResourceBundle bundle = ResourceBundle.getBundle("com.webfront.app.bank");
-            if (bundle.containsKey("bankName")) {
-                bankName = bundle.getString("bankName");
-            }
-            
-        } catch (MissingResourceException e) {
-            System.out.println("Can't find bundle file ");
-        }  
+//        try {
+//            ResourceBundle bundle = ResourceBundle.getBundle("com.webfront.app.bank");
+//            if (bundle.containsKey("bankName")) {
+//                bankName = bundle.getString("bankName");
+//            }
+//            
+//        } catch (MissingResourceException e) {
+//            System.out.println("Can't find bundle file ");
+//        }
+        // Set up some system-dependant defaults
         Properties properties;
         properties = System.getProperties();
         installDir = properties.getProperty("java.io.tmpdir");
@@ -65,9 +70,12 @@ public class Config {
         fileSep = properties.getProperty("file.separator");
         systemTmpDir = properties.getProperty("java.io.tmpdir");
         tmpDir = systemTmpDir;
-        if(fileSep.equals("/")) {
+
+        if (fileSep.equals("/")) {
             tmpDir.replaceAll("/", "\\/");
         }
+
+        // Find the default bootstrap file
         File defaultStartupFile = new File(home + fileSep + defaultConfigFileName);
         try {
             BufferedReader reader = new BufferedReader(new FileReader(defaultStartupFile));
@@ -76,6 +84,7 @@ public class Config {
                 installDir = startupLoc;
             }
         } catch (FileNotFoundException ex) {
+            // If the bootstrap file isn't found, create it
             try {
                 try (FileWriter writer = new FileWriter(defaultStartupFile)) {
                     writer.write(home);
@@ -97,17 +106,28 @@ public class Config {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            xmlDoc = new Document();
-            Element rootElement = new Element(root);
-            Element systemNode = new Element("system");
-            systemNode.addContent(new Element("installDir").addContent(getInstallDir()));
-//            systemNode.addContent(new Element("tmpDir").addContent(tmpDir));
-            String tmp = tmpDir;
-            tmp.replaceAll("/", "\\/");
-            systemNode.addContent(new Element("tmpDir").addContent(tmp));
-            rootElement.addContent(systemNode);
-            xmlDoc.setRootElement(rootElement);
+            if (xmlDoc == null) {
+                xmlDoc = new Document();
+                Element rootElement = new Element(root);
+                Element systemNode = new Element("system");
+                Element appNode = new Element("application");
+                Element dimsNode = new Element("dimensions");
+                systemNode.addContent(new Element("installDir").addContent(getInstallDir()));
+                dimsNode.addContent(new Element("width").addContent(w));
+                dimsNode.addContent(new Element("height").addContent(h));
+                appNode.addContent(dimsNode);
 
+                String tmp = tmpDir;
+                tmp.replaceAll("/", "\\/");
+                systemNode.addContent(new Element("tmpDir").addContent(tmp));
+                rootElement.addContent(systemNode);
+                rootElement.addContent(appNode);
+                xmlDoc.setRootElement(rootElement);
+            } else {
+                Element dims = xmlDoc.getRootElement().getChild("application").getChild("dimensions");
+                dims.getChild("width").setText(w);
+                dims.getChild("height").setText(h);
+            }
             writer = new FileWriter(getInstallDir() + getFileSep() + configFileName);
             XMLOutputter xml = new XMLOutputter();
             xml.setFormat(Format.getPrettyFormat());
@@ -124,28 +144,52 @@ public class Config {
             }
         }
     }
-    
+
     public static Config getInstance() {
-        if(config==null) {
-            config=new Config();
+        if (config == null) {
+            config = new Config();
         }
         return config;
     }
 
     public void getConfig() {
         jdomBuilder = new SAXBuilder();
+        dimensions = javafx.stage.Screen.getPrimary().getBounds();
+        setWidth(null);
+        setHeight(null);
         try {
             xmlDoc = jdomBuilder.build(getInstallDir() + getFileSep() + configFileName);
             Element docRoot = xmlDoc.getRootElement();
             Element systemNode = docRoot.getChild("system");
+            Element appNode = docRoot.getChild("application");
+            Element dimsNode = appNode.getChild("dimensions");
             installDir = systemNode.getChildText("installDir");
             tmpDir = systemNode.getChildText("tmpDir");
+            if (dimsNode.getChild("width") != null) {
+                setWidth(dimsNode.getChild("width").getText());
+            }
+            if (dimsNode.getChild("height") != null) {
+                setHeight(dimsNode.getChild("height").getText());
+            }
+            if (getWidth() == null || getWidth().isEmpty()) {
+                setWidth("1300");
+            }
+            if (getHeight() == null || getHeight().isEmpty()) {
+                setHeight("800");
+            }
+            w = getWidth();
+            h = getHeight();
+            dimsNode.getChild("width").setText(w);
+            dimsNode.getChild("height").setText(h);
+
         } catch (FileNotFoundException ex) {
             //Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         } catch (JDOMException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -231,6 +275,34 @@ public class Config {
      */
     public void setBankName(String bankName) {
         this.bankName = bankName;
+    }
+
+    /**
+     * @return the width
+     */
+    public String getWidth() {
+        return width;
+    }
+
+    /**
+     * @param width the width to set
+     */
+    public void setWidth(String width) {
+        this.width = width;
+    }
+
+    /**
+     * @return the height
+     */
+    public String getHeight() {
+        return height;
+    }
+
+    /**
+     * @param height the height to set
+     */
+    public void setHeight(String height) {
+        this.height = height;
     }
 
 }

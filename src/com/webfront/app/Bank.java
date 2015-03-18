@@ -94,7 +94,8 @@ public class Bank extends Application {
         config = Config.getInstance();
         bankName = config.getBankName();
         viewList = new HashMap<>();
-        config.setConfig();
+        config.getConfig();
+        //config.setConfig();
         observableAccounts = javafx.collections.FXCollections.observableArrayList();
     }
 
@@ -415,6 +416,15 @@ public class Bank extends Application {
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);
+        primaryStage.setOnCloseRequest(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                config.setWidth(Double.toString(primaryStage.getWidth()));
+                config.setHeight(Double.toString(primaryStage.getHeight()));
+                config.setConfig();
+            }
+        });
+        
         primaryStage.show();
     }
 
