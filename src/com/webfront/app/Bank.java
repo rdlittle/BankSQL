@@ -101,7 +101,8 @@ public class Bank extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        scene = new Scene(new VBox(), 1300, 800);
+//        scene = new Scene(new VBox(), 1300, 800);
+        scene = new Scene(new VBox(), Double.parseDouble(config.getWidth()), Double.parseDouble(config.getHeight()));
 
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("_File");

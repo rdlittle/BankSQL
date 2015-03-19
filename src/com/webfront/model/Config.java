@@ -5,6 +5,7 @@
  */
 package com.webfront.model;
 
+import com.webfront.app.Bank;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,7 +18,6 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.ObservableList;
-import javafx.geometry.Rectangle2D;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -50,18 +50,20 @@ public class Config {
     private String x, y, w, h;
     private String width;
     private String height;
-    private Rectangle2D dimensions;
 
     private Config() {
-//        try {
-//            ResourceBundle bundle = ResourceBundle.getBundle("com.webfront.app.bank");
-//            if (bundle.containsKey("bankName")) {
-//                bankName = bundle.getString("bankName");
-//            }
-//            
-//        } catch (MissingResourceException e) {
-//            System.out.println("Can't find bundle file ");
-//        }
+        try {
+            ResourceBundle bundle = ResourceBundle.getBundle("com.webfront.app.bank");
+            if (bundle.containsKey("defaultWidth")) {
+                width = bundle.getString("bankName");
+            }
+            if (bundle.containsKey("defaultheight")) {
+                height = bundle.getString("defaultheight");
+            }            
+            
+        } catch (MissingResourceException e) {
+            Logger.getLogger(Bank.class.getName()).log(Level.WARNING, "Can't find resource bank.properties");
+        }
         // Set up some system-dependant defaults
         Properties properties;
         properties = System.getProperties();
@@ -110,23 +112,22 @@ public class Config {
                 xmlDoc = new Document();
                 Element rootElement = new Element(root);
                 Element systemNode = new Element("system");
-                Element appNode = new Element("application");
-                Element dimsNode = new Element("dimensions");
+                Element windowNode = new Element("window");
                 systemNode.addContent(new Element("installDir").addContent(getInstallDir()));
-                dimsNode.addContent(new Element("width").addContent(w));
-                dimsNode.addContent(new Element("height").addContent(h));
-                appNode.addContent(dimsNode);
+                windowNode.addContent(new Element("width").addContent(w));
+                windowNode.addContent(new Element("height").addContent(h));
 
                 String tmp = tmpDir;
                 tmp.replaceAll("/", "\\/");
                 systemNode.addContent(new Element("tmpDir").addContent(tmp));
                 rootElement.addContent(systemNode);
-                rootElement.addContent(appNode);
+                rootElement.addContent(windowNode);
                 xmlDoc.setRootElement(rootElement);
             } else {
-                Element dims = xmlDoc.getRootElement().getChild("application").getChild("dimensions");
-                dims.getChild("width").setText(w);
-                dims.getChild("height").setText(h);
+                Element root = xmlDoc.getRootElement();
+                Element dims = root.getChild("window");
+                dims.getChild("width").setText(getWidth());
+                dims.getChild("height").setText(getHeight());
             }
             writer = new FileWriter(getInstallDir() + getFileSep() + configFileName);
             XMLOutputter xml = new XMLOutputter();
@@ -154,33 +155,30 @@ public class Config {
 
     public void getConfig() {
         jdomBuilder = new SAXBuilder();
-        dimensions = javafx.stage.Screen.getPrimary().getBounds();
-        setWidth(null);
-        setHeight(null);
         try {
             xmlDoc = jdomBuilder.build(getInstallDir() + getFileSep() + configFileName);
             Element docRoot = xmlDoc.getRootElement();
             Element systemNode = docRoot.getChild("system");
-            Element appNode = docRoot.getChild("application");
-            Element dimsNode = appNode.getChild("dimensions");
+            Element windowNode = docRoot.getChild("window");
             installDir = systemNode.getChildText("installDir");
             tmpDir = systemNode.getChildText("tmpDir");
-            if (dimsNode.getChild("width") != null) {
-                setWidth(dimsNode.getChild("width").getText());
+
+            if (windowNode == null) {
+                windowNode = new Element("window");
+                windowNode.addContent(new Element("width").setText("1300"));
+                windowNode.addContent(new Element("height").setText("800"));
+                docRoot.addContent(windowNode);
+            } else {
+                if (windowNode.getChild("width") == null) {
+                    windowNode.addContent(new Element("width").setText("1300"));
+                }
+                if (windowNode.getChild("height") == null) {
+                    windowNode.addContent(new Element("height").setText("800"));
+                }
             }
-            if (dimsNode.getChild("height") != null) {
-                setHeight(dimsNode.getChild("height").getText());
-            }
-            if (getWidth() == null || getWidth().isEmpty()) {
-                setWidth("1300");
-            }
-            if (getHeight() == null || getHeight().isEmpty()) {
-                setHeight("800");
-            }
-            w = getWidth();
-            h = getHeight();
-            dimsNode.getChild("width").setText(w);
-            dimsNode.getChild("height").setText(h);
+
+            setWidth(windowNode.getChild("width").getText());
+            setHeight(windowNode.getChild("height").getText());
 
         } catch (FileNotFoundException ex) {
             //Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
