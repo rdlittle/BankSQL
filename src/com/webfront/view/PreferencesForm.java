@@ -56,13 +56,13 @@ public class PreferencesForm extends AnchorPane {
 
     @FXML
     TabPane tabPane;
-    
+
     @FXML
     Tab accountTab;
-    
+
     @FXML
     Tab generalTab;
-    
+
     @FXML
     TextField txtInstallLocation;
     @FXML
@@ -379,7 +379,7 @@ public class PreferencesForm extends AnchorPane {
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         if (newValue != null) {
                             if (!newValue.equals(oldValue)) {
-                                form.account.setConfigName((String)newValue);
+                                form.account.setConfigName((String) newValue);
                                 form.hasChanged.set(true);
                             }
                         }
@@ -450,20 +450,22 @@ public class PreferencesForm extends AnchorPane {
             int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
             form.cbAccounts.getItems().set(idx, form.account.getAccountName());
         } else {
-            form.account.setBankName(form.txtBankName.getText());
-            form.account.setAccountName(form.txtAccountName.getText());
-            form.account.setAccountNumber(form.txtAccountNumber.getText());
-            form.account.setRoutingNumber(form.txtRoutingNumber.getText());
-            form.account.setAddress1(form.txtAddress1.getText());
-            form.account.setCity(form.txtCity.getText());
-            form.account.setStateAbbr(form.cbStates.getValue());
-            form.account.setPostalCode(form.txtPostalCode.getText());
-            form.account.setPhoneNumber(form.txtPhone.getText());
-            form.account.setConfigName(form.txtConfigName.getText());
-            if(form.account.getAccountName()==null || form.account.getAccountName().isEmpty()) {
-                form.account.setAccountName(form.account.getId().toString());
+            if (form.account != null) {
+                form.account.setBankName(form.txtBankName.getText());
+                form.account.setAccountName(form.txtAccountName.getText());
+                form.account.setAccountNumber(form.txtAccountNumber.getText());
+                form.account.setRoutingNumber(form.txtRoutingNumber.getText());
+                form.account.setAddress1(form.txtAddress1.getText());
+                form.account.setCity(form.txtCity.getText());
+                form.account.setStateAbbr(form.cbStates.getValue());
+                form.account.setPostalCode(form.txtPostalCode.getText());
+                form.account.setPhoneNumber(form.txtPhone.getText());
+                form.account.setConfigName(form.txtConfigName.getText());
+                if (form.account.getAccountName() == null || form.account.getAccountName().isEmpty()) {
+                    form.account.setAccountName(form.account.getId().toString());
+                }
+                acctMgr.update(form.account);
             }
-            acctMgr.update(form.account);
         }
         form.accountSelected.set(false);
         form.hasChanged.set(false);
