@@ -480,4 +480,16 @@ public class PreferencesForm extends AnchorPane {
     public void closeForm() {
         form.stage.close();
     }
+    
+    public TabPane getTabPane() {
+        return tabPane;
+    }
+    
+    public Tab getGeneralTab() {
+        return generalTab;
+    }
+    
+    public Tab getAccountTab() {
+        return accountTab;
+    }
 }

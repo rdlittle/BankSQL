@@ -177,8 +177,8 @@ public class Bank extends Application {
                             addLedger(acct);
                             int pos = 1;
                             for (Tab t : getLedgers()) {
-                                if (tabPane.getTabs().indexOf(t)>-1) {
-                                    pos+=1;
+                                if (tabPane.getTabs().indexOf(t) > -1) {
+                                    pos += 1;
                                 }
                                 if (t.getId().equals(acct.getId().toString())) {
                                     tabPane.getTabs().add(pos, t);
@@ -237,6 +237,8 @@ public class Bank extends Application {
                         config.setConfig();
                     }
                 });
+                int idx = prefs.getTabPane().getTabs().indexOf(prefs.getGeneralTab());
+                prefs.getTabPane().getSelectionModel().select(idx);
                 prefs.showForm();
             }
         });
@@ -251,6 +253,8 @@ public class Bank extends Application {
                         config.setConfig();
                     }
                 });
+                int idx = prefs.getTabPane().getTabs().indexOf(prefs.getAccountTab());
+                prefs.getTabPane().getSelectionModel().select(idx);
                 prefs.showForm();
             }
         });
@@ -430,7 +434,7 @@ public class Bank extends Application {
                 config.setConfig();
             }
         });
-        
+
         primaryStage.show();
     }
 
