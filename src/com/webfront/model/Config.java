@@ -32,7 +32,7 @@ import org.jdom2.output.XMLOutputter;
 public class Config {
 
     public ObservableList<Account> accountList;
-    private String bankName;
+//    private String bankName;
     private String installDir;
     private String tmpDir;
     private String home;
@@ -275,19 +275,19 @@ public class Config {
         this.systemTmpDir = systemTmpDir;
     }
 
-    /**
-     * @return the bankName
-     */
-    public String getBankName() {
-        return bankName;
-    }
-
-    /**
-     * @param bankName the bankName to set
-     */
-    public void setBankName(String bankName) {
-        this.bankName = bankName;
-    }
+//    /**
+//     * @return the bankName
+//     */
+//    public String getBankName() {
+//        return bankName;
+//    }
+//
+//    /**
+//     * @param bankName the bankName to set
+//     */
+//    public void setBankName(String bankName) {
+//        this.bankName = bankName;
+//    }
 
     /**
      * @return the width

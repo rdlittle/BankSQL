@@ -59,6 +59,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  *
@@ -92,7 +93,7 @@ public class Bank extends Application {
         importDone = new SimpleBooleanProperty(true);
         bankName = "";
         config = Config.getInstance();
-        bankName = config.getBankName();
+//        bankName = config.getBankName();
         viewList = new HashMap<>();
         config.getConfig();
         //config.setConfig();
@@ -101,7 +102,6 @@ public class Bank extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-//        scene = new Scene(new VBox(), 1300, 800);
         scene = new Scene(new VBox(), Double.parseDouble(config.getWidth()), Double.parseDouble(config.getHeight()));
         primaryStage.setX(Double.parseDouble(config.getX()));
         primaryStage.setY(Double.parseDouble(config.getY()));
@@ -216,6 +216,7 @@ public class Bank extends Application {
         });
 
         fileExit.setOnAction((ActionEvent event) -> {
+            primaryStage.fireEvent(new Event(WindowEvent.WINDOW_CLOSE_REQUEST));
             System.exit(0);
         });
 
