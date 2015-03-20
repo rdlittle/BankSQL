@@ -103,6 +103,8 @@ public class Bank extends Application {
     public void start(Stage primaryStage) {
 //        scene = new Scene(new VBox(), 1300, 800);
         scene = new Scene(new VBox(), Double.parseDouble(config.getWidth()), Double.parseDouble(config.getHeight()));
+        primaryStage.setX(Double.parseDouble(config.getX()));
+        primaryStage.setY(Double.parseDouble(config.getY()));
 
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("_File");
@@ -422,6 +424,8 @@ public class Bank extends Application {
             public void handle(Event event) {
                 config.setWidth(Double.toString(primaryStage.getWidth()));
                 config.setHeight(Double.toString(primaryStage.getHeight()));
+                config.setX(Double.toString(primaryStage.getX()));
+                config.setY(Double.toString(primaryStage.getY()));
                 config.setConfig();
             }
         });
