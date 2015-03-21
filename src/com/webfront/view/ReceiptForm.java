@@ -5,11 +5,15 @@
  */
 package com.webfront.view;
 
+import com.webfront.app.Bank;
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.StoresManager;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Receipts;
 import com.webfront.model.SearchCriteria;
+import com.webfront.model.SelectItem;
 import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
@@ -52,7 +56,7 @@ public class ReceiptForm extends AnchorPane {
     @FXML
     DatePicker transDate;
     @FXML
-    ChoiceBox accountNum;
+    ComboBox<SelectItem> cbAccount;
     @FXML
     ComboBox<String> primaryCat;
     @FXML
@@ -93,6 +97,7 @@ public class ReceiptForm extends AnchorPane {
         oldReceipt = prevReceipt;
         newReceipt = new Receipts();
         transDate = new DatePicker();
+        cbAccount = new ComboBox<>();
         primaryCat = new ComboBox<>();
         subCat = new ComboBox<>();
         storeMap = new HashMap<>();
@@ -125,8 +130,12 @@ public class ReceiptForm extends AnchorPane {
             for (Stores s : view.getStoreList()) {
                 storeMap.put(s.getStoreName(), s);
                 cbStores.getItems().add(s.getStoreName());
-            };
+            }
 
+            for(Account acct : Bank.accountList) {
+                SelectItem<Integer,String> se = new SelectItem<>(acct.getId(),acct.getAccountName());
+                cbAccount.getItems().add(se);
+            }
             cbStores.setEditable(true);
             cbStores.setPromptText("Enter store name...");
             cbStores.setOnAction(new EventHandler() {
@@ -274,19 +283,22 @@ public class ReceiptForm extends AnchorPane {
             transDate.setValue(localDate);
             transDescription.setText(oldReceipt.getTransDesc());
             transAmt.setText(Float.toString(oldReceipt.getTransAmt()));
-            accountNum.setValue(oldReceipt.getAccountNum().toString());
             Ledger l = oldReceipt.getLedgerEntry();
             if (l != null) {
                 transId.setText(l.getId().toString());
             }
+            Integer aid = l.getAccountNum();
+            Account acct = AccountManager.getInstance().getAccount(aid);
+            SelectItem<Integer,String> se = new SelectItem<>(aid,acct.getAccountName());
             primaryCat.setValue(oldReceipt.getPrimaryCat().getDescription());
+            cbAccount.setValue(se);
             subCat.setValue(oldReceipt.getSubCat().getDescription());
             if (oldReceipt.getStore().getStoreName() != null) {
                 cbStores.setValue(oldReceipt.getStore().getStoreName());
             }
         } else {
             transDate.setValue(LocalDate.now());
-            accountNum.setValue("1");
+            cbAccount.getSelectionModel().selectFirst();
             transId.setText("0");
             transAmt.setText("0");
             btnDelete.setDisable(true);
@@ -317,7 +329,7 @@ public class ReceiptForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             oldReceipt.setTransDate(Date.valueOf(dateStr));
             oldReceipt.setTransDesc(transDescription.getText());
-            oldReceipt.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+            oldReceipt.setAccountNum((Integer)cbAccount.getSelectionModel().getSelectedItem().getKey());
             oldReceipt.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
@@ -336,7 +348,7 @@ public class ReceiptForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             receipt.setTransDate(Date.valueOf(dateStr));
             receipt.setTransDesc(transDescription.getText());
-            receipt.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+            receipt.setAccountNum(Integer.parseInt(cbAccount.getSelectionModel().getSelectedItem().toString()));
             receipt.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
