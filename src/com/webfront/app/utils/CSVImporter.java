@@ -82,10 +82,11 @@ public class CSVImporter extends Importer {
             }
 
             Float amount;
-            LedgerItem item = new LedgerItem();
+            
             if (lineDefinition != null) {
                 lineMatcher = Pattern.compile(lineDefinition.getText()).matcher(line);
                 if (lineMatcher.matches()) {
+                    LedgerItem item = new LedgerItem();
                     int groups = lineMatcher.groupCount();
                     for (int g = 1; g <= groups; g++) {
                         System.out.println(g + ") " + lineMatcher.group(g));
@@ -96,16 +97,17 @@ public class CSVImporter extends Importer {
                         String charge = lineMatcher.group(4).replaceAll("\"", "");
                         item.setAmount(charge.replaceAll(",", ""));
                     }
-                    if (lineMatcher.group(6) != null) {
-                        String payment = lineMatcher.group(6).replaceAll("\"", "");
+                    if (lineMatcher.group(8) != null) {
+                        String payment = lineMatcher.group(8).replaceAll("\"", "");
                         amount = Float.parseFloat(payment.replaceAll(",", ""));
                         amount = amount * -1;
                         item.setAmount(amount.toString());
                     }
+                    entries.add(item);
                 }
             }
-            entries.add(item);
         }
+        
         entries.sort(LedgerItem.LedgerComparator);
         for (LedgerItem item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
@@ -119,9 +121,9 @@ public class CSVImporter extends Importer {
             float amount = Float.parseFloat(amountString);
             if (isCredit) {
                 lastBalance += amount;
-                totalDeposits += amount;
+                totalDeposits -= amount;
             } else {
-                lastBalance -= amount;
+                lastBalance += amount;
                 totalWithdrawals += amount;
             }
             Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);

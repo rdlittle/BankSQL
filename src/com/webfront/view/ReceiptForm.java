@@ -35,7 +35,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
@@ -321,7 +320,6 @@ public class ReceiptForm extends AnchorPane {
             view.getStoreList().add(store);
             view.getStoreAdded().set(true);
             cbStores.getItems().sort(comparator);
-            System.out.println("Store added");
         }
 
         if (oldReceipt.getId() != null) {
