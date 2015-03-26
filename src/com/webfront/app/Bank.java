@@ -93,10 +93,8 @@ public class Bank extends Application {
         importDone = new SimpleBooleanProperty(true);
         bankName = "";
         config = Config.getInstance();
-//        bankName = config.getBankName();
         viewList = new HashMap<>();
         config.getConfig();
-        //config.setConfig();
         observableAccounts = javafx.collections.FXCollections.observableArrayList();
     }
 
@@ -427,8 +425,8 @@ public class Bank extends Application {
         primaryStage.setOnCloseRequest(new EventHandler() {
             @Override
             public void handle(Event event) {
-                config.setWidth(Double.toString(primaryStage.getWidth()));
-                config.setHeight(Double.toString(primaryStage.getHeight()));
+                config.setWidth(Double.toString(scene.getWidth()));
+                config.setHeight(Double.toString(scene.getHeight()));
                 config.setX(Double.toString(primaryStage.getX()));
                 config.setY(Double.toString(primaryStage.getY()));
                 config.setConfig();

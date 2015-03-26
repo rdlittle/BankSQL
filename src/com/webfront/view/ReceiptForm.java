@@ -131,8 +131,8 @@ public class ReceiptForm extends AnchorPane {
                 cbStores.getItems().add(s.getStoreName());
             }
 
-            for(Account acct : Bank.accountList) {
-                SelectItem<Integer,String> se = new SelectItem<>(acct.getId(),acct.getAccountName());
+            for (Account acct : Bank.accountList) {
+                SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
                 cbAccount.getItems().add(se);
             }
             cbStores.setEditable(true);
@@ -266,7 +266,7 @@ public class ReceiptForm extends AnchorPane {
             searchLink.setOnAction((ActionEvent e) -> {
                 System.out.println("This link is clicked");
             });
-           stage.show();
+            stage.show();
         } catch (IOException ex) {
             Logger.getLogger(ReceiptForm.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -285,12 +285,14 @@ public class ReceiptForm extends AnchorPane {
             Ledger l = oldReceipt.getLedgerEntry();
             if (l != null) {
                 transId.setText(l.getId().toString());
+                Integer aid = l.getAccountNum();
+                Account acct = AccountManager.getInstance().getAccount(aid);
+                SelectItem<Integer, String> se = new SelectItem<>(aid, acct.getAccountName());
+                cbAccount.setValue(se);
+            } else {
+                cbAccount.getSelectionModel().selectFirst();
             }
-            Integer aid = l.getAccountNum();
-            Account acct = AccountManager.getInstance().getAccount(aid);
-            SelectItem<Integer,String> se = new SelectItem<>(aid,acct.getAccountName());
             primaryCat.setValue(oldReceipt.getPrimaryCat().getDescription());
-            cbAccount.setValue(se);
             subCat.setValue(oldReceipt.getSubCat().getDescription());
             if (oldReceipt.getStore().getStoreName() != null) {
                 cbStores.setValue(oldReceipt.getStore().getStoreName());
@@ -327,7 +329,7 @@ public class ReceiptForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             oldReceipt.setTransDate(Date.valueOf(dateStr));
             oldReceipt.setTransDesc(transDescription.getText());
-            oldReceipt.setAccountNum((Integer)cbAccount.getSelectionModel().getSelectedItem().getKey());
+            oldReceipt.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
             oldReceipt.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);

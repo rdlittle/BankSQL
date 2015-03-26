@@ -41,6 +41,7 @@ public class CSVImporter extends Importer {
                 lastBalance += item.getTransBal();
             }
         }
+        beginningBalance = lastBalance;
     }
 
     @Override
@@ -88,9 +89,9 @@ public class CSVImporter extends Importer {
                 if (lineMatcher.matches()) {
                     LedgerItem item = new LedgerItem();
                     int groups = lineMatcher.groupCount();
-                    for (int g = 1; g <= groups; g++) {
-                        System.out.println(g + ") " + lineMatcher.group(g));
-                    }
+//                    for (int g = 1; g <= groups; g++) {
+//                        System.out.println(g + ") " + lineMatcher.group(g));
+//                    }
                     item.setDate(lineMatcher.group(1).replaceAll("\"", ""));
                     item.setDescription(lineMatcher.group(3).replaceAll("\"", ""));
                     if (lineMatcher.group(4) != null) {
@@ -108,7 +109,7 @@ public class CSVImporter extends Importer {
             }
         }
         
-        entries.sort(LedgerItem.LedgerComparator);
+        
         for (LedgerItem item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
             String amountString = item.getAmount();
@@ -137,6 +138,11 @@ public class CSVImporter extends Importer {
             ledger.setTransDesc(item.getDescription());
             getItemList().add(ledger);
         }
+    }
+    
+    @Override
+    public void doSort() {
+        entries.sort(LedgerItem.LedgerComparator);
     }
 
     public void loadImportFile(BufferedReader reader) throws IOException {
