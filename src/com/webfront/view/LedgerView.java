@@ -23,8 +23,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -33,7 +33,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class LedgerView extends Pane {
+public class LedgerView extends VBox {
 
     public int accountNumber;
     private static LedgerView ledgerView;
@@ -50,10 +50,20 @@ public class LedgerView extends Pane {
     TableColumn<Ledger, String> subCatColumn;
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
-    
+
     public LedgerView(int acctNum) {
         super();
         
+        this.setPrefHeight(900);
+        this.setPrefWidth(1600);
+//        this.setMaxHeight(Double.MAX_VALUE);
+        this.setStyle("-fx-background-color: #336699;");
+        
+        HBox buttonBox = new HBox();
+        buttonBox.setStyle("-fx-background-color: #ffffff;");
+        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
+        buttonBox.setPadding(new Insets(10, 10, 10, 10));
+
         accountNumber = acctNum;
         ledgerManager = new LedgerManager();
         categoryManager = new CategoryManager();
@@ -61,7 +71,7 @@ public class LedgerView extends Pane {
         list = ledgerManager.getList(Integer.toString(acctNum));
 
         table = new TableView<>();
-        table.setMaxWidth(USE_PREF_SIZE);
+        table.setPrefSize(800, 1300);
 
         dateColumn = new TableColumn("Date");
         dateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
@@ -126,10 +136,9 @@ public class LedgerView extends Pane {
         };
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-
         table.getItems().addAll(list);
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
-        VBox vbox = new VBox();
+
         btnSearch = new Button("Search");
         btnSearch.setOnAction(new EventHandler() {
             @Override
@@ -147,14 +156,9 @@ public class LedgerView extends Pane {
                 table.setItems(list);
             }
         });
-        HBox buttons = new HBox();
-        buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10, 10, 0, 10));
-        buttons.setSpacing(10.0);
-        buttons.getChildren().addAll(btnSearch, btnReset);
-        vbox.getChildren().addAll(table, buttons);
 
-        getChildren().addAll(vbox);
+        buttonBox.getChildren().addAll(btnSearch, btnReset);
+        getChildren().addAll(table,buttonBox);
         ledgerView = this;
     }
 
@@ -164,14 +168,14 @@ public class LedgerView extends Pane {
         }
         return ledgerView;
     }
-    
+
     public LedgerView newInstance(int acctNum) {
         LedgerView view = new LedgerView(acctNum);
-        view.accountNumber=acctNum;
+        view.accountNumber = acctNum;
         ledgerView = view;
         return view;
     }
-    
+
     public void doSearch(String sql) {
         SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();

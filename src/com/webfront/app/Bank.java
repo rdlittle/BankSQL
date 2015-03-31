@@ -452,7 +452,8 @@ public class Bank extends Application {
     private void addLedger(Account acct) {
         LedgerView lv = new LedgerView(acct.getId());
         lv.setPrefSize(scene.getWidth(), scene.getHeight());
-        lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+        //lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+        //lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight());
         viewList.put(acct.getId(), lv);
         Tab t = new LedgerTab(acct.getBankName(), acct.getId());
         t.setClosable(true);
