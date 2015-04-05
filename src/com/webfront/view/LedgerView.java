@@ -23,7 +23,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -33,7 +33,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class LedgerView extends VBox {
+public class LedgerView extends AnchorPane {
 
     public int accountNumber;
     private static LedgerView ledgerView;
@@ -53,16 +53,13 @@ public class LedgerView extends VBox {
 
     public LedgerView(int acctNum) {
         super();
-        
-        this.setPrefHeight(900);
-        this.setPrefWidth(1600);
-//        this.setMaxHeight(Double.MAX_VALUE);
         this.setStyle("-fx-background-color: #336699;");
         
         HBox buttonBox = new HBox();
-        buttonBox.setStyle("-fx-background-color: #ffffff;");
+        buttonBox.getStyleClass().add("panel");
         buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonBox.setPadding(new Insets(10, 10, 10, 10));
+        buttonBox.setPadding(new Insets(8));
+        buttonBox.setSpacing(10);
 
         accountNumber = acctNum;
         ledgerManager = new LedgerManager();
@@ -71,7 +68,6 @@ public class LedgerView extends VBox {
         list = ledgerManager.getList(Integer.toString(acctNum));
 
         table = new TableView<>();
-        table.setPrefSize(800, 1300);
 
         dateColumn = new TableColumn("Date");
         dateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
@@ -158,7 +154,18 @@ public class LedgerView extends VBox {
         });
 
         buttonBox.getChildren().addAll(btnSearch, btnReset);
+        
+        AnchorPane.setTopAnchor(table, 0.0);
+        AnchorPane.setLeftAnchor(table, 0.0);
+        AnchorPane.setRightAnchor(table, 0.0);
+        AnchorPane.setBottomAnchor(table, 0.0);
+        
+        AnchorPane.setBottomAnchor(buttonBox, 0.0);
+        AnchorPane.setLeftAnchor(buttonBox, 0.0);
+        AnchorPane.setRightAnchor(buttonBox, 0.0);
+        
         getChildren().addAll(table,buttonBox);
+        
         ledgerView = this;
     }
 

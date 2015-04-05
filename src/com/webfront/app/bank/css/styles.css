@@ -33,3 +33,7 @@ and open the template in the editor.
     -fx-border-radius: 5;
     -fx-padding: 3 6 6 6;    
 }
+
+.panel {
+    -fx-background-color: linear-gradient(to bottom, white 0%, silver 100%);
+}

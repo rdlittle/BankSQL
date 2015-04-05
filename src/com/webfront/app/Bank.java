@@ -69,37 +69,38 @@ public class Bank extends Application {
 
     final int TAB_BOTTOM_MARGIN = 130;
     final ProgressBar progressBar;
-    final SimpleDoubleProperty sdp;
+
+    private final Config config;
+    private final String defaultConfig = ".bankSQL";
+
+    private static Stage stage = null;
+    private static List<Tab> ledgers;
+
+    public static ArrayList<Account> accountList;
+    public static HashMap<Integer, LedgerView> viewList;
+    public Scene scene;
+
     ResourceBundle bundle;
     Thread importThread;
     SimpleBooleanProperty importDone;
     Importer importer;
-    Importer pdfImporter;
-    String bankName;
     String tmpDir;
-    private final Config config;
-    private final String defaultConfig = ".bankSQL";
-    public static ArrayList<Account> accountList;
-    ObservableList observableAccounts;
-    public static HashMap<Integer, LedgerView> viewList;
+
     TabPane tabPane;
-    private static List<Tab> ledgers;
+
     int accountId;
-    public Scene scene;
 
     public Bank() {
-        this.sdp = new SimpleDoubleProperty();
         this.progressBar = new ProgressBar(0);
         importDone = new SimpleBooleanProperty(true);
-        bankName = "";
         config = Config.getInstance();
         viewList = new HashMap<>();
         config.getConfig();
-        observableAccounts = javafx.collections.FXCollections.observableArrayList();
     }
 
     @Override
     public void start(Stage primaryStage) {
+
         scene = new Scene(new VBox(), Double.parseDouble(config.getWidth()), Double.parseDouble(config.getHeight()));
         primaryStage.setX(Double.parseDouble(config.getX()));
         primaryStage.setY(Double.parseDouble(config.getY()));
@@ -263,7 +264,8 @@ public class Bank extends Application {
         tabPane.getTabs().add(receiptsTab);
 
         Pane statusPanel = new Pane();
-        statusPanel.setPrefSize(scene.getWidth(), 110);
+        statusPanel.setPrefSize(scene.getWidth(), 100);
+        statusPanel.setMaxHeight(100);
         statusPanel.setPadding(new Insets(1, 5, 1, 5));
         statusPanel.getChildren().add(progressBar);
         progressBar.setPrefWidth(scene.getWidth() / 2);
@@ -432,8 +434,10 @@ public class Bank extends Application {
                 config.setConfig();
             }
         });
-
-        primaryStage.show();
+        if (stage == null) {
+            stage = primaryStage;
+        }
+        stage.show();
     }
 
     public void setAccounts() {
@@ -451,9 +455,7 @@ public class Bank extends Application {
 
     private void addLedger(Account acct) {
         LedgerView lv = new LedgerView(acct.getId());
-        lv.setPrefSize(scene.getWidth(), scene.getHeight());
-        //lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-        //lv.getTable().setPrefSize(scene.getWidth(), scene.getHeight());
+//        lv.setPrefSize(scene.getWidth(), scene.getHeight());
         viewList.put(acct.getId(), lv);
         Tab t = new LedgerTab(acct.getBankName(), acct.getId());
         t.setClosable(true);

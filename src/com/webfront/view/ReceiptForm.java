@@ -348,7 +348,7 @@ public class ReceiptForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             receipt.setTransDate(Date.valueOf(dateStr));
             receipt.setTransDesc(transDescription.getText());
-            receipt.setAccountNum(Integer.parseInt(cbAccount.getSelectionModel().getSelectedItem().toString()));
+            receipt.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
             receipt.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
