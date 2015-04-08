@@ -230,7 +230,7 @@ public final class SearchResults extends Pane {
             stage.setScene(scene);
             stage.show();
         } else {
-            if (clzz.getSimpleName().equals("Receipts")) {
+            if (clzz.getSimpleName().equals("Payment")) {
                 // Build results for a receipts list;
             }
         }

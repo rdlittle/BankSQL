@@ -88,7 +88,7 @@ public class Ledger implements Serializable {
     private List<Distribution> distribution;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
-    private List<Receipts> receipts;
+    private List<Payment> receipts;
     
     public Ledger() {
         this.id=null;
@@ -229,14 +229,14 @@ public class Ledger implements Serializable {
     /**
      * @return the receipt
      */
-    public List<Receipts> getReceipts() {
+    public List<Payment> getPayment() {
         return receipts;
     }
 
     /**
      * @param receipt the receipt to set
      */
-    public void setReceipts(List<Receipts> receipt) {
+    public void setPayment(List<Payment> receipt) {
         this.receipts = receipt;
     }
 

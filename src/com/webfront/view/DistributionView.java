@@ -5,8 +5,8 @@
  */
 package com.webfront.view;
 
-import com.webfront.model.Receipts;
-import com.webfront.view.ReceiptsView;
+import com.webfront.model.Payment;
+import com.webfront.view.PaymentView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -30,9 +30,9 @@ public class DistributionView extends TableView {
     TableColumn subCatColumn;
     TableColumn transAmtColumn;
     
-    private ObservableList<Receipts> list;
+    private ObservableList<Payment> list;
     
-    public DistributionView(ObservableList<Receipts> receiptsList) {
+    public DistributionView(ObservableList<Payment> receiptsList) {
         list=receiptsList;
 
         transDescColumn = new TableColumn("Description");
@@ -40,9 +40,9 @@ public class DistributionView extends TableView {
         transDescColumn.setMinWidth(200.0);
 
         storeColumn = new TableColumn("Store");
-        storeColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, SimpleStringProperty>() {
+        storeColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
             @Override
-            public SimpleStringProperty call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getStore() != null) {
                     return new SimpleStringProperty(param.getValue().getStore().getStoreName());
                 }
@@ -52,9 +52,9 @@ public class DistributionView extends TableView {
         storeColumn.setMinWidth(180.0);
 
         primaryCatColumn = new TableColumn("Cat 1");
-        primaryCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, ObservableValue<String>>() {
+        primaryCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
             @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getPrimaryCat() != null) {
                     return new SimpleStringProperty(param.getValue().getPrimaryCat().getDescription());
                 }
@@ -64,9 +64,9 @@ public class DistributionView extends TableView {
         primaryCatColumn.setMinWidth(190.0);
 
         subCatColumn = new TableColumn("Cat 2");
-        subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, ObservableValue<String>>() {
+        subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
             @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getSubCat() != null) {
                     return new SimpleStringProperty(param.getValue().getSubCat().getDescription());
                 }
@@ -86,8 +86,8 @@ public class DistributionView extends TableView {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Receipts receipt = (Receipts) getSelectionModel().getSelectedItem();
-                    ReceiptForm receiptForm = new ReceiptForm(ReceiptsView.getInstance(), receipt);
+                    Payment receipt = (Payment) getSelectionModel().getSelectedItem();
+                    PaymentForm receiptForm = new PaymentForm(PaymentView.getInstance(), receipt);
                 }
             }
         };
@@ -99,14 +99,14 @@ public class DistributionView extends TableView {
     /**
      * @return the list
      */
-    public ObservableList<Receipts> getList() {
+    public ObservableList<Payment> getList() {
         return list;
     }
 
     /**
      * @param list the list to set
      */
-    public void setList(ObservableList<Receipts> list) {
+    public void setList(ObservableList<Payment> list) {
         this.list = list;
     }
 }

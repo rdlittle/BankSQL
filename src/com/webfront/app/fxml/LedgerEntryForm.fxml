@@ -37,7 +37,7 @@
         <Label layoutX="750.0" layoutY="81.0" text="Amount" />
         <TextField fx:id="transAmt" layoutX="820.0" layoutY="76.0" prefHeight="26.0" prefWidth="111.0" />
         
-        <Label layoutX="10.0" layoutY="130.0" text="Desc" />
+        <Label fx:id="lblDescription" layoutX="10.0" layoutY="130.0" mnemonicParsing="true" text="_Desc" />
         <TextField fx:id="transDescription" layoutX="75.0" layoutY="124.0" prefHeight="26.0" prefWidth="857.0" />
         
         <Pane fx:id="distView" layoutX="75.0" layoutY="170.0" prefHeight="236.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">

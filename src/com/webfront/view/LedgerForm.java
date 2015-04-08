@@ -31,6 +31,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -69,6 +70,8 @@ public final class LedgerForm extends AnchorPane {
     Button btnOk;
     @FXML
     Button btnCancel;
+    @FXML
+    Label lblDescription;
 
     @FXML
     Pane distView;
@@ -101,6 +104,8 @@ public final class LedgerForm extends AnchorPane {
         categoryMap = new HashMap<>();
         subCatMap = new HashMap<>();
         distView = new Pane();
+        lblDescription = new Label();
+        lblDescription.setLabelFor(transDescription);
         distTable = new DistributionView(FXCollections.observableArrayList());
         buildForm();
         setFormData();
@@ -111,6 +116,9 @@ public final class LedgerForm extends AnchorPane {
             URL location = getClass().getResource("/com/webfront/app/fxml/LedgerEntryForm.fxml");
             ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
             FXMLLoader loader = new FXMLLoader(location, resources);
+
+            btnOk.setDefaultButton(true);
+            btnCancel.setCancelButton(true);
 
             stage = new Stage();
             scene = new Scene(this);
@@ -127,7 +135,7 @@ public final class LedgerForm extends AnchorPane {
             accountList.stream().forEach((acct) -> {
                 accountNum.getItems().add(acct.getId());
             });
-            
+
             for (Category c : cList) {
                 //Category parent = c.getParent();
                 Integer parent = c.getParent();
@@ -222,11 +230,19 @@ public final class LedgerForm extends AnchorPane {
             transDescription.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
-                    if (event.getCode() == KeyCode.TAB) {
-                        if (!transDescription.getText().equals(oldItem.getTransDesc())) {
-                            oldItem.setTransDesc(transDescription.getText());
-                            btnOk.setDisable(false);
-                        }
+                    if (!transDescription.getText().equals(oldItem.getTransDesc())) {
+                        oldItem.setTransDesc(transDescription.getText());
+                        btnOk.setDisable(false);
+                    }
+                }
+            });
+
+            transDescription.textProperty().addListener(new ChangeListener() {
+                @Override
+                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                    if (!oldValue.equals(newValue)) {
+
+                        btnOk.setDisable(false);
                     }
                 }
             });
@@ -270,7 +286,7 @@ public final class LedgerForm extends AnchorPane {
             }
             if (oldItem.getDistribution() != null && oldItem.getDistribution().size() > 0) {
                 if (oldItem.getDistribution().get(0) != null) {
-                    distTable.setList(FXCollections.observableList(oldItem.getReceipts()));
+                    distTable.setList(FXCollections.observableList(oldItem.getPayment()));
                     distTable.setItems(distTable.getList());
                     Category c = oldItem.getDistribution().get(0).getCategory();
                     if (c != null) {
@@ -296,15 +312,14 @@ public final class LedgerForm extends AnchorPane {
         }
     }
 
-    public Ledger getFormData() {
-        Ledger ledger = new Ledger();
-        ledger.setId(Integer.parseInt(transId.getText()));
-        ledger.setTransDesc(transDescription.getText());
-        ledger.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
-        ledger.setCheckNum(checkNum.getText());
-        ledger.setTransAmt(Float.parseFloat(transAmt.getText()));
-        ledger.setTransBal(Float.parseFloat(transBalance.getText()));
-        return ledger;
+    public void updateModel(Ledger item) {
+        item.setId(Integer.parseInt(transId.getText()));
+        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+        item.setTransDesc(transDescription.getText());
+        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+        item.setCheckNum(checkNum.getText());
+        item.setTransAmt(Float.parseFloat(transAmt.getText()));
+        item.setTransBal(Float.parseFloat(transBalance.getText()));
     }
 
     @FXML
@@ -315,12 +330,13 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     public void submitItem() {
         if (oldItem != null) {
+            updateModel(oldItem);
             view.getLedgerManager().update(oldItem);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {
-            Ledger ledger;
-            ledger = getFormData();
+            Ledger ledger=new Ledger();
+            updateModel(ledger);
             view.getLedgerManager().create(ledger);
             view.getTable().getItems().add(ledger);
         }

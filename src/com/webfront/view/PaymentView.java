@@ -7,11 +7,11 @@ package com.webfront.view;
 
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
-import com.webfront.bean.ReceiptsManager;
+import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
-import com.webfront.model.Receipts;
+import com.webfront.model.Payment;
 import com.webfront.model.Stores;
 import java.util.List;
 import javafx.beans.property.BooleanProperty;
@@ -39,17 +39,17 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class ReceiptsView extends Pane {
+public class PaymentView extends Pane {
 
-    private static ReceiptsView receiptsView;
+    private static PaymentView paymentView;
 
-    private ObservableList<Receipts> list;
+    private ObservableList<Payment> list;
     private ObservableList<Stores> storeList;
     private ObservableList<Category> categoryList;
-    private TableView<Receipts> table;
+    private TableView<Payment> table;
     private BooleanProperty storeAdded;
 
-    private final ReceiptsManager receiptsManager;
+    private final PaymentManager paymentManager;
     final StoresManager storesManager;
     final CategoryManager categoryManager;
     private final LedgerManager ledgerManager;
@@ -66,20 +66,20 @@ public class ReceiptsView extends Pane {
 
     Button btnAdd;
 
-    public ReceiptsView() {
+    public PaymentView() {
         super();
         storeAdded = new SimpleBooleanProperty();
         storeAdded.set(false);
         GridPane grid = new GridPane();
 
-        receiptsManager = new ReceiptsManager();
+        paymentManager = new PaymentManager();
         storesManager = new StoresManager();
         categoryManager = new CategoryManager();
         ledgerManager = new LedgerManager();
 
         storeList = FXCollections.observableArrayList();
         categoryList = (ObservableList<Category>) categoryManager.getCategories();
-        list = receiptsManager.getList("SELECT * FROM receipts ORDER BY transDate DESC");
+        list = paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC");
 
         table = new TableView<>();
         table.setMinWidth(1300.0);
@@ -101,35 +101,35 @@ public class ReceiptsView extends Pane {
         transDescColumn.setMaxWidth(315.0);
 
         transIdColumn = new TableColumn("Trans");
-        transIdColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, SimpleStringProperty>() {
+        transIdColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
             @Override
-            public SimpleStringProperty call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getLedgerEntry() != null) {
-                    // From this receipt (param.getValue()) get the Ledger item
+                    // From this payment (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
-                    List<Receipts> tmpList = l.getReceipts();
+                    List<Payment> tmpList = l.getPayment();
 //                    if(tmpList.size()==0) {
-//                        System.out.println("no receipts");
+//                        System.out.println("no payment");
 //                    }
-                    if (l.getReceipts() != null && l.getReceipts().size() > 0) {
+                    if (l.getPayment() != null && l.getPayment().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
-                    if (l.getReceipts() == null) {
-                        System.out.println(param.getValue().getId() + " Ledger.getReceipts() is null when in ReceiptsView.transIdColumn callback");
+                    if (l.getPayment() == null) {
+                        System.out.println(param.getValue().getId() + " Ledger.getPayment() is null when in PaymentView.transIdColumn callback");
                     } else {
-                        System.out.println(param.getValue().getId() + " Ledger.getReceipts() size is " + l.getReceipts().size() + " when in ReceiptsView.transIdColumn callback");
+                        System.out.println(param.getValue().getId() + " Ledger.getPayment() size is " + l.getPayment().size() + " when in PaymentView.transIdColumn callback");
                     }
                 }
-                //System.out.println(param.getValue().getId()+" has null ledger entry when in ReceiptsView.transIdColumn callback");
+                //System.out.println(param.getValue().getId()+" has null ledger entry when in PaymentView.transIdColumn callback");
                 return null;
             }
         });
         transIdColumn.setMinWidth(50.0);
 
         storeColumn = new TableColumn("Store");
-        storeColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, SimpleStringProperty>() {
+        storeColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
             @Override
-            public SimpleStringProperty call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getStore() != null) {
                     return new SimpleStringProperty(param.getValue().getStore().getStoreName());
                 }
@@ -139,9 +139,9 @@ public class ReceiptsView extends Pane {
         storeColumn.setMinWidth(50.0);
 
         primaryCatColumn = new TableColumn("Cat 1");
-        primaryCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, ObservableValue<String>>() {
+        primaryCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
             @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getPrimaryCat() != null) {
                     return new SimpleStringProperty(param.getValue().getPrimaryCat().getDescription());
                 }
@@ -151,9 +151,9 @@ public class ReceiptsView extends Pane {
         primaryCatColumn.setMinWidth(50.0);
 
         subCatColumn = new TableColumn("Cat 2");
-        subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Receipts, String>, ObservableValue<String>>() {
+        subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
             @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Receipts, String> param) {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Payment, String> param) {
                 if (param.getValue().getSubCat() != null) {
                     return new SimpleStringProperty(param.getValue().getSubCat().getDescription());
                 }
@@ -184,15 +184,15 @@ public class ReceiptsView extends Pane {
 
         btnAdd = new Button("Add Receipt");
         btnAdd.setOnAction((ActionEvent event) -> {
-            ReceiptForm receiptForm = new ReceiptForm(getInstance(), new Receipts());
+            PaymentForm paymentForm = new PaymentForm(getInstance(), new Payment());
         });
 
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Receipts receipt = (Receipts) table.getSelectionModel().getSelectedItem();
-                    ReceiptForm receiptForm = new ReceiptForm(receiptsView, receipt);
+                    Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
+                    PaymentForm paymentForm = new PaymentForm(paymentView, payment);
                 }
             }
         };
@@ -210,38 +210,38 @@ public class ReceiptsView extends Pane {
         getChildren().add(grid);
     }
 
-    public static ReceiptsView getInstance() {
-        if (receiptsView == null) {
-            receiptsView = new ReceiptsView();
+    public static PaymentView getInstance() {
+        if (paymentView == null) {
+            paymentView = new PaymentView();
         }
-        return receiptsView;
+        return paymentView;
     }
 
     /**
      * @return the table
      */
-    public TableView<Receipts> getTable() {
+    public TableView<Payment> getTable() {
         return table;
     }
 
     /**
      * @param table the table to set
      */
-    public void setTable(TableView<Receipts> table) {
+    public void setTable(TableView<Payment> table) {
         this.table = table;
     }
 
     /**
      * @return the list
      */
-    public ObservableList<Receipts> getList() {
+    public ObservableList<Payment> getList() {
         return list;
     }
 
     /**
      * @param list the list to set
      */
-    public void setList(ObservableList<Receipts> list) {
+    public void setList(ObservableList<Payment> list) {
         this.list = list;
     }
 
@@ -295,9 +295,9 @@ public class ReceiptsView extends Pane {
     }
 
     /**
-     * @return the receiptsManager
+     * @return the paymentManager
      */
-    public ReceiptsManager getReceiptsManager() {
-        return receiptsManager;
+    public PaymentManager getPaymentManager() {
+        return paymentManager;
     }
 }

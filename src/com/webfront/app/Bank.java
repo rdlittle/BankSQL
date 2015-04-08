@@ -23,7 +23,7 @@ import com.webfront.view.CategoryForm;
 import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PreferencesForm;
-import com.webfront.view.ReceiptsView;
+import com.webfront.view.PaymentView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import java.util.ArrayList;
@@ -161,7 +161,7 @@ public class Bank extends Application {
         StoresView stores = StoresView.getInstance();
         storesTab.setContent(stores);
 
-        ReceiptsView receipts = ReceiptsView.getInstance();
+        PaymentView receipts = PaymentView.getInstance();
         receiptsTab.setContent(receipts);
 
         fileOpen.setOnAction(new EventHandler() {
