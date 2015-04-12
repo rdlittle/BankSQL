@@ -108,9 +108,6 @@ public class PaymentView extends Pane {
                     // From this payment (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
                     List<Payment> tmpList = l.getPayment();
-//                    if(tmpList.size()==0) {
-//                        System.out.println("no payment");
-//                    }
                     if (l.getPayment() != null && l.getPayment().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
@@ -120,7 +117,6 @@ public class PaymentView extends Pane {
                         System.out.println(param.getValue().getId() + " Ledger.getPayment() size is " + l.getPayment().size() + " when in PaymentView.transIdColumn callback");
                     }
                 }
-                //System.out.println(param.getValue().getId()+" has null ledger entry when in PaymentView.transIdColumn callback");
                 return null;
             }
         });

@@ -214,8 +214,10 @@ public final class PaymentForm extends AnchorPane {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                     if (oldPayment.getId() != null) {
-                        if (oldPayment.getSubCat().getDescription() != subCat.getValue()) {
-                            btnOk.setDisable(false);
+                        if (oldPayment.getSubCat() != null) {
+                            if (oldPayment.getSubCat().getDescription() != subCat.getValue()) {
+                                btnOk.setDisable(false);
+                            }
                         }
                     }
                 }
@@ -292,9 +294,17 @@ public final class PaymentForm extends AnchorPane {
                 cbAccount.setValue(se);
             } else {
                 cbAccount.getSelectionModel().selectFirst();
+                for (SelectItem se : cbAccount.getItems()) {
+                    if (se.getKey() == oldPayment.getAccountNum()) {
+                        cbAccount.getSelectionModel().select(se);
+                        break;
+                    }
+                }
             }
             primaryCat.setValue(oldPayment.getPrimaryCat().getDescription());
-            subCat.setValue(oldPayment.getSubCat().getDescription());
+            if (oldPayment.getSubCat() != null) {
+                subCat.setValue(oldPayment.getSubCat().getDescription());
+            }
             if (oldPayment.getStore().getStoreName() != null) {
                 cbStores.setValue(oldPayment.getStore().getStoreName());
             }
