@@ -5,18 +5,12 @@
  */
 package com.webfront.app;
 
-import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
-import com.webfront.app.utils.PDFImporter;
-import com.webfront.app.utils.StringUtil;
 import com.webfront.bean.AccountManager;
-import com.webfront.bean.DistributionManager;
 import com.webfront.controller.SummaryController;
 import com.webfront.model.Account;
 import com.webfront.model.Account.AccountStatus;
 import com.webfront.model.Config;
-import com.webfront.model.Distribution;
-import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import com.webfront.view.AccountPickerForm;
 import com.webfront.view.CategoryForm;
@@ -30,25 +24,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -82,7 +71,8 @@ public class Bank extends Application {
 
     ResourceBundle bundle;
     Thread importThread;
-    SimpleBooleanProperty importDone;
+    public static SimpleBooleanProperty importDone;
+    public static SimpleIntegerProperty accountNum;
     Importer importer;
     String tmpDir;
 
@@ -92,10 +82,12 @@ public class Bank extends Application {
 
     public Bank() {
         this.progressBar = new ProgressBar(0);
-        importDone = new SimpleBooleanProperty(true);
+        importDone = new SimpleBooleanProperty(false);
+        accountNum = new SimpleIntegerProperty();
         config = Config.getInstance();
         viewList = new HashMap<>();
         config.getConfig();
+
     }
 
     @Override
@@ -196,7 +188,9 @@ public class Bank extends Application {
         fileImport.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                importDone.setValue(Boolean.FALSE);
+                ImportForm importForm = ImportForm.getInstance(accountList);
+                importDone.bind(ImportForm.importDone);
+                accountNum.bind(ImportForm.accountNum);
             }
         });
 
@@ -290,128 +284,15 @@ public class Bank extends Application {
         importDone.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
-                if (importDone.getValue() == false) {
-                    accountId = -1;
-                    ImportForm importForm = ImportForm.getInstance(accountList);
-                    if (importForm.selectedAccount < 0 && importForm.fileName.isEmpty()) {
-                        ImportForm.setForm(null);
-                        return;
+                if (importDone.getValue() == true) {
+                    if (ImportForm.accountNum != null) {
+                        accountId = ImportForm.accountNum.get();
+                        LedgerView view = viewList.get(Integer.valueOf(accountId));
+                        view.getList().addAll(ImportForm.newItems);
+                        view.getList().sort(LedgerView.LedgerComparator);
+                        view.getTable().setItems(view.getList());
+                        importDone.unbind();
                     }
-                    if (importForm.selectedAccount >= 0) {
-                        accountId = importForm.selectedAccount;
-                    }
-                    if (importForm.fileName != null && !importForm.fileName.isEmpty()) {
-                        if (importForm.fileName.contains("pdf")) {
-                            importer = new PDFImporter(importForm.fileName, accountId);
-                        } else {
-                            importer = new CSVImporter(importForm.fileName, accountId);
-                        }
-                    }
-                    if (accountId > 0 && !importForm.fileName.isEmpty()) {
-                        progressBar.setVisible(true);
-                        importer.setFileName(importForm.fileName);
-                        Thread t = new Thread(importer);
-                        importForm.fileName = "";
-                        importForm.selectedAccount = 0;
-                        ImportForm.setForm(null);
-                        t.start();
-                        while (t.isAlive()) {
-                            try {
-                                t.join(1000);
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                        Task<Void> importTask = new Task<Void>() {
-                            @Override
-                            protected Void call() throws Exception {
-                                ArrayList<Ledger> list = importer.getItemList();
-                                DistributionManager distMgr = new DistributionManager();
-                                Double itemCount = (double) list.size();
-                                Double progress = (double) 0;
-                                Double itemsCreated = (double) 0;
-                                LedgerView view = viewList.get(Integer.valueOf(accountId));
-                                for (Ledger item : list) {
-                                    view.getLedgerManager().create(item);
-                                    Distribution dist = new Distribution(item);
-                                    dist.setCategory(item.getPrimaryCat());
-                                    distMgr.create(dist);
-                                    itemsCreated += 1;
-                                    progress = itemsCreated / itemCount;
-                                    updateProgress(progress, 1);
-                                }
-                                return null;
-                            }
-
-                            @Override
-                            protected void succeeded() {
-                                super.succeeded();
-                                updateMessage("Done!");
-                                LedgerView view = viewList.get(Integer.valueOf(accountId));
-                                view.getTable().getItems().clear();
-                                view.getList().addAll(importer.getItemList());
-                                view.getList().sort(LedgerView.LedgerComparator);
-                                view.getTable().setItems(view.getList());
-                                progressBar.progressProperty().unbind();
-                                progressBar.setProgress(0);
-                                progressBar.setVisible(false);
-                                importDone.setValue(Boolean.TRUE);
-                            }
-
-                            @Override
-                            protected void cancelled() {
-                                super.cancelled();
-                                updateMessage("Cancelled!");
-                            }
-
-                            @Override
-                            protected void failed() {
-                                super.failed();
-                                updateMessage("Failed!");
-                            }
-                        };
-                        progressBar.progressProperty().bind(importTask.progressProperty());
-                        new Thread(importTask).start();
-                    }
-                } else {
-                    Group summary = new Group();
-                    HBox hbox = new HBox();
-                    VBox labelsBox = new VBox();
-                    VBox valuesBox = new VBox();
-                    ArrayList<Label> labels = new ArrayList<>();
-                    ArrayList<Label> values = new ArrayList<>();
-
-                    labels.add(new Label("Start date :"));
-                    labels.add(new Label("End date :"));
-                    labels.add(new Label("Beginning balance : "));
-                    labels.add(new Label("Total deposits : "));
-                    labels.add(new Label("Total withdrawals : "));
-                    labels.add(new Label("Total checks : "));
-                    labels.add(new Label("Total fees :"));
-                    labels.add(new Label("Ending balance : "));
-
-                    values.add(new Label(importer.startDate));
-                    values.add(new Label(importer.endDate));
-                    values.add(new Label(StringUtil.toCurrency(importer.beginningBalance.toString())));
-                    values.add(new Label(StringUtil.toCurrency(importer.totalDeposits.toString())));
-                    values.add(new Label(StringUtil.toCurrency(importer.totalWithdrawals.toString())));
-                    values.add(new Label(StringUtil.toCurrency(importer.totalChecks.toString())));
-                    values.add(new Label(StringUtil.toCurrency(importer.totalFees.toString())));
-
-                    values.add(new Label(StringUtil.toCurrency(importer.endingBalance.toString())));
-
-                    labelsBox.getChildren().addAll(labels);
-                    valuesBox.getChildren().addAll(values);
-
-                    labelsBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
-                    valuesBox.setAlignment(Pos.CENTER_RIGHT);
-                    valuesBox.setPadding(new Insets(0.0, 0.0, 20.0, 0.0));
-
-                    hbox.getChildren().addAll(labelsBox, valuesBox);
-                    hbox.setPadding(new Insets(10.0, 20.0, 0.0, 10.0));
-
-                    summary.getChildren().add(hbox);
-                    summaryTab.setContent(summary);
                 }
             }
         });
@@ -455,7 +336,6 @@ public class Bank extends Application {
 
     private void addLedger(Account acct) {
         LedgerView lv = new LedgerView(acct.getId());
-//        lv.setPrefSize(scene.getWidth(), scene.getHeight());
         viewList.put(acct.getId(), lv);
         Tab t = new LedgerTab(acct.getBankName(), acct.getId());
         t.setClosable(true);

@@ -5,10 +5,17 @@
  */
 package com.webfront.app.event;
 
+import javafx.event.Event;
+import javafx.event.EventType;
+
 /**
  *
  * @author rlittle
  */
-public class ImportHandler  {
-    
+public class ImportEvent extends Event {
+
+    public ImportEvent(EventType<? extends Event> eventType) {
+        super(eventType);
+    }
+
 }
