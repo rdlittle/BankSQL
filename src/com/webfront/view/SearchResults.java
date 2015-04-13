@@ -16,15 +16,20 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -113,6 +118,12 @@ public final class SearchResults extends Pane {
         tileButtons.setHgap(10.0);
         tileButtons.setVgap(8.0);
         tileButtons.setAlignment(Pos.CENTER_RIGHT);
+        tileButtons.setStyle("fx-background: blue;");
+        
+        Label label = new Label("Target date: "+searchCriteria.getDate()+" Amount: "+searchCriteria.getAmount());
+        label.setAlignment(Pos.CENTER_LEFT);
+        label.setStyle("fx-background: white;");
+        label.setPadding(new Insets(0,0,0,10));
 
         btnOK.setMaxWidth(Double.MAX_VALUE);
         btnCancel.setMaxWidth(Double.MAX_VALUE);
@@ -184,7 +195,7 @@ public final class SearchResults extends Pane {
             date.setCellFactory(new CellFormatter<>());
 
             description.setCellValueFactory(new PropertyValueFactory("transDesc"));
-            description.setMinWidth(620.00);
+            description.setMinWidth(520.00);
 
             primaryCat.setCellValueFactory(new PropertyValueFactory("primaryCat"));
             primaryCat.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
@@ -223,8 +234,23 @@ public final class SearchResults extends Pane {
             table.setItems(resultsList);
 
             Scene scene = new Scene(this);
-            vbox.getChildren().addAll(table, tileButtons);
+            GridPane bottomPane = new GridPane();
+            
+            ColumnConstraints col0 = new ColumnConstraints();
+            ColumnConstraints col1 = new ColumnConstraints();
+            
+            col0.setHalignment(HPos.LEFT);
+            col0.setHgrow(Priority.ALWAYS);
+            col1.setHalignment(HPos.RIGHT);
+            col1.setHgrow(Priority.NEVER);
+            
+            bottomPane.getColumnConstraints().addAll(col0,col1);
+            bottomPane.add(label, 0, 0);
+            bottomPane.add(tileButtons, 1,0);
+            
+            vbox.getChildren().addAll(table, bottomPane);
             this.getChildren().add(vbox);
+            
             stage = new Stage();
             stage.setTitle("Search Results");
             stage.setScene(scene);

@@ -226,11 +226,9 @@ public final class PaymentForm extends AnchorPane {
             transDescription.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
-                    //if (event.getCode() == KeyCode.TAB) {
                     if (!transDescription.getText().equals(oldPayment.getTransDesc())) {
                         btnOk.setDisable(false);
                     }
-                    //}
                 }
             });
 
@@ -414,6 +412,7 @@ public final class PaymentForm extends AnchorPane {
         searchCriteria = new SearchCriteria();
         String sql = "SELECT * from ledger where transDate >= \"";
         LocalDate localDate = transDate.getValue();
+        searchCriteria.setDate(localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
         LocalDate startDate = localDate.minusDays(5);
         LocalDate endDate = localDate.plusDays(5);
         String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -426,8 +425,11 @@ public final class PaymentForm extends AnchorPane {
         SearchResults searchResults = new SearchResults();
         searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        searchCriteria.setAmount(Float.toString(oldPayment.getTransAmt()));
+        if (oldPayment.getStore() != null) {
+            searchCriteria.setStoreId(oldPayment.getStore().getStoreName());
+        }
         searchResults.searchCriteria = this.searchCriteria;
-
         searchResults.resultProperty.addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
