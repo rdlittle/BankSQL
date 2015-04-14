@@ -37,3 +37,15 @@ and open the template in the editor.
 .panel {
     -fx-background-color: linear-gradient(to bottom, white 0%, silver 100%);
 }
+
+.default-color0.chart-pie { -fx-pie-color: #ffd700; }
+.default-color1.chart-pie { -fx-pie-color: #ffa500; }
+.default-color2.chart-pie { -fx-pie-color: #860061; }
+.default-color3.chart-pie { -fx-pie-color: #adff2f; }
+.default-color4.chart-pie { -fx-pie-color: #ff5700; }
+
+.default-color5.chart-pie { -fx-pie-color: #ffa010; }
+.default-color6.chart-pie { -fx-pie-color: #ffa5ff; }
+.default-color7.chart-pie { -fx-pie-color: #8600bb; }
+.default-color8.chart-pie { -fx-pie-color: #d3ff2f; }
+.default-color9.chart-pie { -fx-pie-color: #efea12; }

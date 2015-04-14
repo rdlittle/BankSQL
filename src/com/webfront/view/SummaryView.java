@@ -6,6 +6,7 @@
 
 package com.webfront.view;
 
+import javafx.geometry.Side;
 import javafx.scene.chart.PieChart;
 import javafx.scene.layout.Pane;
 
@@ -20,8 +21,12 @@ public class SummaryView extends Pane {
     public SummaryView() {
         super();
         chart = new PieChart();
-        chart.setPrefHeight(USE_PREF_SIZE);
-        chart.setPrefWidth(USE_PREF_SIZE);
+        chart.setTitle("Income to Expense Summary");
+        chart.setPrefHeight(600);
+        chart.setPrefWidth(1000);
+        chart.setMaxHeight(USE_PREF_SIZE);
+        chart.setMaxWidth(USE_PREF_SIZE);
+        chart.setLegendSide(Side.LEFT);
         this.getChildren().add(chart);
     }
 

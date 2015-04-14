@@ -10,6 +10,8 @@ import com.webfront.bean.LedgerManager;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.view.SummaryView;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -21,7 +23,7 @@ import javafx.scene.chart.PieChart;
  */
 public class SummaryController {
 
-    ObservableMap<Integer, PieChart.Data> pieChartData;
+    ObservableMap<Integer, PieChart.Data> pieChartHashMap;
     ObservableList dataList;
     private static SummaryController controller = null;
     private final CategoryManager catMgr;
@@ -29,7 +31,7 @@ public class SummaryController {
     SummaryView view;
 
     private SummaryController() {
-        pieChartData = FXCollections.observableHashMap();
+        pieChartHashMap = FXCollections.observableHashMap();
         view = new SummaryView();
         catMgr = new CategoryManager();
         ledgerMgr = new LedgerManager();
@@ -47,36 +49,36 @@ public class SummaryController {
     }
 
     public void buildSummary() {
+        String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
         ObservableList<Category> catList = catMgr.getCategories(stmt);
-        for (Category c : catList) {
-            if (c != null) {
-                pieChartData.put(c.getId(), new PieChart.Data(c.getDescription(), 0));
-            }
-        }
-        stmt = "SELECT * FROM ledger";
+        
+        stmt = "SELECT * FROM ledger where transDate >= \""+startDate+"\"";
         ObservableList<Ledger> ledgerList = ledgerMgr.doSqlQuery(stmt);
         for (Ledger l : ledgerList) {
             if (l.getPrimaryCat() != null) {
-                int idx = l.getPrimaryCat().getId();
-                PieChart.Data data;
-                if (!pieChartData.containsKey(idx)) {
-                    idx = 21;
-                }
-                data = pieChartData.get(idx);
+                Category cat = l.getPrimaryCat();
+                Integer catId = cat.getId();
+                String catDesc = cat.getDescription();
                 float amt = l.getTransAmt();
+                PieChart.Data data;
+                if(!pieChartHashMap.containsKey(catId)) {
+                    data = new PieChart.Data(cat.getDescription(),0);
+                } else {
+                    data = pieChartHashMap.get(catId);
+                }
                 if (data != null) {
                     if (amt != 0) {
                         amt += data.getPieValue();
                         data.setPieValue((double) amt);
-                        pieChartData.put(idx, data);
+                        pieChartHashMap.put(catId, data);
                     }
                 }
 
             }
         }
         dataList = FXCollections.observableArrayList();
-        dataList.addAll(pieChartData.values());
+        dataList.addAll(pieChartHashMap.values());
         view.getChart().setData(dataList);
     }
 
