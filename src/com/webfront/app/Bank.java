@@ -7,7 +7,6 @@ package com.webfront.app;
 
 import com.webfront.app.utils.Importer;
 import com.webfront.bean.AccountManager;
-import com.webfront.controller.SummaryController;
 import com.webfront.model.Account;
 import com.webfront.model.Account.AccountStatus;
 import com.webfront.model.Config;
@@ -20,6 +19,7 @@ import com.webfront.view.PreferencesForm;
 import com.webfront.view.PaymentView;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
+import com.webfront.view.SummaryView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -294,12 +294,7 @@ public class Bank extends Application {
                 }
             }
         });
-
-        SummaryController summaryController = SummaryController.getInstance();
-        summaryController.buildSummary();
-        summaryController.getView().setPrefSize(scene.getWidth(), scene.getHeight());
-        summaryTab.setContent(summaryController.getView());
-
+        summaryTab.setContent(SummaryView.getInstance());
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);

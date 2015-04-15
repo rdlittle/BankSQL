@@ -5,16 +5,13 @@
  */
 package com.webfront.controller;
 
-import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
-import com.webfront.model.Category;
-import com.webfront.model.Ledger;
-import com.webfront.view.SummaryView;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
+import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.scene.chart.PieChart;
 
 /**
@@ -23,67 +20,50 @@ import javafx.scene.chart.PieChart;
  */
 public class SummaryController {
 
-    ObservableMap<Integer, PieChart.Data> pieChartHashMap;
-    ObservableList dataList;
+    private ObservableList<PieChart.Data> dataList;
     private static SummaryController controller = null;
-    private final CategoryManager catMgr;
     private final LedgerManager ledgerMgr;
-    SummaryView view;
 
-    private SummaryController() {
-        pieChartHashMap = FXCollections.observableHashMap();
-        view = new SummaryView();
-        catMgr = new CategoryManager();
+    public SummaryController() {
         ledgerMgr = new LedgerManager();
-    }
-
-    /**
-     *
-     * @return
-     */
-    public static SummaryController getInstance() {
-        if (controller == null) {
-            controller = new SummaryController();
-        }
-        return controller;
+        dataList = FXCollections.observableArrayList();
     }
 
     public void buildSummary() {
         String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
-        ObservableList<Category> catList = catMgr.getCategories(stmt);
-        
-        stmt = "SELECT * FROM ledger where transDate >= \""+startDate+"\"";
-        ObservableList<Ledger> ledgerList = ledgerMgr.doSqlQuery(stmt);
-        for (Ledger l : ledgerList) {
-            if (l.getPrimaryCat() != null) {
-                Category cat = l.getPrimaryCat();
-                Integer catId = cat.getId();
-                String catDesc = cat.getDescription();
-                float amt = l.getTransAmt();
-                PieChart.Data data;
-                if(!pieChartHashMap.containsKey(catId)) {
-                    data = new PieChart.Data(cat.getDescription(),0);
-                } else {
-                    data = pieChartHashMap.get(catId);
-                }
-                if (data != null) {
-                    if (amt != 0) {
-                        amt += data.getPieValue();
-                        data.setPieValue((double) amt);
-                        pieChartHashMap.put(catId, data);
-                    }
-                }
-
-            }
+        stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
+        stmt += "inner join categories c on l.primaryCat = c.id ";
+        stmt += "where l.transDate > \"" + startDate + "\" group by l.primaryCat";
+        List<Object[]> list = ledgerMgr.getResults(stmt);
+        class Item {
+            Float amt;
+            String label;
         }
-        dataList = FXCollections.observableArrayList();
-        dataList.addAll(pieChartHashMap.values());
-        view.getChart().setData(dataList);
+        Iterator<Object[]> li = list.iterator();
+        while (li.hasNext()) {
+            Object[] obj = li.next();
+            Item item = new Item();
+            String s = (String) obj[0];
+            item.amt = Float.parseFloat(s.replaceAll(",", ""));
+            item.label = (String) obj[1];
+            PieChart.Data data = new PieChart.Data(item.label, item.amt);
+            getDataList().add(data);
+        }
     }
 
-    public SummaryView getView() {
-        return view;
+    /**
+     * @return the dataList
+     */
+    public ObservableList<PieChart.Data> getDataList() {
+        return dataList;
+    }
+
+    /**
+     * @param dataList the dataList to set
+     */
+    public void setDataList(ObservableList<PieChart.Data> dataList) {
+        this.dataList = dataList;
     }
 
 }

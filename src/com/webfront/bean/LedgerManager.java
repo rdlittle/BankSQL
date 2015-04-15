@@ -7,6 +7,7 @@ package com.webfront.bean;
 
 import com.webfront.model.Ledger;
 import java.io.Serializable;
+import java.sql.ResultSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,6 +32,12 @@ public class LedgerManager extends DBManager implements Serializable {
         List<Ledger> list = query.getResultList();
         ObservableList olist = FXCollections.observableList(list);
         return olist;
+    }
+    
+    public List getResults(String q) {
+        Query query = em.createNativeQuery(q);
+        List list = query.getResultList();
+        return list;
     }
 
     public Ledger getItem(int idx) throws javax.persistence.NoResultException {
