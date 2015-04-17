@@ -29,7 +29,7 @@ public class SummaryController {
         dataList = FXCollections.observableArrayList();
     }
 
-    public void buildSummary() {
+    public void buildSummary(int category) {
         String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
         stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
@@ -50,6 +50,35 @@ public class SummaryController {
             PieChart.Data data = new PieChart.Data(item.label, item.amt);
             getDataList().add(data);
         }
+    }
+    
+    public ObservableList<PieChart.Data> getSubCat(int category) {
+        ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
+        String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        String stmt;
+        stmt = "SELECT c.description Category,lpad(format(ABS(l.transAmt),2),9,' ') Amount FROM ledger l ";
+        stmt += "INNER JOIN categories c ON l.primaryCat = c.id ";
+        stmt += "INNER JOIN distribution d ON d.transId = l.id ";
+        stmt += "WHERE l.transDate > \"" + startDate + "\"" ;
+        stmt += "AND c.parent = "+category+" ";
+        stmt += "GROUP BY c.id ";
+        stmt += "ORDER BY c.description";
+        List<Object[]> objList = ledgerMgr.getResults(stmt);
+        class Item {
+            Float amt;
+            String label;
+        }
+        Iterator<Object[]> li = objList.iterator();
+        while (li.hasNext()) {
+            Object[] obj = li.next();
+            Item item = new Item();
+            String s = (String) obj[0];
+            item.amt = Float.parseFloat(s.replaceAll(",", ""));
+            item.label = (String) obj[1];
+            PieChart.Data data = new PieChart.Data(item.label, item.amt);
+            list.add(data);
+        }
+        return list;
     }
 
     /**

@@ -250,6 +250,8 @@ public class Bank extends Application {
             }
         });
 
+        summaryTab.setContent(new SummaryView());
+        
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
@@ -294,7 +296,7 @@ public class Bank extends Application {
                 }
             }
         });
-        summaryTab.setContent(SummaryView.getInstance());
+        
         scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
         primaryStage.setTitle("Bank");
         primaryStage.setScene(scene);

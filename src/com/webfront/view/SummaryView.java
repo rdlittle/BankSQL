@@ -6,14 +6,12 @@
 package com.webfront.view;
 
 import com.webfront.controller.SummaryController;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import javafx.event.EventHandler;
 import javafx.geometry.Side;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
-import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
@@ -24,14 +22,20 @@ import javafx.scene.paint.Color;
 public class SummaryView extends StackPane {
 
     private final PieChart chart;
-    private static SummaryView view = null;
-    private SummaryController controller;
+    private static final SummaryView view = null;
+    private final SummaryController controller;
     final Label caption = new Label("");
 
     public SummaryView() {
         super();
+        DropShadow ds = new DropShadow();
+        ds.setOffsetY(4.0f);
+        ds.setColor(Color.color(0.0f, 0.0f, 0.0f));
+        caption.setTextFill(Color.WHITE);
+        caption.setStyle("-fx-font: 24 arial;");
+        caption.setEffect(ds);
         controller = new SummaryController();
-        controller.buildSummary();
+        controller.buildSummary(0);
         chart = new PieChart();
         chart.setData(controller.getDataList());
         chart.setTitle("Income to Expense Summary");
@@ -40,37 +44,34 @@ public class SummaryView extends StackPane {
         chart.setMaxHeight(USE_PREF_SIZE);
         chart.setMaxWidth(USE_PREF_SIZE);
         chart.setLegendSide(Side.LEFT);
-        caption.setTextFill(Color.DARKORANGE);
-        caption.setStyle("-fx-font: 24 arial;");
+
         getChildren().addAll(chart, caption);
+        setHandler();
     }
 
     public SummaryView getView() {
         return this;
     }
-    
-    public static SummaryView getInstance() {
-        if (view == null) {
-            view = new SummaryView();
-            for (final PieChart.Data data : view.getChart().getData()) {
-                data.getNode().addEventHandler(MouseEvent.MOUSE_PRESSED,
-                        new EventHandler<MouseEvent>() {
-                            @Override
-                            public void handle(MouseEvent e) {
-                                view.caption.setTranslateX(e.getSceneX());
-                                view.caption.setTranslateY(e.getSceneY());
-                                view.caption.setText(String.valueOf(data.getPieValue()) + "%");
-                            }
-                        });
-            }
-        }
-        return view;
-    }
 
-    /**
-     * @return the chart
-     */
-    public PieChart getChart() {
-        return view.chart;
+    private void setHandler() {
+        for (final PieChart.Data data : chart.getData()) {
+            data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
+                    new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent e) {
+                            caption.setTranslateX(e.getSceneX() - 600);
+                            caption.setTranslateY(e.getSceneY() - 400);
+                            int pct = (int) data.getPieValue();
+                            caption.setText(data.getName() + " " + Integer.toString(pct));
+                        }
+                    });
+            data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED,
+                    new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent e) {
+                            caption.setText("");
+                        }
+                    });
+        }
     }
 }
