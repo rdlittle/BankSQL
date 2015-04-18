@@ -5,9 +5,11 @@
  */
 package com.webfront.controller;
 
+import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -21,18 +23,20 @@ import javafx.scene.chart.PieChart;
 public class SummaryController {
 
     private ObservableList<PieChart.Data> dataList;
+    private HashMap<String,Integer> catMap;
     private static SummaryController controller = null;
     private final LedgerManager ledgerMgr;
 
     public SummaryController() {
         ledgerMgr = new LedgerManager();
         dataList = FXCollections.observableArrayList();
+        catMap = CategoryManager.getInstance().getMapByDescription();
     }
 
     public void buildSummary(int category) {
         String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
-        String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
-        stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
+        //String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
+        String stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
         stmt += "inner join categories c on l.primaryCat = c.id ";
         stmt += "where l.transDate > \"" + startDate + "\" group by l.primaryCat";
         List<Object[]> list = ledgerMgr.getResults(stmt);
@@ -56,10 +60,10 @@ public class SummaryController {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
         String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt;
-        stmt = "SELECT c.description Category,lpad(format(ABS(l.transAmt),2),9,' ') Amount FROM ledger l ";
-        stmt += "INNER JOIN categories c ON l.primaryCat = c.id ";
+        stmt = "SELECT c.description Category,format(ABS(l.transAmt),2) Amount FROM ledger l ";
         stmt += "INNER JOIN distribution d ON d.transId = l.id ";
-        stmt += "WHERE l.transDate > \"" + startDate + "\"" ;
+        stmt += "INNER JOIN categories c ON d.categoryId = c.id ";
+        stmt += "WHERE l.transDate > \"" + startDate + "\" " ;
         stmt += "AND c.parent = "+category+" ";
         stmt += "GROUP BY c.id ";
         stmt += "ORDER BY c.description";
@@ -72,9 +76,9 @@ public class SummaryController {
         while (li.hasNext()) {
             Object[] obj = li.next();
             Item item = new Item();
-            String s = (String) obj[0];
-            item.amt = Float.parseFloat(s.replaceAll(",", ""));
-            item.label = (String) obj[1];
+            String s = (String) obj[1];
+            item.amt = Float.parseFloat(s);
+            item.label = (String) obj[0];
             PieChart.Data data = new PieChart.Data(item.label, item.amt);
             list.add(data);
         }
@@ -93,6 +97,20 @@ public class SummaryController {
      */
     public void setDataList(ObservableList<PieChart.Data> dataList) {
         this.dataList = dataList;
+    }
+
+    /**
+     * @return the catMap
+     */
+    public HashMap<String,Integer> getCatMap() {
+        return catMap;
+    }
+
+    /**
+     * @param catMap the catMap to set
+     */
+    public void setCatMap(HashMap<String,Integer> catMap) {
+        this.catMap = catMap;
     }
 
 }

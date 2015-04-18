@@ -72,6 +72,15 @@ public class SummaryView extends StackPane {
                             caption.setText("");
                         }
                     });
+            data.getNode().addEventHandler(MouseEvent.MOUSE_CLICKED,
+                    new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent e) {
+                            caption.setText("");
+                            Integer id = controller.getCatMap().get(data.getName());
+                            chart.setData(controller.getSubCat(id));
+                        }
+                    });
         }
     }
 }
