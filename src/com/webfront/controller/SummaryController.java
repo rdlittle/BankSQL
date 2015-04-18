@@ -77,7 +77,7 @@ public class SummaryController {
             Object[] obj = li.next();
             Item item = new Item();
             String s = (String) obj[1];
-            item.amt = Float.parseFloat(s);
+            item.amt = Float.parseFloat(s.replaceAll(",", ""));
             item.label = (String) obj[0];
             PieChart.Data data = new PieChart.Data(item.label, item.amt);
             list.add(data);

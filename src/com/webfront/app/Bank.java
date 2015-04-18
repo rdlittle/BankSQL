@@ -130,11 +130,11 @@ public class Bank extends Application {
 
         Tab summaryTab = new Tab("Summary");
         Tab storesTab = new Tab("Stores");
-        Tab receiptsTab = new Tab("Receipts");
+        Tab paymentTab = new Tab("Payments");
 
         summaryTab.setClosable(false);
         storesTab.setClosable(false);
-        receiptsTab.setClosable(false);
+        paymentTab.setClosable(false);
 
         setLedgers(new ArrayList<>());
         setAccounts();
@@ -151,8 +151,8 @@ public class Bank extends Application {
         StoresView stores = StoresView.getInstance();
         storesTab.setContent(stores);
 
-        PaymentView receipts = PaymentView.getInstance();
-        receiptsTab.setContent(receipts);
+        PaymentView payment = PaymentView.getInstance();
+        paymentTab.setContent(payment);
 
         fileOpen.setOnAction(new EventHandler() {
             @Override
@@ -255,7 +255,7 @@ public class Bank extends Application {
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
-        tabPane.getTabs().add(receiptsTab);
+        tabPane.getTabs().add(paymentTab);
 
         Pane statusPanel = new Pane();
         statusPanel.setPrefSize(scene.getWidth(), 100);
@@ -269,15 +269,15 @@ public class Bank extends Application {
         ((VBox) scene.getRoot()).getChildren().add(tabPane);
         ((VBox) scene.getRoot()).getChildren().add(statusPanel);
 
-        receipts.setPrefSize(scene.getWidth(), scene.getHeight());
-        receipts.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+        payment.setPrefSize(scene.getWidth(), scene.getHeight());
+        payment.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
 
         stores.setPrefSize(scene.getWidth(), scene.getHeight());
         stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
 
-        receipts.setStoreList(stores.getList());
-        receipts.getStoreAdded().addListener((Observable observable) -> {
-            receipts.getStoreAdded().setValue(Boolean.FALSE);
+        payment.setStoreList(stores.getList());
+        payment.getStoreAdded().addListener((Observable observable) -> {
+            payment.getStoreAdded().setValue(Boolean.FALSE);
             stores.getList().sort(StoresView.StoreComparator);
         });
 

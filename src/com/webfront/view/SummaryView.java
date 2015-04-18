@@ -12,40 +12,51 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
+import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.paint.Color;
 
 /**
  *
  * @author rlittle
  */
-public class SummaryView extends StackPane {
+public class SummaryView extends Pane {
 
     private final PieChart chart;
     private static final SummaryView view = null;
     private final SummaryController controller;
     final Label caption = new Label("");
+    final Label parentCategory = new Label("");
+    double x, y;
 
     public SummaryView() {
         super();
+
         DropShadow ds = new DropShadow();
         ds.setOffsetY(4.0f);
         ds.setColor(Color.color(0.0f, 0.0f, 0.0f));
-        caption.setTextFill(Color.WHITE);
+
+        caption.setTextFill(Color.BEIGE);
         caption.setStyle("-fx-font: 24 arial;");
         caption.setEffect(ds);
+
+        parentCategory.setTextFill(Color.CORNFLOWERBLUE);
+        parentCategory.setStyle("-fx-font: 24 arial;");
+
         controller = new SummaryController();
         controller.buildSummary(0);
+
         chart = new PieChart();
         chart.setData(controller.getDataList());
-        chart.setTitle("Income to Expense Summary");
+        chart.setTitle("All Categories");
         chart.setPrefHeight(600);
         chart.setPrefWidth(1000);
         chart.setMaxHeight(USE_PREF_SIZE);
         chart.setMaxWidth(USE_PREF_SIZE);
         chart.setLegendSide(Side.LEFT);
 
-        getChildren().addAll(chart, caption);
+        getChildren().addAll(chart, parentCategory, caption);
+
         setHandler();
     }
 
@@ -59,8 +70,8 @@ public class SummaryView extends StackPane {
                     new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent e) {
-                            caption.setTranslateX(e.getSceneX() - 600);
-                            caption.setTranslateY(e.getSceneY() - 400);
+                            caption.setTranslateX(e.getSceneX());
+                            caption.setTranslateY(e.getSceneY());
                             int pct = (int) data.getPieValue();
                             caption.setText(data.getName() + " " + Integer.toString(pct));
                         }
@@ -77,10 +88,25 @@ public class SummaryView extends StackPane {
                         @Override
                         public void handle(MouseEvent e) {
                             caption.setText("");
+                            y = chart.boundsInParentProperty().getValue().getHeight();
+                            x = chart.boundsInParentProperty().getValue().getWidth();
+                            parentCategory.setTranslateX(x);
+                            parentCategory.setTranslateY(y);
+                            parentCategory.setText("< " + data.getName());
                             Integer id = controller.getCatMap().get(data.getName());
                             chart.setData(controller.getSubCat(id));
+                            chart.setTitle(data.getName());
                         }
                     });
         }
+        parentCategory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                parentCategory.setText("");
+                chart.setTitle("All Categories");
+                chart.setData(controller.getDataList());
+            }
+        });
+
     }
 }
