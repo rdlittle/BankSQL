@@ -7,12 +7,13 @@ package com.webfront.view;
 
 import com.webfront.controller.SummaryController;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Side;
+import javafx.scene.Group;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.paint.Color;
 
@@ -20,18 +21,22 @@ import javafx.scene.paint.Color;
  *
  * @author rlittle
  */
-public class SummaryView extends Pane {
+public class SummaryView extends Group {
 
     private final PieChart chart;
     private static final SummaryView view = null;
     private final SummaryController controller;
     final Label caption = new Label("");
     final Label parentCategory = new Label("");
+    final Label subTitle = new Label("");
     double x, y;
 
     public SummaryView() {
         super();
 
+        controller = new SummaryController();
+        controller.buildSummary(0);
+        
         DropShadow ds = new DropShadow();
         ds.setOffsetY(4.0f);
         ds.setColor(Color.color(0.0f, 0.0f, 0.0f));
@@ -42,20 +47,27 @@ public class SummaryView extends Pane {
 
         parentCategory.setTextFill(Color.CORNFLOWERBLUE);
         parentCategory.setStyle("-fx-font: 24 arial;");
-
-        controller = new SummaryController();
-        controller.buildSummary(0);
+        
+        subTitle.setText(controller.getStartDate()+" through "+controller.getEndDate());
+        subTitle.setStyle("-fx-font: 18 arial;");
 
         chart = new PieChart();
         chart.setData(controller.getDataList());
         chart.setTitle("All Categories");
+        chart.setTitleSide(Side.TOP);
+        chart.setClockwise(true);
         chart.setPrefHeight(600);
         chart.setPrefWidth(1000);
         chart.setMaxHeight(USE_PREF_SIZE);
         chart.setMaxWidth(USE_PREF_SIZE);
         chart.setLegendSide(Side.LEFT);
+        Bounds b = chart.getBoundsInParent();
+        b = chart.getBoundsInLocal();
+        
+        subTitle.setTranslateX(500);
+        subTitle.setTranslateY(650);
 
-        getChildren().addAll(chart, parentCategory, caption);
+        getChildren().addAll(chart, parentCategory, caption, subTitle);
 
         setHandler();
     }

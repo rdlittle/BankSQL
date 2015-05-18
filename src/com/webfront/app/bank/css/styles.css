@@ -23,7 +23,7 @@ and open the template in the editor.
     -fx-border-color: rgb(49, 89, 23);
     -fx-border-radius: 5;
     -fx-padding: 3 6 6 6;
-    
+
 }
 
 .button:pressed {
@@ -36,6 +36,16 @@ and open the template in the editor.
 
 .panel {
     -fx-background-color: linear-gradient(to bottom, white 0%, silver 100%);
+}
+
+.chart {
+    -fx-border-color: black;
+    -fx-padding: 10;
+}
+
+.chart-title {
+    -fx-text-fill: black;
+    -fx-font-size: 2em;
 }
 
 .data0.chart-pie { -fx-pie-color: turquoise; }

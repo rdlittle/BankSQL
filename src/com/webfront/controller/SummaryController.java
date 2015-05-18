@@ -24,21 +24,24 @@ public class SummaryController {
 
     private ObservableList<PieChart.Data> dataList;
     private HashMap<String,Integer> catMap;
-    private static SummaryController controller = null;
+    private static final SummaryController controller = null;
     private final LedgerManager ledgerMgr;
+    private String startDate;
+    private String endDate;
 
     public SummaryController() {
         ledgerMgr = new LedgerManager();
         dataList = FXCollections.observableArrayList();
         catMap = CategoryManager.getInstance().getMapByDescription();
+        startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+        endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
     }
 
     public void buildSummary(int category) {
-        String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
-        //String stmt = "SELECT * FROM categories WHERE parent = 0 ORDER BY description";
+        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
         stmt += "inner join categories c on l.primaryCat = c.id ";
-        stmt += "where l.transDate > \"" + startDate + "\" group by l.primaryCat";
+        stmt += "where l.transDate > \"" + sDate + "\" group by l.primaryCat";
         List<Object[]> list = ledgerMgr.getResults(stmt);
         class Item {
             Float amt;
@@ -58,12 +61,12 @@ public class SummaryController {
     
     public ObservableList<PieChart.Data> getSubCat(int category) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
-        String startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt;
         stmt = "SELECT c.description Category,format(ABS(l.transAmt),2) Amount FROM ledger l ";
         stmt += "INNER JOIN distribution d ON d.transId = l.id ";
         stmt += "INNER JOIN categories c ON d.categoryId = c.id ";
-        stmt += "WHERE l.transDate > \"" + startDate + "\" " ;
+        stmt += "WHERE l.transDate > \"" + sDate + "\" " ;
         stmt += "AND c.parent = "+category+" ";
         stmt += "GROUP BY c.id ";
         stmt += "ORDER BY c.description";
@@ -111,6 +114,34 @@ public class SummaryController {
      */
     public void setCatMap(HashMap<String,Integer> catMap) {
         this.catMap = catMap;
+    }
+
+    /**
+     * @return the startDate
+     */
+    public String getStartDate() {
+        return startDate;
+    }
+
+    /**
+     * @param startDate the startDate to set
+     */
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    /**
+     * @return the endDate
+     */
+    public String getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * @param endDate the endDate to set
+     */
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 
 }
