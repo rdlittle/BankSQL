@@ -6,6 +6,7 @@
 package com.webfront.bean;
 
 import com.webfront.model.Category;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -19,7 +20,7 @@ import javax.persistence.Query;
 public class CategoryManager extends DBManager<Category> {
 
     private ObservableList<Category> categories;
-    private static CategoryManager instance=null;
+    private static CategoryManager instance = null;
 
     public CategoryManager() {
         super();
@@ -27,11 +28,12 @@ public class CategoryManager extends DBManager<Category> {
     }
 
     public static CategoryManager getInstance() {
-        if(instance==null) {
+        if (instance == null) {
             instance = new CategoryManager();
         }
         return instance;
     }
+
     public ObservableList<Category> getCategories() {
         if (categories.isEmpty()) {
             Query query = em.createNativeQuery("Select * from categories c order by c.description", Category.class);
@@ -47,22 +49,35 @@ public class CategoryManager extends DBManager<Category> {
         return FXCollections.observableList(list);
     }
 
-    public HashMap<String,Integer> getMapByDescription() {
-        HashMap<String,Integer> map = new HashMap<>();
-        for(Category c : getCategories()) {
+    public HashMap<String, Integer> getMapByDescription() {
+        HashMap<String, Integer> map = new HashMap<>();
+        for (Category c : getCategories()) {
             map.put(c.getDescription(), c.getId());
         }
         return map;
     }
-    
-   public HashMap<String,Integer> getMapById() {
-        HashMap<String,Integer> map = new HashMap<>();
-        for(Category c : getCategories()) {
+
+    public HashMap<String, Integer> getMapById() {
+        HashMap<String, Integer> map = new HashMap<>();
+        for (Category c : getCategories()) {
             map.put(c.getDescription(), c.getId());
         }
         return map;
     }
-   
+
+    public Category getCategory(int id) {
+        Query query = em.createNamedQuery("Category.findById");
+        query.setParameter("id", id);
+        Category cat = (Category) query.getSingleResult();
+        return cat;
+    }
+
+    public boolean hasChildren(int id) {
+        Query query = em.createNamedQuery("Category.findByParent");
+        query.setParameter("parent", id);
+        return(!query.getResultList().isEmpty());
+    }
+
     /**
      * @param categories the categories to set
      */
@@ -77,10 +92,10 @@ public class CategoryManager extends DBManager<Category> {
         categories = (ObservableList<Category>) FXCollections.observableList(list);
         return categories;
     }
-    
+
     @Override
     public ObservableList<Category> doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
 }

@@ -11,6 +11,9 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import java.util.Comparator;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -25,7 +28,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 
@@ -51,10 +53,14 @@ public class LedgerView extends AnchorPane {
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
 
+    public SimpleBooleanProperty isRebalance;
+    public Ledger selectedItem;
+
     public LedgerView(int acctNum) {
         super();
         this.setStyle("-fx-background-color: #336699;");
-        
+        isRebalance = new SimpleBooleanProperty(false);
+
         HBox buttonBox = new HBox();
         buttonBox.getStyleClass().add("panel");
         buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
@@ -122,11 +128,14 @@ public class LedgerView extends AnchorPane {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
-                    if (item != null) {
-                        getLedgerManager().refresh(item);
-                        LedgerForm form = new LedgerForm(LedgerView.this, item);
+//                    Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
+                    selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
+                    if (selectedItem != null) {
+                        getLedgerManager().refresh(selectedItem);
+                        LedgerForm form = new LedgerForm(LedgerView.this, selectedItem);
                     }
+                } else {
+                    selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
                 }
             }
         };
@@ -153,20 +162,35 @@ public class LedgerView extends AnchorPane {
             }
         });
 
+        isRebalance.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                RebalanceForm rebal = RebalanceForm.getInstance(LedgerView.this);
+                rebal.hasChanged.addListener(new InvalidationListener() {
+                    @Override
+                    public void invalidated(Observable observable) {
+                        ledgerView.getChildren().remove(rebal);
+                    }
+                });
+                table.addEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
+                rebal.showForm();                
+            }
+        });
+
         buttonBox.getChildren().addAll(btnSearch, btnReset);
-        
+
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);
         AnchorPane.setBottomAnchor(table, 0.0);
-        
+
         AnchorPane.setBottomAnchor(buttonBox, 0.0);
         AnchorPane.setLeftAnchor(buttonBox, 0.0);
         AnchorPane.setRightAnchor(buttonBox, 0.0);
-        
-        getChildren().addAll(table,buttonBox);
-        
-        ledgerView = this;
+
+        getChildren().addAll(table, buttonBox);
+
+        ledgerView = LedgerView.this;
     }
 
     public LedgerView getInstance(int acctNum) {

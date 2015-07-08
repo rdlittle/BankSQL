@@ -27,6 +27,12 @@ public class LedgerManager extends DBManager implements Serializable {
         return olist;
     }
     
+    /**
+     *
+     * @param q
+     * @return
+     */
+    @Override
     public ObservableList<Ledger> doSqlQuery(String q) {
         Query query = em.createNativeQuery(q,Ledger.class);
         List<Ledger> list = query.getResultList();

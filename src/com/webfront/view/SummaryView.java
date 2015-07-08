@@ -29,6 +29,7 @@ public class SummaryView extends Group {
     final Label caption = new Label("");
     final Label parentCategory = new Label("");
     final Label subTitle = new Label("");
+    final Label chartHeader = new Label("");
     double x, y;
 
     public SummaryView() {
@@ -46,7 +47,8 @@ public class SummaryView extends Group {
         caption.setEffect(ds);
 
         parentCategory.setTextFill(Color.CORNFLOWERBLUE);
-        parentCategory.setStyle("-fx-font: 24 arial;");
+        parentCategory.setStyle("-fx-font: 22 arial;");
+        parentCategory.setTranslateX(0);
         
         subTitle.setText(controller.getStartDate()+" through "+controller.getEndDate());
         subTitle.setStyle("-fx-font: 18 arial;");
@@ -57,7 +59,7 @@ public class SummaryView extends Group {
         chart.setTitleSide(Side.TOP);
         chart.setClockwise(true);
         chart.setPrefHeight(600);
-        chart.setPrefWidth(1000);
+        chart.setPrefWidth(1200);
         chart.setMaxHeight(USE_PREF_SIZE);
         chart.setMaxWidth(USE_PREF_SIZE);
         chart.setLegendSide(Side.LEFT);
@@ -102,11 +104,16 @@ public class SummaryView extends Group {
                             caption.setText("");
                             y = chart.boundsInParentProperty().getValue().getHeight();
                             x = chart.boundsInParentProperty().getValue().getWidth();
-                            parentCategory.setTranslateX(x);
+                            parentCategory.setTranslateX(x-200);
                             parentCategory.setTranslateY(y);
                             parentCategory.setText("< " + data.getName());
+                            chartHeader.setText(parentCategory.getText());
                             Integer id = controller.getCatMap().get(data.getName());
-                            chart.setData(controller.getSubCat(id));
+                            if(controller.hasChildren(id)) {
+                                chart.setData(controller.getSubCat(id));
+                            } else {
+                                chart.setData(controller.getDetail(id));
+                            }
                             chart.setTitle(data.getName());
                         }
                     });
@@ -119,6 +126,5 @@ public class SummaryView extends Group {
                 chart.setData(controller.getDataList());
             }
         });
-
     }
 }

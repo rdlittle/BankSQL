@@ -17,6 +17,7 @@ import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PreferencesForm;
 import com.webfront.view.PaymentView;
+import com.webfront.view.RebalanceForm;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
@@ -29,7 +30,10 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -71,6 +75,8 @@ public class Bank extends Application {
     Thread importThread;
     public static SimpleBooleanProperty importDone;
     public static SimpleIntegerProperty accountNum;
+    public static SimpleBooleanProperty isLedger;
+    public static SimpleBooleanProperty isRebalance;
     Importer importer;
     String tmpDir;
 
@@ -82,10 +88,11 @@ public class Bank extends Application {
         this.progressBar = new ProgressBar(0);
         importDone = new SimpleBooleanProperty(false);
         accountNum = new SimpleIntegerProperty();
+        isLedger = new SimpleBooleanProperty(false);
+        isRebalance = new SimpleBooleanProperty(false);
         config = Config.getInstance();
         viewList = new HashMap<>();
         config.getConfig();
-
     }
 
     @Override
@@ -110,6 +117,7 @@ public class Bank extends Application {
         MenuItem editAccounts = new MenuItem("Accounts");
         MenuItem editCategories = new MenuItem("Categories");
         MenuItem editPreferences = new MenuItem("_Preferences");
+        MenuItem editRebalance = new MenuItem("_Rebalance");
 
         fileMenu.setMnemonicParsing(true);
         fileOpen.setMnemonicParsing(true);
@@ -121,8 +129,7 @@ public class Bank extends Application {
         fileMenu.getItems().addAll(fileOpen, fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
 
         editMenu.setMnemonicParsing(true);
-        editMenu.setMnemonicParsing(true);
-        editMenu.getItems().addAll(editAccounts, editCategories, editPreferences);
+        editMenu.getItems().addAll(editAccounts, editCategories, editPreferences, editRebalance);
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
@@ -183,6 +190,9 @@ public class Bank extends Application {
             }
         });
 
+        
+        editRebalance.disableProperty().bindBidirectional(isLedger);
+        
         fileImport.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -249,14 +259,40 @@ public class Bank extends Application {
                 prefs.showForm();
             }
         });
+        
+        editRebalance.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                //RebalanceForm rebal = RebalanceForm.getInstance();
+                LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
+                lv.isRebalance.set(true);
+                //rebal.hasChanged.addListener(new InvalidationListener() {
+                //    @Override
+                //    public void invalidated(Observable observable) {
+                //        
+                //    }
+                //});
+                //rebal.showForm();
+            }
+        });
+        
 
         summaryTab.setContent(new SummaryView());
+
+        
+        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
+            @Override
+            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
+                isLedger.set(!"LedgerView".equalsIgnoreCase(newTab.getContent().getClass().getSimpleName()));
+            }
+        });        
         
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
         tabPane.getTabs().add(paymentTab);
 
+        
         Pane statusPanel = new Pane();
         statusPanel.setPrefSize(scene.getWidth(), 100);
         statusPanel.setMaxHeight(100);
@@ -331,6 +367,7 @@ public class Bank extends Application {
 
     private void addLedger(Account acct) {
         LedgerView lv = new LedgerView(acct.getId());
+        isRebalance.bind(lv.isRebalance);
         viewList.put(acct.getId(), lv);
         Tab t = new LedgerTab(acct.getBankName(), acct.getId());
         t.setClosable(true);

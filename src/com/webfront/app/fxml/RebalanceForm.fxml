@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<fx:root prefHeight="270.0" prefWidth="587.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+
+        <Label layoutX="14.0" layoutY="72.0" text="Starting transaction" />
+        <TextField fx:id="txtStart" layoutX="14.0" layoutY="88.0" />
+        <Label layoutX="318.0" layoutY="72.0" text="Ending transaction" />
+        <TextField fx:id="txtEnd" layoutX="315.0" layoutY="88.0" />
+        <Label layoutX="14.0" layoutY="14.0" text="Rebalance Account">
+            <font>
+                <Font size="24.0" />
+            </font>
+        </Label>
+        <Label layoutX="14.0" layoutY="141.0" text="Opening balance (optional)" />
+        <TextField layoutX="14.0" layoutY="156.0" />
+        <Button fx:id="btnGo" layoutX="14.0" layoutY="232.0" mnemonicParsing="false" onAction="#btnGoOnAction" prefHeight="25.0" prefWidth="63.0" text="Go" />
+        <Button fx:id="btnCancel" layoutX="94.0" layoutY="232.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
+        <Button fx:id="btnChooseStart" layoutX="193.0" layoutY="88.0" mnemonicParsing="false" onAction="#btnChooseStartOnAction" text="Choose" />
+        <Button fx:id="btnChooseEnd" layoutX="493.0" layoutY="88.0" mnemonicParsing="false" onAction="#btnChooseEndOnAction" text="Choose" />
+      <Label fx:id="lblMessage" layoutX="14.0" layoutY="200.0" prefHeight="15.0" prefWidth="553.0" />
+    </children>
+</fx:root>

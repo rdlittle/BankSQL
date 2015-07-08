@@ -7,8 +7,10 @@ package com.webfront.controller;
 
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
+import com.webfront.model.Category;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,11 +25,12 @@ import javafx.scene.chart.PieChart;
 public class SummaryController {
 
     private ObservableList<PieChart.Data> dataList;
-    private HashMap<String,Integer> catMap;
+    private HashMap<String, Integer> catMap;
     private static final SummaryController controller = null;
     private final LedgerManager ledgerMgr;
     private String startDate;
     private String endDate;
+    private final ArrayList<Category> selectedCategory;
 
     public SummaryController() {
         ledgerMgr = new LedgerManager();
@@ -35,15 +38,17 @@ public class SummaryController {
         catMap = CategoryManager.getInstance().getMapByDescription();
         startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
         endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+        selectedCategory = new ArrayList<>();
     }
 
     public void buildSummary(int category) {
         String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
-        String stmt = "SELECT FORMAT(ABS(l.transAmt),2), c.description FROM ledger l ";
-        stmt += "inner join categories c on l.primaryCat = c.id ";
-        stmt += "where l.transDate > \"" + sDate + "\" group by l.primaryCat";
+        String stmt = "SELECT FORMAT(ABS(SUM(l.transAmt)),2), c.description FROM ledger l ";
+        stmt += "join categories c on l.primaryCat = c.id ";
+        stmt += "where l.transDate > \"" + sDate + "\" group by l.primaryCat WITH ROLLUP";
         List<Object[]> list = ledgerMgr.getResults(stmt);
         class Item {
+
             Float amt;
             String label;
         }
@@ -58,16 +63,17 @@ public class SummaryController {
             getDataList().add(data);
         }
     }
-    
+
     public ObservableList<PieChart.Data> getSubCat(int category) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
         String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt;
-        stmt = "SELECT c.description Category,format(ABS(l.transAmt),2) Amount FROM ledger l ";
+        Category cat = CategoryManager.getInstance().getCategory(category);
+        stmt = "SELECT c.description Category,format(ABS(SUM(l.transAmt)),2) Amount FROM ledger l ";
         stmt += "INNER JOIN distribution d ON d.transId = l.id ";
         stmt += "INNER JOIN categories c ON d.categoryId = c.id ";
-        stmt += "WHERE l.transDate > \"" + sDate + "\" " ;
-        stmt += "AND c.parent = "+category+" ";
+        stmt += "WHERE l.transDate > \"" + sDate + "\" ";
+        stmt += "AND c.parent = " + category + " ";
         stmt += "GROUP BY c.id ";
         stmt += "ORDER BY c.description";
         List<Object[]> objList = ledgerMgr.getResults(stmt);
@@ -88,6 +94,73 @@ public class SummaryController {
         return list;
     }
 
+    public ObservableList<PieChart.Data> getPayments(int subCategory) {
+        ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
+        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        ObservableList<Category> catList = CategoryManager.getInstance().getCategories();
+        for(Category c : catList) {
+            if(c.getId()==subCategory) {
+                if(c.getParent()>0) {
+                    return getDetail(subCategory);
+                }
+            }
+        }
+        String stmt;
+        stmt = "SELECT c.description Category,format(ABS(p.transAmt),2) Amount FROM categories c ";
+        stmt += "JOIN payment p ON p.subCat = c.id ";
+        stmt += "WHERE p.transDate > \"" + sDate + "\" ";
+        stmt += "AND p.primaryCat = " + subCategory + " ";
+        stmt += "GROUP BY c.description ";
+        stmt += "ORDER BY c.description";
+        List<Object[]> objList = ledgerMgr.getResults(stmt);
+        class Item {
+            Float amt;
+            String label;
+        }
+        Iterator<Object[]> li = objList.iterator();
+        while (li.hasNext()) {
+            Object[] obj = li.next();
+            Item item = new Item();
+            String s = (String) obj[1];
+            item.amt = Float.parseFloat(s.replaceAll(",", ""));
+            item.label = (String) obj[0];
+            PieChart.Data data = new PieChart.Data(item.label, item.amt);
+            list.add(data);
+        }
+        return list;
+    }
+    
+    public ObservableList<PieChart.Data> getDetail(int subCategory) {
+        ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
+        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        String stmt;
+        stmt = "SELECT p.transDesc, format(ABS(p.transAmt),2) ";
+        stmt += "FROM payment p ";
+        stmt += "WHERE p.primaryCat = "+subCategory+" ";
+        stmt += "AND p.transDate > \"" + sDate + "\" ";
+        stmt += "GROUP BY p.transDesc";
+        List<Object[]> objList = ledgerMgr.getResults(stmt);
+        class Item {
+            Float amt;
+            String label;
+        }
+        Iterator<Object[]> li = objList.iterator();
+        while (li.hasNext()) {
+            Object[] obj = li.next();
+            Item item = new Item();
+            String s = (String) obj[1];
+            item.amt = Float.parseFloat(s.replaceAll(",", ""));
+            item.label = (String) obj[0];
+            PieChart.Data data = new PieChart.Data(item.label, item.amt);
+            list.add(data);
+        }
+        return list;
+    }
+    
+    public boolean hasChildren(int id) {
+        return CategoryManager.getInstance().hasChildren(id);
+    }
+
     /**
      * @return the dataList
      */
@@ -105,14 +178,14 @@ public class SummaryController {
     /**
      * @return the catMap
      */
-    public HashMap<String,Integer> getCatMap() {
+    public HashMap<String, Integer> getCatMap() {
         return catMap;
     }
 
     /**
      * @param catMap the catMap to set
      */
-    public void setCatMap(HashMap<String,Integer> catMap) {
+    public void setCatMap(HashMap<String, Integer> catMap) {
         this.catMap = catMap;
     }
 

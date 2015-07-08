@@ -73,7 +73,7 @@ public class PDFImporter extends Importer {
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);
             if (item != null) {
-                lastBalance += item.getTransBal();
+                lastBalance = item.getTransBal();
             }
         }
     }
@@ -184,7 +184,7 @@ public class PDFImporter extends Importer {
                 lastBalance += amount;
                 totalDeposits += amount;
             } else {
-                lastBalance -= amount;
+                lastBalance += amount;
                 totalWithdrawals += amount;
             }
             Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);
