@@ -34,6 +34,7 @@ public class Config {
     public ObservableList<Account> accountList;
 //    private String bankName;
     private String installDir;
+    private String importDir;
     private String tmpDir;
     private String home;
     private String fileSep;
@@ -68,6 +69,7 @@ public class Config {
         Properties properties;
         properties = System.getProperties();
         installDir = properties.getProperty("java.io.tmpdir");
+        importDir =  properties.getProperty("java.io.tmpdir");
         home = properties.getProperty("user.home");
         fileSep = properties.getProperty("file.separator");
         systemTmpDir = properties.getProperty("java.io.tmpdir");
@@ -85,6 +87,7 @@ public class Config {
             String startupLoc = reader.readLine();
             if (!"".equals(startupLoc)) {
                 installDir = startupLoc;
+                importDir = startupLoc;
             }
         } catch (FileNotFoundException ex) {
             // If the bootstrap file isn't found, create it
@@ -115,6 +118,7 @@ public class Config {
                 Element systemNode = new Element("system");
                 Element windowNode = new Element("window");
                 systemNode.addContent(new Element("installDir").addContent(getInstallDir()));
+                systemNode.addContent(new Element("importDir").addContent(getImportDir()));
                 windowNode.addContent(new Element("width").addContent(width));
                 windowNode.addContent(new Element("height").addContent(height));
                 windowNode.addContent(new Element("x").addContent(getX()));
@@ -174,6 +178,7 @@ public class Config {
             }
             
             installDir = systemNode.getChildText("installDir");
+            setImportDir(systemNode.getChildText("importDir"));
             tmpDir = systemNode.getChildText("tmpDir");
 
             if (windowNode.getChild("width") == null) {
@@ -343,6 +348,20 @@ public class Config {
      */
     public void setY(String y) {
         this.y = y;
+    }
+
+    /**
+     * @return the importDir
+     */
+    public String getImportDir() {
+        return importDir;
+    }
+
+    /**
+     * @param importDir the importDir to set
+     */
+    public void setImportDir(String importDir) {
+        this.importDir = importDir;
     }
 
 }

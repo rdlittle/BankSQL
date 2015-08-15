@@ -8,21 +8,29 @@
 <fx:root prefHeight="270.0" prefWidth="587.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
     <children>
 
-        <Label layoutX="14.0" layoutY="72.0" text="Starting transaction" />
-        <TextField fx:id="txtStart" layoutX="14.0" layoutY="88.0" />
-        <Label layoutX="318.0" layoutY="72.0" text="Ending transaction" />
-        <TextField fx:id="txtEnd" layoutX="315.0" layoutY="88.0" />
+        <Label layoutX="14.0" layoutY="61.0" text="Start" />
+      <DatePicker layoutX="96.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
+        <TextField fx:id="txtStart" layoutX="96.0" layoutY="95.0" prefHeight="25.0" prefWidth="67.0" />
+        <Button fx:id="btnChooseStart" layoutX="192.0" layoutY="95.0" mnemonicParsing="false" onAction="#btnChooseStartOnAction" text="Choose" />
+        <Label layoutX="311.0" layoutY="60.0" text="Stop" />
+      <DatePicker layoutX="399.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
+        <TextField fx:id="txtEnd" layoutX="399.0" layoutY="95.0" prefHeight="25.0" prefWidth="67.0" />
+        <Button fx:id="btnChooseEnd" layoutX="493.0" layoutY="95.0" mnemonicParsing="false" onAction="#btnChooseEndOnAction" text="Choose" />
         <Label layoutX="14.0" layoutY="14.0" text="Rebalance Account">
             <font>
                 <Font size="24.0" />
             </font>
         </Label>
-        <Label layoutX="14.0" layoutY="141.0" text="Opening balance (optional)" />
-        <TextField layoutX="14.0" layoutY="156.0" />
+        <Label layoutX="15.0" layoutY="141.0" text="Opening balance (optional)" />
+        <TextField fx:id="txtOpeningBalance" layoutX="16.0" layoutY="161.0" promptText="0.00" />
         <Button fx:id="btnGo" layoutX="14.0" layoutY="232.0" mnemonicParsing="false" onAction="#btnGoOnAction" prefHeight="25.0" prefWidth="63.0" text="Go" />
         <Button fx:id="btnCancel" layoutX="94.0" layoutY="232.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
-        <Button fx:id="btnChooseStart" layoutX="193.0" layoutY="88.0" mnemonicParsing="false" onAction="#btnChooseStartOnAction" text="Choose" />
-        <Button fx:id="btnChooseEnd" layoutX="493.0" layoutY="88.0" mnemonicParsing="false" onAction="#btnChooseEndOnAction" text="Choose" />
-      <Label fx:id="lblMessage" layoutX="14.0" layoutY="200.0" prefHeight="15.0" prefWidth="553.0" />
+      <Label fx:id="lblMessage" layoutX="17.0" layoutY="195.0" prefHeight="15.0" prefWidth="553.0" />
+      <Label layoutX="14.0" layoutY="100.0" text="Transaction" />
+      <Label layoutX="311.0" layoutY="100.0" text="Transaction" />
+      <RadioButton fx:id="rbDate" layoutX="236.0" layoutY="165.0" mnemonicParsing="false" text="Date" />
+      <RadioButton fx:id="rbTrans" layoutX="311.0" layoutY="165.0" mnemonicParsing="false" text="Transaction" />
+      <RadioButton fx:id="rbBoth" layoutX="427.0" layoutY="165.0" mnemonicParsing="false" text="Both" />
+      <Label layoutX="238.0" layoutY="141.0" text="Constrain to" />
     </children>
 </fx:root>

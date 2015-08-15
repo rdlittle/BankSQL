@@ -69,6 +69,8 @@ public class PreferencesForm extends AnchorPane {
     Button btnBrowse;
     @FXML
     TextField txtTmpLoc;
+    @FXML
+    TextField txtImportDir;
 
     @FXML
     ComboBox<String> cbAccounts;
@@ -161,6 +163,7 @@ public class PreferencesForm extends AnchorPane {
 
         txtInstallLocation = new TextField();
         txtTmpLoc = new TextField();
+        txtImportDir = new TextField();
         txtAccountNumber = new TextField();
         txtAccountName = new TextField();
         txtRoutingNumber = new TextField();
@@ -227,6 +230,17 @@ public class PreferencesForm extends AnchorPane {
     }
 
     @FXML
+    public void btnBrowseImportDirOnAction() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select import location");
+        File selectedFile = directoryChooser.showDialog(stage);
+        String importDir = selectedFile.getAbsolutePath();
+        txtImportDir.setText(importDir);
+        config.setImportDir(importDir);
+        hasChanged.set(true);
+    }
+    
+    @FXML
     public void btnBrowseTmpOnAction() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select install location");
@@ -266,6 +280,7 @@ public class PreferencesForm extends AnchorPane {
                 form.cbAccounts.getItems().addAll(form.accountMap.keySet());
                 form.txtInstallLocation.setText(form.config.getInstallDir());
                 form.txtTmpLoc.setText(form.config.getTmpDir());
+                form.txtImportDir.setText(form.config.getImportDir());
 
                 form.rbChecking.setUserData(AccountType.CHECKING);
                 form.rbSavings.setUserData(AccountType.SAVINGS);

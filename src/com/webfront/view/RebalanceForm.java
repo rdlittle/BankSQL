@@ -18,8 +18,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -34,17 +37,31 @@ public class RebalanceForm extends AnchorPane {
     Scene scene;
     private static RebalanceForm form = null;
     private FXMLLoader loader;
-    
+
+    @FXML
+    DatePicker dateStart;
     @FXML
     TextField txtStart;
     @FXML
+    Button btnChooseStart;
+
+    @FXML
+    DatePicker dateEnd;
+    @FXML
     TextField txtEnd;
     @FXML
-    TextField txtOpeningBalance;
-    @FXML
-    Button btnChooseStart;
-    @FXML
     Button btnChooseEnd;
+    
+    @FXML
+    TextField txtOpeningBalance;
+    
+    @FXML
+    RadioButton rbDate;
+    @FXML
+    RadioButton rbTrans;
+    @FXML
+    RadioButton rbBoth;
+
     @FXML
     Button btnCancel;
     @FXML
@@ -56,24 +73,39 @@ public class RebalanceForm extends AnchorPane {
     public SimpleStringProperty endProperty;
     public SimpleStringProperty balanceProperty;
     public SimpleBooleanProperty hasChanged;
+    
+    ToggleGroup rbGroup;
     EventHandler<MouseEvent> click;
     LedgerView parentView;
     TextField selectedField;
     int startTrans;
     int endTrans;
+    float balance;
 
     private RebalanceForm() {
         this.loader = null;
         URL location = getClass().getResource("/com/webfront/app/fxml/RebalanceForm.fxml");
         ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         loader = new FXMLLoader(location, resources);
+        rbGroup = new ToggleGroup();
         stage = new Stage();
         scene = new Scene(this);
         stage.setScene(scene);
         stage.setTitle("Rebalance");
+        dateStart = new DatePicker();
         txtStart = new TextField();
+        dateEnd = new DatePicker();
         txtEnd = new TextField();
         txtOpeningBalance = new TextField();
+        rbDate = new RadioButton();
+        rbDate.setToggleGroup(rbGroup);
+        
+        rbTrans = new RadioButton();
+        rbTrans.setToggleGroup(rbGroup);
+        
+        rbBoth = new RadioButton();
+        rbBoth.setToggleGroup(rbGroup);        
+        
         btnChooseStart = new Button();
         btnChooseEnd = new Button();
         selectedField = new TextField();
@@ -85,6 +117,7 @@ public class RebalanceForm extends AnchorPane {
         txtEnd.setId("txtEnd");
         startTrans = 0;
         endTrans = 0;
+        balance = 0;
     }
 
     public static RebalanceForm getInstance(LedgerView view) {
@@ -105,7 +138,7 @@ public class RebalanceForm extends AnchorPane {
 
     @FXML
     public void btnChooseStartOnAction() {
-        
+
     }
 
     @FXML
@@ -115,11 +148,14 @@ public class RebalanceForm extends AnchorPane {
 
     @FXML
     public void btnGoOnAction() {
-        if(startTrans > endTrans) {
+        if (startTrans > endTrans) {
             form.lblMessage.setText("Starting transaction cannot be greater than ending transaction");
             form.txtEnd.requestFocus();
         } else {
             form.lblMessage.setText("");
+            if (!txtOpeningBalance.getText().isEmpty() && !"".equals(txtOpeningBalance.getText())) {
+                balance = Float.parseFloat(txtOpeningBalance.getText());
+            }
             hasChanged.set(true);
             closeForm();
         }
@@ -143,7 +179,7 @@ public class RebalanceForm extends AnchorPane {
                 form.stage.setIconified(true);
             }
         });
-        
+
         form.btnChooseEnd.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -152,14 +188,14 @@ public class RebalanceForm extends AnchorPane {
                 form.stage.setIconified(true);
             }
         });
-        
+
         click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (stage.isIconified()) {
                     stage.setIconified(false);
                     selectedField.setText(form.parentView.selectedItem.getId().toString());
-                    if("txtStart".equals(selectedField.getId())) {
+                    if ("txtStart".equals(selectedField.getId())) {
                         startTrans = Integer.parseInt(selectedField.getText());
                         txtEnd.requestFocus();
                     } else {

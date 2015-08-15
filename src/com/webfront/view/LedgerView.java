@@ -128,7 +128,6 @@ public class LedgerView extends AnchorPane {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-//                    Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
                     selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
                     if (selectedItem != null) {
                         getLedgerManager().refresh(selectedItem);
@@ -170,6 +169,8 @@ public class LedgerView extends AnchorPane {
                     @Override
                     public void invalidated(Observable observable) {
                         ledgerView.getChildren().remove(rebal);
+                        table.removeEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
+                        ledgerManager.rebalance(accountNumber, rebal.startTrans, rebal.endTrans, rebal.balance);
                     }
                 });
                 table.addEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
@@ -177,6 +178,13 @@ public class LedgerView extends AnchorPane {
             }
         });
 
+        ledgerManager.isChanged.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                list=ledgerManager.getList(Integer.toString(acctNum));
+            }
+        });
+        
         buttonBox.getChildren().addAll(btnSearch, btnReset);
 
         AnchorPane.setTopAnchor(table, 0.0);

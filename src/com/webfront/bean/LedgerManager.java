@@ -7,15 +7,25 @@ package com.webfront.bean;
 
 import com.webfront.model.Ledger;
 import java.io.Serializable;
-import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.persistence.Query;
 
 public class LedgerManager extends DBManager implements Serializable {
 
+    private List<Ledger> selectedItems;
+
+    /**
+     *
+     */
+    public SimpleBooleanProperty isChanged;
+    
     public LedgerManager() {
+        selectedItems = new ArrayList<>();
+        isChanged=new SimpleBooleanProperty(false);
     }
 
     @Override
@@ -56,6 +66,7 @@ public class LedgerManager extends DBManager implements Serializable {
     
     /**
      *
+     * @param accountNum
      * @return most recent entry in the ledger
      */
     public int getLastId(int accountNum) {
@@ -73,5 +84,44 @@ public class LedgerManager extends DBManager implements Serializable {
     public int getLastId() {
         return 1;
     }    
+    
+    /**
+     *
+     * @param acct - The account number to use in the selection of transactions.
+     * @param start - The transaction id from which to start the recalculation.
+     * @param end - The transaction id at which to end the recalculation.
+     * @param openingBalance - The implied opening balance.
+     */
+    public void rebalance(int acct, int start, int end, float openingBalance) {
+        Query query = em.createNamedQuery("Ledger.findRangeById");
+        query.setParameter("accountNum", acct);
+        query.setParameter("startId",start);
+        query.setParameter("endId",end);
+        selectedItems = query.getResultList();
+        if(!selectedItems.isEmpty()) {
+            float balance = openingBalance;
+            for(Ledger l : selectedItems) {
+                float amt = l.getTransAmt();
+                balance += amt;
+                l.setTransBal(balance);
+                update(l);
+            }
+            isChanged.set(true);
+        }
+    }
+
+    /**
+     * @return the selectedItems
+     */
+    public List<Ledger> getSelectedItems() {
+        return selectedItems;
+    }
+
+    /**
+     * @param selectedItems the selectedItems to set
+     */
+    public void setSelectedItems(ArrayList<Ledger> selectedItems) {
+        this.selectedItems = selectedItems;
+    }
 
 }
