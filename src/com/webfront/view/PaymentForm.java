@@ -418,7 +418,9 @@ public final class PaymentForm extends AnchorPane {
         String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
         sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
-        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\"";
+        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
+        sql += "AND accountNum = "+oldPayment.getAccountNum()+" ";
+        sql += "ORDER BY transDate";
         ObservableList<Ledger> results;
         results = view.getLedgerManager().doSqlQuery(sql);
 
