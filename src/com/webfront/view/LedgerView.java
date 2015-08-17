@@ -170,7 +170,8 @@ public class LedgerView extends AnchorPane {
                     public void invalidated(Observable observable) {
                         ledgerView.getChildren().remove(rebal);
                         table.removeEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
-                        ledgerManager.rebalance(accountNumber, rebal.startTrans, rebal.endTrans, rebal.balance);
+                        //ledgerManager.rebalance(accountNumber, rebal.startTrans, rebal.endTrans, rebal.balance);
+                        ledgerManager.rebalance(accountNumber, rebal.getCriteria());
                     }
                 });
                 table.addEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);

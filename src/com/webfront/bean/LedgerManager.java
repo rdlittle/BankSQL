@@ -5,10 +5,18 @@
  */
 package com.webfront.bean;
 
+import com.webfront.model.Account;
 import com.webfront.model.Ledger;
+import com.webfront.model.SearchCriteria;
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,10 +30,10 @@ public class LedgerManager extends DBManager implements Serializable {
      *
      */
     public SimpleBooleanProperty isChanged;
-    
+
     public LedgerManager() {
         selectedItems = new ArrayList<>();
-        isChanged=new SimpleBooleanProperty(false);
+        isChanged = new SimpleBooleanProperty(false);
     }
 
     @Override
@@ -36,7 +44,7 @@ public class LedgerManager extends DBManager implements Serializable {
         ObservableList olist = FXCollections.observableList(list);
         return olist;
     }
-    
+
     /**
      *
      * @param q
@@ -44,12 +52,12 @@ public class LedgerManager extends DBManager implements Serializable {
      */
     @Override
     public ObservableList<Ledger> doSqlQuery(String q) {
-        Query query = em.createNativeQuery(q,Ledger.class);
+        Query query = em.createNativeQuery(q, Ledger.class);
         List<Ledger> list = query.getResultList();
         ObservableList olist = FXCollections.observableList(list);
         return olist;
     }
-    
+
     public List getResults(String q) {
         Query query = em.createNativeQuery(q);
         List list = query.getResultList();
@@ -63,28 +71,28 @@ public class LedgerManager extends DBManager implements Serializable {
         ledger = (Ledger) query.getSingleResult();
         return ledger;
     }
-    
+
     /**
      *
      * @param accountNum
      * @return most recent entry in the ledger
      */
     public int getLastId(int accountNum) {
-        String queryString="SELECT id FROM ledger WHERE accountNum = ";
+        String queryString = "SELECT id FROM ledger WHERE accountNum = ";
         queryString += Integer.toString(accountNum);
         queryString += " ORDER BY id DESC LIMIT 0,1";
-        Query query=em.createNativeQuery(queryString);
-        List<Integer> result=query.getResultList();
-        if(result.isEmpty()) {
+        Query query = em.createNativeQuery(queryString);
+        List<Integer> result = query.getResultList();
+        if (result.isEmpty()) {
             return 0;
         }
         return result.get(0);
     }
-    
+
     public int getLastId() {
         return 1;
-    }    
-    
+    }
+
     /**
      *
      * @param acct - The account number to use in the selection of transactions.
@@ -93,21 +101,64 @@ public class LedgerManager extends DBManager implements Serializable {
      * @param openingBalance - The implied opening balance.
      */
     public void rebalance(int acct, int start, int end, float openingBalance) {
-        Query query = em.createNamedQuery("Ledger.findRangeById");
+        Query query = em.createNamedQuery("Account.findById");
+        query.setParameter("id", acct);
+        Account account = (Account) query.getSingleResult();
+
+        query = em.createNamedQuery("Ledger.findRangeById");
         query.setParameter("accountNum", acct);
-        query.setParameter("startId",start);
-        query.setParameter("endId",end);
+        query.setParameter("startId", start);
+        query.setParameter("endId", end);
         selectedItems = query.getResultList();
-        if(!selectedItems.isEmpty()) {
+        if (!selectedItems.isEmpty()) {
             float balance = openingBalance;
-            for(Ledger l : selectedItems) {
+            for (Ledger l : selectedItems) {
                 float amt = l.getTransAmt();
-                balance += amt;
+                if (account.getAccountType() == Account.AccountType.CREDIT) {
+                    balance += amt;
+                } else {
+                    balance -= amt;
+                }
                 l.setTransBal(balance);
                 update(l);
             }
             isChanged.set(true);
         }
+    }
+    
+    public void rebalance(int acct, SearchCriteria criteria) {
+        Query query = em.createNamedQuery("Account.findById");
+        query.setParameter("id", acct);
+        Account account = (Account) query.getSingleResult();
+        query = em.createNamedQuery("Ledger.findRangeByDate");
+        Calendar cal = Calendar.getInstance(Locale.getDefault());
+        
+        LocalDate ld1 = criteria.getDateRange()[0];
+        LocalDate ld2 = criteria.getDateRange()[1];
+        
+        Instant instant = ld1.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        Date d1 = Date.from(instant);
+        instant = ld2.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        Date d2 = Date.from(instant);
+        
+        query.setParameter("accountNum", acct);
+        query.setParameter("startDate", d1);
+        query.setParameter("endDate", d2);
+        selectedItems = query.getResultList();
+        if (!selectedItems.isEmpty()) {
+            float balance = criteria.getBeginningBalance();
+            for (Ledger l : selectedItems) {
+                float amt = l.getTransAmt();
+                if (account.getAccountType() == Account.AccountType.CREDIT) {
+                    balance += amt;
+                } else {
+                    balance -= amt;
+                }
+                l.setTransBal(balance);
+                update(l);
+            }
+            isChanged.set(true);
+        }        
     }
 
     /**

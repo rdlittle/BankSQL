@@ -5,8 +5,11 @@
  */
 package com.webfront.view;
 
+import com.webfront.model.SearchCriteria;
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,10 +54,10 @@ public class RebalanceForm extends AnchorPane {
     TextField txtEnd;
     @FXML
     Button btnChooseEnd;
-    
+
     @FXML
     TextField txtOpeningBalance;
-    
+
     @FXML
     RadioButton rbDate;
     @FXML
@@ -73,14 +76,17 @@ public class RebalanceForm extends AnchorPane {
     public SimpleStringProperty endProperty;
     public SimpleStringProperty balanceProperty;
     public SimpleBooleanProperty hasChanged;
-    
+
     ToggleGroup rbGroup;
     EventHandler<MouseEvent> click;
     LedgerView parentView;
     TextField selectedField;
     int startTrans;
     int endTrans;
+    LocalDate startDate;
+    LocalDate endDate;
     float balance;
+    private SearchCriteria criteria;
 
     private RebalanceForm() {
         this.loader = null;
@@ -99,13 +105,10 @@ public class RebalanceForm extends AnchorPane {
         txtOpeningBalance = new TextField();
         rbDate = new RadioButton();
         rbDate.setToggleGroup(rbGroup);
-        
+
         rbTrans = new RadioButton();
         rbTrans.setToggleGroup(rbGroup);
-        
-        rbBoth = new RadioButton();
-        rbBoth.setToggleGroup(rbGroup);        
-        
+
         btnChooseStart = new Button();
         btnChooseEnd = new Button();
         selectedField = new TextField();
@@ -118,6 +121,12 @@ public class RebalanceForm extends AnchorPane {
         startTrans = 0;
         endTrans = 0;
         balance = 0;
+
+        startDate = LocalDate.now();
+        endDate = LocalDate.now();
+        
+        criteria = new SearchCriteria();
+        
     }
 
     public static RebalanceForm getInstance(LedgerView view) {
@@ -155,6 +164,7 @@ public class RebalanceForm extends AnchorPane {
             form.lblMessage.setText("");
             if (!txtOpeningBalance.getText().isEmpty() && !"".equals(txtOpeningBalance.getText())) {
                 balance = Float.parseFloat(txtOpeningBalance.getText());
+                criteria.setBeginningBalance(Float.valueOf(balance));
             }
             hasChanged.set(true);
             closeForm();
@@ -189,6 +199,54 @@ public class RebalanceForm extends AnchorPane {
             }
         });
 
+        form.dateStart.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                startDate = dateStart.getValue();
+                if (dateEnd.getValue() == null) {
+                    endDate = startDate;
+                    dateEnd.setValue(endDate);
+                } else {
+                    if (startDate.isBefore(endDate)) {
+                        endDate = startDate;
+                        dateEnd.setValue(endDate);
+                    }                    
+                    if (dateEnd.getChronology().compareTo(dateStart.getChronology()) > 0) {
+                        endDate = startDate;
+                        dateEnd.setValue(endDate);
+                    }
+                }
+                criteria.setStartDate(startDate.format(DateTimeFormatter.ISO_DATE));
+                LocalDate[] dr = criteria.getDateRange();
+                dr[0]=startDate;
+                criteria.setDateRange(dr);
+            }
+        });
+
+        form.dateEnd.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                endDate = dateEnd.getValue();
+                if (dateStart.getValue() == null) {
+                    startDate = endDate;
+                    dateStart.setValue(startDate);
+                } else {
+                    if (endDate.isBefore(startDate)) {
+                        startDate = endDate;
+                        dateStart.setValue(startDate);
+                    }
+                    if (dateStart.getChronology().compareTo(dateEnd.getChronology()) > 0) {
+                        startDate = endDate;
+                        dateStart.setValue(startDate);
+                    }
+                }
+                criteria.setEndDate(endDate.format(DateTimeFormatter.ISO_DATE));                
+                LocalDate[] dr = criteria.getDateRange();
+                dr[1]=endDate;
+                criteria.setDateRange(dr);                
+            }
+        });
+
         click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -204,6 +262,20 @@ public class RebalanceForm extends AnchorPane {
                 }
             }
         };
+    }
+
+    /**
+     * @return the criteria
+     */
+    public SearchCriteria getCriteria() {
+        return criteria;
+    }
+
+    /**
+     * @param criteria the criteria to set
+     */
+    public void setCriteria(SearchCriteria criteria) {
+        this.criteria = criteria;
     }
 
 }

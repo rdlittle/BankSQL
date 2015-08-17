@@ -9,11 +9,11 @@
     <children>
 
         <Label layoutX="14.0" layoutY="61.0" text="Start" />
-      <DatePicker layoutX="96.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
+      <DatePicker fx:id="dateStart" layoutX="96.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
         <TextField fx:id="txtStart" layoutX="96.0" layoutY="95.0" prefHeight="25.0" prefWidth="67.0" />
         <Button fx:id="btnChooseStart" layoutX="192.0" layoutY="95.0" mnemonicParsing="false" onAction="#btnChooseStartOnAction" text="Choose" />
         <Label layoutX="311.0" layoutY="60.0" text="Stop" />
-      <DatePicker layoutX="399.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
+      <DatePicker fx:id="dateEnd" layoutX="399.0" layoutY="56.0" prefHeight="25.0" prefWidth="160.0" />
         <TextField fx:id="txtEnd" layoutX="399.0" layoutY="95.0" prefHeight="25.0" prefWidth="67.0" />
         <Button fx:id="btnChooseEnd" layoutX="493.0" layoutY="95.0" mnemonicParsing="false" onAction="#btnChooseEndOnAction" text="Choose" />
         <Label layoutX="14.0" layoutY="14.0" text="Rebalance Account">
@@ -30,7 +30,6 @@
       <Label layoutX="311.0" layoutY="100.0" text="Transaction" />
       <RadioButton fx:id="rbDate" layoutX="236.0" layoutY="165.0" mnemonicParsing="false" text="Date" />
       <RadioButton fx:id="rbTrans" layoutX="311.0" layoutY="165.0" mnemonicParsing="false" text="Transaction" />
-      <RadioButton fx:id="rbBoth" layoutX="427.0" layoutY="165.0" mnemonicParsing="false" text="Both" />
       <Label layoutX="238.0" layoutY="141.0" text="Constrain to" />
     </children>
 </fx:root>

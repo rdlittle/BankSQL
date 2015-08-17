@@ -6,6 +6,9 @@
 package com.webfront.model;
 
 import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -26,6 +29,8 @@ public class SearchCriteria {
     private String storeId;
     private String amount;
     private String date;
+    private Float beginningBalance;
+    private LocalDate[] dateRange;
 
     /**
      *
@@ -40,6 +45,8 @@ public class SearchCriteria {
         maxAmount = new String();
         sqlProperty = new SimpleStringProperty();
         sqlProperty.setValue("");
+        beginningBalance = new Float(0);
+        dateRange = new LocalDate[2];
     }
 
     public void validateRange(LocalDate sDate, LocalDate eDate) throws Exception {
@@ -56,6 +63,11 @@ public class SearchCriteria {
      */
     public String getStartDate() {
         return startDate;
+    }
+    
+    public Date toDate(LocalDate d) {
+        Date dt = new Date(d.toEpochDay());
+        return dt;
     }
 
     /**
@@ -229,5 +241,33 @@ public class SearchCriteria {
      */
     public void setDate(String date) {
         this.date = date;
+    }
+
+    /**
+     * @return the beginningBalance
+     */
+    public Float getBeginningBalance() {
+        return beginningBalance;
+    }
+
+    /**
+     * @param beginningBalance the beginningBalance to set
+     */
+    public void setBeginningBalance(Float beginningBalance) {
+        this.beginningBalance = beginningBalance;
+    }
+
+    /**
+     * @return the dateRange
+     */
+    public LocalDate[] getDateRange() {
+        return dateRange;
+    }
+
+    /**
+     * @param dateRange the dateRange to set
+     */
+    public void setDateRange(LocalDate[] dateRange) {
+        this.dateRange = dateRange;
     }
 }
