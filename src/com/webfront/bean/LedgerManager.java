@@ -93,39 +93,6 @@ public class LedgerManager extends DBManager implements Serializable {
         return 1;
     }
 
-    /**
-     *
-     * @param acct - The account number to use in the selection of transactions.
-     * @param start - The transaction id from which to start the recalculation.
-     * @param end - The transaction id at which to end the recalculation.
-     * @param openingBalance - The implied opening balance.
-     */
-    public void rebalance(int acct, int start, int end, float openingBalance) {
-        Query query = em.createNamedQuery("Account.findById");
-        query.setParameter("id", acct);
-        Account account = (Account) query.getSingleResult();
-
-        query = em.createNamedQuery("Ledger.findRangeById");
-        query.setParameter("accountNum", acct);
-        query.setParameter("startId", start);
-        query.setParameter("endId", end);
-        selectedItems = query.getResultList();
-        if (!selectedItems.isEmpty()) {
-            float balance = openingBalance;
-            for (Ledger l : selectedItems) {
-                float amt = l.getTransAmt();
-                if (account.getAccountType() == Account.AccountType.CREDIT) {
-                    balance += amt;
-                } else {
-                    balance -= amt;
-                }
-                l.setTransBal(balance);
-                update(l);
-            }
-            isChanged.set(true);
-        }
-    }
-    
     public void rebalance(int acct, SearchCriteria criteria) {
         Query query = em.createNamedQuery("Account.findById");
         query.setParameter("id", acct);
