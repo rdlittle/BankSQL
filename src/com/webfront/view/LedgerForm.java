@@ -24,6 +24,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -35,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -258,6 +260,20 @@ public final class LedgerForm extends AnchorPane {
                     }
                 }
             });
+
+            EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    System.out.println("clicked");
+                    if (event.getClickCount() == 2) {
+                        transAmt.setDisable(false);
+                        System.out.println("double clicked");
+                    }
+                }
+            };
+            
+            transAmt.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+            
             distView.setPrefSize(857.0, 175.0);
             distTable.setPrefSize(857.0, 175.0);
             distView.getChildren().add(distTable);
@@ -335,7 +351,7 @@ public final class LedgerForm extends AnchorPane {
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {
-            Ledger ledger=new Ledger();
+            Ledger ledger = new Ledger();
             updateModel(ledger);
             view.getLedgerManager().create(ledger);
             view.getTable().getItems().add(ledger);
