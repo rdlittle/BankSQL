@@ -9,9 +9,7 @@ import com.webfront.model.Account;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import java.io.Serializable;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -103,10 +101,8 @@ public class LedgerManager extends DBManager implements Serializable {
         LocalDate ld1 = criteria.getDateRange()[0];
         LocalDate ld2 = criteria.getDateRange()[1];
         
-        Instant instant = ld1.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-        Date d1 = Date.from(instant);
-        instant = ld2.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-        Date d2 = Date.from(instant);
+        Date d1 = criteria.asDate(ld1);
+        Date d2 = criteria.asDate(ld2);
         
         query.setParameter("accountNum", acct);
         query.setParameter("startDate", d1);

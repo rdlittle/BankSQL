@@ -5,7 +5,9 @@
  */
 package com.webfront.model;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -65,9 +67,9 @@ public class SearchCriteria {
         return startDate;
     }
     
-    public Date toDate(LocalDate d) {
-        Date dt = new Date(d.toEpochDay());
-        return dt;
+    public Date asDate(LocalDate ld) {
+        Instant instant = ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        return Date.from(instant);
     }
 
     /**
