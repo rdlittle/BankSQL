@@ -24,7 +24,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -32,11 +31,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -74,6 +73,8 @@ public final class LedgerForm extends AnchorPane {
     Button btnCancel;
     @FXML
     Label lblDescription;
+    @FXML
+    Hyperlink editLink;
 
     @FXML
     Pane distView;
@@ -243,7 +244,6 @@ public final class LedgerForm extends AnchorPane {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                     if (!oldValue.equals(newValue)) {
-
                         btnOk.setDisable(false);
                     }
                 }
@@ -261,18 +261,14 @@ public final class LedgerForm extends AnchorPane {
                 }
             });
 
-            EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
+            transAmt.textProperty().addListener(new ChangeListener() {
                 @Override
-                public void handle(MouseEvent event) {
-                    System.out.println("clicked");
-                    if (event.getClickCount() == 2) {
-                        transAmt.setDisable(false);
-                        System.out.println("double clicked");
+                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                    if (!oldValue.equals(newValue)) {
+                        btnOk.setDisable(false);
                     }
                 }
-            };
-            
-            transAmt.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+            });            
             
             distView.setPrefSize(857.0, 175.0);
             distTable.setPrefSize(857.0, 175.0);
@@ -338,6 +334,12 @@ public final class LedgerForm extends AnchorPane {
         item.setTransBal(Float.parseFloat(transBalance.getText()));
     }
 
+    @FXML
+    public void editLinkClicked() {
+        transAmt.setDisable(false);
+        transAmt.requestFocus();
+    }
+    
     @FXML
     public void closeForm() {
         stage.close();
