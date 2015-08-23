@@ -15,7 +15,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.persistence.Query;
@@ -27,11 +26,9 @@ public class LedgerManager extends DBManager implements Serializable {
     /**
      *
      */
-    public SimpleBooleanProperty isChanged;
 
     public LedgerManager() {
         selectedItems = new ArrayList<>();
-        isChanged = new SimpleBooleanProperty(false);
     }
 
     @Override
@@ -120,7 +117,6 @@ public class LedgerManager extends DBManager implements Serializable {
                 l.setTransBal(balance);
                 update(l);
             }
-            isChanged.set(true);
         }        
     }
 

@@ -141,6 +141,8 @@ public class RebalanceForm extends AnchorPane {
             } catch (IOException ex) {
                 Logger.getLogger(PreferencesForm.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } else {
+            form.hasChanged.set(false);
         }
         return form;
     }

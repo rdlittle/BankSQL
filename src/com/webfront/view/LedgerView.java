@@ -11,24 +11,28 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import java.util.Comparator;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 /**
@@ -45,6 +49,8 @@ public class LedgerView extends AnchorPane {
     private CategoryManager categoryManager;
     Button btnSearch;
     Button btnReset;
+
+    ContextMenu contextMenu;
 
     TableColumn dateColumn;
     TableColumn descColumn;
@@ -124,17 +130,46 @@ public class LedgerView extends AnchorPane {
         transBalColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transBalColumn.setMinWidth(100.0);
 
+        contextMenu = new ContextMenu();
+        contextMenu.setOnShown(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent e) {
+//                System.out.println("shown");
+            }
+        });
+
+        MenuItem ctxItem1 = new MenuItem("Edit");
+        ctxItem1.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        MenuItem ctxItem2 = new MenuItem("Delete");
+        ctxItem2.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        MenuItem ctxItem3 = new MenuItem("Refresh");
+        ctxItem3.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        contextMenu.getItems().addAll(ctxItem1, ctxItem2, ctxItem3);
+
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
+                if (event.getButton() == MouseButton.SECONDARY) {
+                    contextMenu.show(LedgerView.this, Side.TOP, event.getSceneX(), event.getSceneY());
+                }
                 if (event.getClickCount() == 2) {
-                    selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
                     if (selectedItem != null) {
                         getLedgerManager().refresh(selectedItem);
                         LedgerForm form = new LedgerForm(LedgerView.this, selectedItem);
                     }
-                } else {
-                    selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
                 }
             }
         };
@@ -161,32 +196,6 @@ public class LedgerView extends AnchorPane {
             }
         });
 
-        isRebalance.addListener(new InvalidationListener() {
-            @Override
-            public void invalidated(Observable observable) {
-                RebalanceForm rebal = RebalanceForm.getInstance(LedgerView.this);
-                rebal.hasChanged.addListener(new InvalidationListener() {
-                    @Override
-                    public void invalidated(Observable observable) {
-                        ledgerView.getChildren().remove(rebal);
-                        table.removeEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
-                        ledgerManager.rebalance(accountNumber, rebal.getCriteria());
-                    }
-                });
-                table.addEventHandler(MouseEvent.MOUSE_CLICKED, rebal.click);
-                rebal.showForm();                
-            }
-        });
-
-        ledgerManager.isChanged.addListener(new InvalidationListener() {
-            @Override
-            public void invalidated(Observable observable) {
-                list=ledgerManager.getList(Integer.toString(acctNum));
-                table.getItems().clear();
-                table.setItems(list);
-            }
-        });
-        
         buttonBox.getChildren().addAll(btnSearch, btnReset);
 
         AnchorPane.setTopAnchor(table, 0.0);
@@ -225,6 +234,23 @@ public class LedgerView extends AnchorPane {
             table.getItems().clear();
             table.setItems(list);
         }
+    }
+
+    public void doRebalance() {
+        RebalanceForm rebal = RebalanceForm.getInstance(LedgerView.this);
+        rebal.showForm();
+        if (rebal.hasChanged.get()) {
+            ledgerManager.rebalance(accountNumber, rebal.getCriteria());
+            list = ledgerManager.getList(Integer.toString(accountNumber));
+            table.getItems().clear();
+            table.setItems(list);
+        }
+    }
+
+    public void doRefresh() {
+        list = ledgerManager.getList(Integer.toString(accountNumber));
+        table.getItems().clear();
+        table.setItems(list);
     }
 
     /**

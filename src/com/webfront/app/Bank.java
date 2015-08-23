@@ -17,7 +17,6 @@ import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PreferencesForm;
 import com.webfront.view.PaymentView;
-import com.webfront.view.RebalanceForm;
 import com.webfront.view.StoreForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
@@ -33,7 +32,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -110,6 +108,7 @@ public class Bank extends Application {
 
         MenuItem fileImport = new MenuItem("_Import");
         MenuItem fileOpen = new MenuItem("_Open");
+        MenuItem fileRefresh = new MenuItem("_Refresh");
         MenuItem fileNewCategory = new MenuItem("_Category");
         MenuItem fileNewStore = new MenuItem("Sto_re");
         MenuItem fileExit = new MenuItem("E_xit");
@@ -126,7 +125,7 @@ public class Bank extends Application {
         fileExit.setMnemonicParsing(true);
         fileNewMenu.getItems().addAll(fileNewCategory, fileNewStore);
 
-        fileMenu.getItems().addAll(fileOpen, fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
+        fileMenu.getItems().addAll(fileOpen, fileRefresh, fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
 
         editMenu.setMnemonicParsing(true);
         editMenu.getItems().addAll(editAccounts, editCategories, editPreferences, editRebalance);
@@ -192,6 +191,7 @@ public class Bank extends Application {
 
         
         editRebalance.disableProperty().bindBidirectional(isLedger);
+        fileRefresh.disableProperty().bindBidirectional(isLedger);
         
         fileImport.setOnAction(new EventHandler() {
             @Override
@@ -201,6 +201,15 @@ public class Bank extends Application {
                 accountNum.bind(ImportForm.accountNum);
             }
         });
+        
+        fileRefresh.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
+                lv.doRefresh();                
+            }
+        });
+        
 
         fileNewStore.setOnAction(new EventHandler() {
             @Override
@@ -263,16 +272,8 @@ public class Bank extends Application {
         editRebalance.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                //RebalanceForm rebal = RebalanceForm.getInstance();
                 LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
-                lv.isRebalance.set(true);
-                //rebal.hasChanged.addListener(new InvalidationListener() {
-                //    @Override
-                //    public void invalidated(Observable observable) {
-                //        
-                //    }
-                //});
-                //rebal.showForm();
+                lv.doRebalance();
             }
         });
         
