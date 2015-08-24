@@ -84,7 +84,7 @@ public class PreferencesForm extends AnchorPane {
     @FXML
     TextField txtRoutingNumber;
     @FXML
-    ChoiceBox cbStatementFormat;
+    ComboBox cbStatementFormat;
     @FXML
     TextField txtConfigName;
     @FXML
@@ -176,7 +176,7 @@ public class PreferencesForm extends AnchorPane {
 
         cbAccounts = new ComboBox<>();
         cbStates = new ComboBox<>();
-        cbStatementFormat = new ChoiceBox();
+        cbStatementFormat = new ComboBox();
         btnBrowse = new Button();
 
         rbChecking = new RadioButton();
@@ -312,7 +312,7 @@ public class PreferencesForm extends AnchorPane {
 
                 form.cbStates.getItems().addAll(new States().names.values());
                 form.cbStatementFormat.getItems().addAll(Account.StatementFormat.values());
-                form.cbStatementFormat.selectionModelProperty().addListener(new ChangeListener() {
+                form.cbStatementFormat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         StatementFormat fmt = (StatementFormat) newValue;
