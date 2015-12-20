@@ -190,7 +190,7 @@ public class LedgerView extends AnchorPane {
         btnReset.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                list = ledgerManager.getList("Ledger.findAll");
+                list = ledgerManager.getList(Integer.toString(accountNumber));
                 table.getItems().clear();
                 table.setItems(list);
             }
@@ -219,13 +219,13 @@ public class LedgerView extends AnchorPane {
         return ledgerView;
     }
 
-    public LedgerView newInstance(int acctNum) {
+    public static LedgerView newInstance(int acctNum) {
         LedgerView view = new LedgerView(acctNum);
         view.accountNumber = acctNum;
         ledgerView = view;
         return view;
     }
-
+    
     public void doSearch(String sql) {
         SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();

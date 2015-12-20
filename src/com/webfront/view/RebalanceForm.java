@@ -206,15 +206,15 @@ public class RebalanceForm extends AnchorPane {
             public void handle(Event event) {
                 startDate = dateStart.getValue();
                 if (dateEnd.getValue() == null) {
-                    endDate = startDate;
+                    endDate = startDate.plusMonths(1);
                     dateEnd.setValue(endDate);
                 } else {
                     if (startDate.isBefore(endDate)) {
-                        endDate = startDate;
+                        endDate = startDate.plusMonths(1);
                         dateEnd.setValue(endDate);
                     }                    
                     if (dateEnd.getChronology().compareTo(dateStart.getChronology()) > 0) {
-                        endDate = startDate;
+                        endDate = startDate.plusMonths(1);
                         dateEnd.setValue(endDate);
                     }
                 }
@@ -230,15 +230,15 @@ public class RebalanceForm extends AnchorPane {
             public void handle(Event event) {
                 endDate = dateEnd.getValue();
                 if (dateStart.getValue() == null) {
-                    startDate = endDate;
+                    startDate = endDate.minusMonths(1);
                     dateStart.setValue(startDate);
                 } else {
                     if (endDate.isBefore(startDate)) {
-                        startDate = endDate;
+                        startDate = endDate.minusMonths(1);
                         dateStart.setValue(startDate);
                     }
                     if (dateStart.getChronology().compareTo(dateEnd.getChronology()) > 0) {
-                        startDate = endDate;
+                        startDate = endDate.minusMonths(1);
                         dateStart.setValue(startDate);
                     }
                 }

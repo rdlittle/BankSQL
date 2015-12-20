@@ -45,8 +45,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByPrimaryCat", query = "SELECT l FROM Ledger l WHERE l.primaryCat = :primaryCat"),
     @NamedQuery(name = "Ledger.findByCheckNum", query = "SELECT l FROM Ledger l WHERE l.checkNum = :checkNum"),
     @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.transDate desc,l.id desc"),
-    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id >= :startId AND l.id <= :endId ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate >= :startDate AND l.transDate <= :endDate ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findByQifUpdate", query = "SELECT l FROM Ledger l WHERE l.qifUpdate = :qifUpdate")})
 public class Ledger implements Serializable {
     private static final long serialVersionUID = 1L;

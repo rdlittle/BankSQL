@@ -8,9 +8,7 @@ package com.webfront.model;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -28,7 +26,7 @@ public class SearchCriteria {
     private Category secondaryCat;
     private String sqlStmt;
     private SimpleStringProperty sqlProperty;
-    private String storeId;
+    private Integer storeId;
     private String amount;
     private String date;
     private Float beginningBalance;
@@ -49,6 +47,8 @@ public class SearchCriteria {
         sqlProperty.setValue("");
         beginningBalance = new Float(0);
         dateRange = new LocalDate[2];
+        storeId = null;
+        
     }
 
     public void validateRange(LocalDate sDate, LocalDate eDate) throws Exception {
@@ -206,14 +206,14 @@ public class SearchCriteria {
     /**
      * @return the storeId
      */
-    public String getStoreId() {
+    public Integer getStoreId() {
         return storeId;
     }
 
     /**
      * @param storeId the storeId to set
      */
-    public void setStoreId(String storeId) {
+    public void setStoreId(Integer storeId) {
         this.storeId = storeId;
     }
 

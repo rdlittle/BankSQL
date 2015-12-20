@@ -51,12 +51,13 @@ public final class SearchForm extends AnchorPane {
     //private TransactionView tView;
     Map<String, Category> primeCatMap;
     Map<String, Category> subCatMap;
+    Map<String, Stores> storeMap;
 
     private ObservableList<Stores> stores;
     private ObservableList<String> primaryCats;
     private ObservableList<String> subCats;
 
-    URL location = new StoreForm().getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
+    URL location;
     ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
 
     @FXML
@@ -90,6 +91,7 @@ public final class SearchForm extends AnchorPane {
     Button btnCancel;
 
     public SearchForm() {
+        location = getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
         FXMLLoader loader = new FXMLLoader(location, resources);
         loader.setRoot(this);
         loader.setController(this);
@@ -110,6 +112,7 @@ public final class SearchForm extends AnchorPane {
 
         primeCatMap = new HashMap<>();
         subCatMap = new HashMap<>();
+        storeMap = new HashMap<>();
         endDate = new DatePicker();
         startDate = new DatePicker();
         minAmount = new TextField();
@@ -118,38 +121,25 @@ public final class SearchForm extends AnchorPane {
         try {
             loader.load();
         } catch (IOException ex) {
-            Logger.getLogger(StoreForm.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SearchForm.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
 
     public SearchForm(LedgerView view, SearchCriteria sc) {
         this();
-        this.criteria = sc;
-        this.view = view;
-        this.catManager = view.getCategoryManager();
+        criteria = sc;
+        //view = view;
+        catManager = view.getCategoryManager();
         // Set the upper range to the latest available transaction date
         Ledger ledgerItem = (Ledger) view.getTable().getItems().get(0);
         Date date = ledgerItem.getTransDate();
         endDate.valueProperty().set(DateConvertor.toLocalDate(date));
         // Set the lower range to 60 days before latest date   
-        startDate.valueProperty().set(endDate.getValue().minusDays(60));
+        startDate.valueProperty().set(endDate.getValue().minusYears(1));
+
         setForm();
     }
-    
-//    public SearchForm(TransactionView view, SearchCriteria sc) {
-//        this();
-//        this.criteria = sc;
-//        this.tView = view;
-//        this.catManager = view.getCategoryManager();
-//        // Set the upper range to the latest available transaction date
-//        Ledger ledgerItem = (Ledger) view.getTable().getItems().get(0);
-//        Date date = ledgerItem.getTransDate();
-//        endDate.valueProperty().set(DateConvertor.toLocalDate(date));
-//        // Set the lower range to 60 days before latest date   
-//        startDate.valueProperty().set(endDate.getValue().minusDays(60));
-//        setForm();
-//    }    
 
     public void setForm() {
         buildForm();
@@ -170,13 +160,12 @@ public final class SearchForm extends AnchorPane {
         startDate.setValue(LocalDate.parse(criteria.getStartDate()));
 
         if (endDate.getValue() == null) {
-            endDate.setValue(startDate.getValue().minusDays(30));
+            endDate.setValue(startDate.getValue().minusYears(10));
         }
         if ("".equals(criteria.getEndDate())) {
             criteria.setEndDate(endDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
         endDate.setValue(LocalDate.parse(criteria.getEndDate()));
-
         ObservableList<Category> list = catManager.getCategories();
         for (Category c : list) {
             if (null != c.getParent() && c.getParent() == 0) {
@@ -196,6 +185,7 @@ public final class SearchForm extends AnchorPane {
         stores = storeManager.getList("SELECT * FROM stores ORDER BY storeName");
         for (Stores store : stores) {
             cbStores.getItems().add(store.getStoreName());
+            storeMap.put(store.getStoreName(), store);
         }
 
         setFormData();
@@ -268,7 +258,19 @@ public final class SearchForm extends AnchorPane {
                 }
             }
         });
-
+        
+        cbStores.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                if(newValue != null) {
+                    String storeName = newValue.toString();
+                    if(storeMap.containsKey(storeName)) {
+                        criteria.setStoreId(storeMap.get(storeName).getId());
+                    }
+                }
+            }
+        });
+        
         txtSubject.textProperty().addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
@@ -302,37 +304,36 @@ public final class SearchForm extends AnchorPane {
         // WHERE l.primaryCat = 1 AND d.categoryId = 23 
         // AND l.transDate >= "2014-04-07" AND l.transDate <= "2014-04-21" 
         // AND l.transDesc like "%SPEED%";
-        String sql = "";
+        StringBuilder sql = new StringBuilder();
         float min, max;
+        boolean hasPrimaryCat = false;
+        boolean hasSecondaryCat = false;
+        boolean hasStartDate = false;
+        boolean hasEndDate = false;
+        boolean hasMinAmt = false;
+        boolean hasMaxAmt = false;
+        boolean hasStore = false;
+        boolean hasDescription = false;
+        int args = 0;
 
         if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
-            sql += " INNER join distribution d ON d.transId = l.id ";
+            hasSecondaryCat = true;
+            args++;
         }
 
         if (criteria.getStartDate() != null && !criteria.getStartDate().isEmpty()) {
-            sql += "WHERE l.transDate >= \"";
-            sql += criteria.getStartDate() + "\"";
+            hasStartDate = true;
+            args++;
         }
 
-        if (criteria.getEndDate() != null) {
-            if (criteria.getStartDate() != null && !criteria.getStartDate().isEmpty()) {
-                sql += " AND ";
-            } else {
-                sql += "WHERE ";
-            }
-            sql += "l.transDate <= \"";
-            sql += criteria.getEndDate() + "\"";
+        if (criteria.getEndDate() != null && !criteria.getEndDate().isEmpty()) {
+            hasEndDate = true;
         }
 
         if (criteria.getPrimaryCat() != null) {
             if (criteria.getPrimaryCat().getId() != null) {
-                if (sql.isEmpty()) {
-                    sql += "WHERE ";
-                } else {
-                    sql += " AND ";
-                }
-                sql += "l.primaryCat = ";
-                sql += criteria.getPrimaryCat().getId();
+                args++;
+                hasPrimaryCat = true;
             }
         }
 
@@ -340,45 +341,122 @@ public final class SearchForm extends AnchorPane {
         max = 0;
 
         if (criteria.getMinAmount() != null && !criteria.getMinAmount().isEmpty()) {
+            hasMinAmt = true;
+            args++;
             min = Float.parseFloat(criteria.getMinAmount());
-            if (sql.isEmpty()) {
-                sql += "WHERE ";
-            } else {
-                sql += " AND ";
-            }
-            sql += "l.transAmt >= ";
-            sql += criteria.getMinAmount();
         }
 
         if (criteria.getMaxAmount() != null && !criteria.getMaxAmount().isEmpty()) {
             max = Float.parseFloat(criteria.getMaxAmount());
             if (max >= min) {
-                if (sql.isEmpty()) {
-                    sql += "WHERE ";
-                } else {
-                    sql += " AND ";
+                hasMaxAmt = true;
+                args++;
+            }
+        }
+
+        if (!criteria.getSearchTarget().isEmpty()) {
+            args++;
+            hasDescription = true;
+        }
+
+        if (criteria.getStoreId()!=null) {
+            args++;
+            hasStore = true;
+        }
+
+        /*
+        SELECT c.description "Category", c2.description "Sub Category" 
+            s.storeName Store,
+            l.transDate "Post Date", left(l.transDesc,30) "Description", 
+            p.transDesc "Detail", 
+            lpad(format(abs(l.transAmt),2),9,' ') Amount, 
+            p.transDate "Receipt Date",
+            lpad(format(abs(p.transAmt),2),7,' ') "Item Cost" 
+            FROM ledger l 
+            JOIN categories c on c.id = l.primaryCat 
+            JOIN payment p on p.transId = l.id 
+            JOIN categories c2 on c2.id = p.subCat
+            JOIN stores s on s.id = p.storeId
+            WHERE l.transDate BETWEEN "2015-01-01" AND "2015-12-30" 
+            AND l.primaryCat = 11 
+            AND p.storeId = 46
+            AND p.subCat = 47;
+        */
+        Map<Integer, String> map = new HashMap<>();
+        int ptr = 0;
+        if (args > 0) {
+            String[] argv = new String[args + 1];
+            sql = sql.append("SELECT * from ledger l ");
+            
+            if(hasSecondaryCat) {
+                sql = sql.append(", categories c2 ");
+            }
+            if(hasStore) {
+                sql = sql.append(", stores s ");
+            }
+            if(hasSecondaryCat || hasStore) {
+                sql = sql.append(", payment p ");
+            }
+
+            if (hasDescription) {
+                argv[ptr] = "l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
+                map.put(ptr++, "ledger");
+            }
+            
+            if (hasStartDate && hasEndDate) {
+                argv[ptr] = "l.transDate BETWEEN \"" + criteria.getStartDate() + "\" AND \""+criteria.getEndDate()+"\"";
+                map.put(ptr++, "ledger");
+            } else if (hasStartDate) {
+                argv[ptr] = "l.transDate >= \"" + criteria.getStartDate() + "\"";
+                map.put(ptr++, "ledger");
+            } else if (hasEndDate) {
+                argv[ptr] = "l.transDate <= \"" + criteria.getEndDate() + "\"";
+                map.put(ptr++, "ledger");
+            } 
+            
+            if (hasMinAmt && hasMaxAmt) {
+                argv[ptr] = "abs(l.transAmt) BETWEEN " + criteria.getMinAmount() + " AND " + criteria.getMaxAmount();
+                map.put(ptr++, "ledger");
+            } else if (hasMinAmt) {
+                argv[ptr] = "abs(l.transAmt) => " + criteria.getMinAmount();
+                map.put(ptr++, "ledger");
+            } else if (hasMaxAmt) {
+                argv[ptr] = "abs(l.transAmt) <= " + criteria.getMaxAmount();
+                map.put(ptr++, "ledger");
+            }
+
+            if (hasPrimaryCat) {
+                argv[ptr] = "l.primaryCat = " + criteria.getPrimaryCat().getId();
+                map.put(ptr++, "ledger");
+            }
+            
+            if (hasSecondaryCat) {
+                argv[ptr] = "p.subCat = "+criteria.getSecondaryCat().getId();
+                map.put(ptr++, "payment");
+            }
+            
+            if (hasStore) {
+                argv[ptr] = "AND s.storeId = "+criteria.getStoreId();
+                map.put(ptr++, "stores");
+            }            
+
+            for (Integer i : map.keySet()) {
+                if (map.get(i).equals("ledger")) {
+                    if (i == 0) {
+                        sql = sql.append(" WHERE ");
+                    } else {
+                        sql = sql.append(" AND ");
+                    }
                 }
-                sql += "l.transAmt <= ";
-                sql += criteria.getMaxAmount();
+                sql = sql.append(argv[i]);
             }
         }
-
-        if (!sql.isEmpty()) {
-            if (criteria.getSearchTarget() != null && !criteria.getSearchTarget().isEmpty()) {
-                sql += " AND l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
-            }
-            if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
-                sql += " AND d.categoryId = " + criteria.getSecondaryCat().getId().toString();
-            }
-            sql = "SELECT * FROM ledger l " + sql;
-        }
-
         System.out.println(
                 "SELECT statement: " + sql);
-        criteria.setSqlStmt(sql);
+        criteria.setSqlStmt(sql.toString());
 
         criteria.getSqlProperty()
-                .set(sql);
+                .set(sql.toString());
         closeForm();
     }
 
@@ -410,7 +488,7 @@ public final class SearchForm extends AnchorPane {
      * @param primaryCats the primaryCats to set
      */
     public void setPrimaryCats(ObservableList<String> primaryCats) {
-        this.primaryCats = primaryCats;
+        primaryCats = primaryCats;
     }
 
     /**
@@ -424,6 +502,6 @@ public final class SearchForm extends AnchorPane {
      * @param subCats the subCats to set
      */
     public void setSubCats(ObservableList<String> subCats) {
-        this.subCats = subCats;
+        subCats = subCats;
     }
 }

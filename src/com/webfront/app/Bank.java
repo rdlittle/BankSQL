@@ -184,12 +184,10 @@ public class Bank extends Application {
 
                         }
                     }
-                } else {
                 }
             }
         });
 
-        
         editRebalance.disableProperty().bindBidirectional(isLedger);
         fileRefresh.disableProperty().bindBidirectional(isLedger);
         
@@ -367,7 +365,7 @@ public class Bank extends Application {
     }
 
     private void addLedger(Account acct) {
-        LedgerView lv = new LedgerView(acct.getId());
+        LedgerView lv = LedgerView.newInstance(acct.getId());
         isRebalance.bind(lv.isRebalance);
         viewList.put(acct.getId(), lv);
         Tab t = new LedgerTab(acct.getBankName(), acct.getId());

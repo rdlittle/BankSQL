@@ -15,9 +15,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.swing.SwingWorker;
 
 public class LedgerManager extends DBManager implements Serializable {
 
@@ -26,18 +31,36 @@ public class LedgerManager extends DBManager implements Serializable {
     /**
      *
      */
-
     public LedgerManager() {
         selectedItems = new ArrayList<>();
     }
 
     @Override
     public ObservableList<Ledger> getList(String q) {
-        Query query = em.createNamedQuery("Ledger.findByAccountNum");
-        query.setParameter("accountNum", Integer.parseInt(q));
-        List<Ledger> list = query.getResultList();
-        ObservableList olist = FXCollections.observableList(list);
-        return olist;
+        ObservableList ledgerList=FXCollections.emptyObservableList();
+        SwingWorker<List<Ledger>, Void> worker;
+        worker = new SwingWorker<List<Ledger>, Void>() {
+            @Override
+            protected List<Ledger> doInBackground() {
+                Query query = em.createNamedQuery("Ledger.findByAccountNum");
+                query.setParameter("accountNum", Integer.parseInt(q));
+                final List<Ledger> list = query.getResultList();
+                return list;
+            }
+
+            @Override
+            protected void done() {
+            }
+        };
+        worker.execute();
+        try {
+            ledgerList = FXCollections.observableList(worker.get());
+        } catch (InterruptedException ex) {
+            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ExecutionException ex) {
+            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ledgerList;
     }
 
     /**
@@ -53,12 +76,35 @@ public class LedgerManager extends DBManager implements Serializable {
         return olist;
     }
 
+    /**
+     *
+     * @param qName
+     * @return
+     */
+    public ObservableList<Ledger> doNamedQuery(String qName) {
+        Query query = em.createNamedQuery(qName, Ledger.class);
+        List<Ledger> list = query.getResultList();
+        ObservableList olist = FXCollections.observableList(list);
+        return olist;
+    }
+
+    /**
+     *
+     * @param q
+     * @return
+     */
     public List getResults(String q) {
         Query query = em.createNativeQuery(q);
         List list = query.getResultList();
         return list;
     }
 
+    /**
+     *
+     * @param idx
+     * @return
+     * @throws NoResultException
+     */
     public Ledger getItem(int idx) throws javax.persistence.NoResultException {
         Query query = em.createNamedQuery("Ledger.findById");
         query.setParameter("id", idx);
@@ -94,13 +140,13 @@ public class LedgerManager extends DBManager implements Serializable {
         Account account = (Account) query.getSingleResult();
         query = em.createNamedQuery("Ledger.findRangeByDate");
         Calendar cal = Calendar.getInstance(Locale.getDefault());
-        
+
         LocalDate ld1 = criteria.getDateRange()[0];
         LocalDate ld2 = criteria.getDateRange()[1];
-        
+
         Date d1 = criteria.asDate(ld1);
         Date d2 = criteria.asDate(ld2);
-        
+
         query.setParameter("accountNum", acct);
         query.setParameter("startDate", d1);
         query.setParameter("endDate", d2);
@@ -117,7 +163,7 @@ public class LedgerManager extends DBManager implements Serializable {
                 l.setTransBal(balance);
                 update(l);
             }
-        }        
+        }
     }
 
     /**

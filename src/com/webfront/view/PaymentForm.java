@@ -429,7 +429,7 @@ public final class PaymentForm extends AnchorPane {
         searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         searchCriteria.setAmount(Float.toString(oldPayment.getTransAmt()));
         if (oldPayment.getStore() != null) {
-            searchCriteria.setStoreId(oldPayment.getStore().getStoreName());
+            searchCriteria.setStoreId(oldPayment.getStore().getId());
         }
         searchResults.searchCriteria = this.searchCriteria;
         searchResults.resultProperty.addListener(new ChangeListener() {
