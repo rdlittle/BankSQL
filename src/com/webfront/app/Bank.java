@@ -219,7 +219,7 @@ public class Bank extends Application {
         fileNewCategory.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                new CategoryForm().showForm();
+                CategoryForm.getInstance().showForm();
             }
         });
 
@@ -231,7 +231,8 @@ public class Bank extends Application {
         editCategories.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                new CategoryForm().showForm();
+                CategoryForm catForm = CategoryForm.getInstance();
+                catForm.showForm();
             }
         });
 

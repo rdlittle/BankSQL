@@ -11,9 +11,12 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import java.util.Comparator;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -44,7 +47,7 @@ public class LedgerView extends AnchorPane {
     public int accountNumber;
     private static LedgerView ledgerView;
     private TableView<Ledger> table;
-    private ObservableList<Ledger> list;
+    private final ObservableList<Ledger> list = FXCollections.<Ledger>observableArrayList();
     private final LedgerManager ledgerManager;
     private CategoryManager categoryManager;
     Button btnSearch;
@@ -75,15 +78,14 @@ public class LedgerView extends AnchorPane {
 
         accountNumber = acctNum;
         ledgerManager = new LedgerManager();
-        categoryManager = new CategoryManager();
-
-        list = ledgerManager.getList(Integer.toString(acctNum));
+        categoryManager = CategoryManager.getInstance();
 
         table = new TableView<>();
 
         dateColumn = new TableColumn("Date");
         dateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
         dateColumn.setCellFactory(new CellFormatter<>());
+        dateColumn.setMinWidth(85.0);
 
         descColumn = new TableColumn("Description");
         descColumn.setCellValueFactory(new PropertyValueFactory("transDesc"));
@@ -174,8 +176,20 @@ public class LedgerView extends AnchorPane {
             }
         };
 
+        Platform.runLater(() -> loadData());
+        
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+
+        list.addListener(new ListChangeListener() {
+            @Override
+            public void onChanged(ListChangeListener.Change c) {
+                table.getItems().addAll(list);
+            }
+        });
+        
+        
         table.getItems().addAll(list);
+
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
 
         btnSearch = new Button("Search");
@@ -190,7 +204,10 @@ public class LedgerView extends AnchorPane {
         btnReset.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                list = ledgerManager.getList(Integer.toString(accountNumber));
+                ObservableList<Ledger> copyOfList;
+                copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+                list.clear();
+                list.addAll(copyOfList);
                 table.getItems().clear();
                 table.setItems(list);
             }
@@ -208,8 +225,10 @@ public class LedgerView extends AnchorPane {
         AnchorPane.setRightAnchor(buttonBox, 0.0);
 
         getChildren().addAll(table, buttonBox);
+    }
 
-        ledgerView = LedgerView.this;
+    public void loadData() {
+        list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
     }
 
     public LedgerView getInstance(int acctNum) {
@@ -225,12 +244,15 @@ public class LedgerView extends AnchorPane {
         ledgerView = view;
         return view;
     }
-    
+
     public void doSearch(String sql) {
         SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();
         if (form.criteria.getSqlStmt() != null) {
-            list = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
+            ObservableList<Ledger> copyOfList;
+            copyOfList = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
+            list.clear();
+            list.addAll(copyOfList);
             table.getItems().clear();
             table.setItems(list);
         }
@@ -241,14 +263,20 @@ public class LedgerView extends AnchorPane {
         rebal.showForm();
         if (rebal.hasChanged.get()) {
             ledgerManager.rebalance(accountNumber, rebal.getCriteria());
-            list = ledgerManager.getList(Integer.toString(accountNumber));
+            ObservableList<Ledger> copyOfList;
+            copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+            list.clear();
+            list.addAll(copyOfList);
             table.getItems().clear();
             table.setItems(list);
         }
     }
 
     public void doRefresh() {
-        list = ledgerManager.getList(Integer.toString(accountNumber));
+        ObservableList<Ledger> copyOfList;
+        copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+        list.clear();
+        list.addAll(copyOfList);
         table.getItems().clear();
         table.setItems(list);
     }
@@ -278,7 +306,8 @@ public class LedgerView extends AnchorPane {
      * @param list the list to set
      */
     public void setList(ObservableList<Ledger> list) {
-        this.list = list;
+        this.list.clear();
+        this.list.addAll(list);
     }
 
     /**

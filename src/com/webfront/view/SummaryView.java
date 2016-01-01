@@ -6,6 +6,7 @@
 package com.webfront.view;
 
 import com.webfront.controller.SummaryController;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Side;
@@ -21,10 +22,10 @@ import javafx.scene.paint.Color;
  *
  * @author rlittle
  */
-public class SummaryView extends Group {
+public final class SummaryView extends Group {
 
     private final PieChart chart;
-    private static final SummaryView view = null;
+    private static SummaryView view = null;
     private final SummaryController controller;
     final Label caption = new Label("");
     final Label parentCategory = new Label("");
@@ -37,7 +38,7 @@ public class SummaryView extends Group {
 
         controller = new SummaryController();
         controller.buildSummary(0);
-        
+
         DropShadow ds = new DropShadow();
         ds.setOffsetY(4.0f);
         ds.setColor(Color.color(0.0f, 0.0f, 0.0f));
@@ -49,12 +50,12 @@ public class SummaryView extends Group {
         parentCategory.setTextFill(Color.CORNFLOWERBLUE);
         parentCategory.setStyle("-fx-font: 22 arial;");
         parentCategory.setTranslateX(0);
-        
-        subTitle.setText(controller.getStartDate()+" through "+controller.getEndDate());
+
+        subTitle.setText(controller.getStartDate() + " through " + controller.getEndDate());
         subTitle.setStyle("-fx-font: 18 arial;");
 
         chart = new PieChart();
-        chart.setData(controller.getDataList());
+
         chart.setTitle("All Categories");
         chart.setTitleSide(Side.TOP);
         chart.setClockwise(true);
@@ -65,58 +66,79 @@ public class SummaryView extends Group {
         chart.setLegendSide(Side.LEFT);
         Bounds b = chart.getBoundsInParent();
         b = chart.getBoundsInLocal();
-        
+
         subTitle.setTranslateX(500);
         subTitle.setTranslateY(650);
 
-        getChildren().addAll(chart, parentCategory, caption, subTitle);
-
+        buildData();
         setHandler();
+
+    }
+
+    public void buildData() {
+//        Runnable task = () -> {
+//            Platform.runLater(() -> {
+//
+//            });
+//        };
+//        new Thread(task).start();
+//        Platform.runLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                chart.setData(controller.getDataList());
+//                getChildren().addAll(chart, parentCategory, caption, subTitle);
+//            }
+//        });
+        chart.setData(controller.getDataList());
+        getChildren().addAll(chart, parentCategory, caption, subTitle);
     }
 
     public SummaryView getView() {
-        return this;
+        if (view == null) {
+            view = new SummaryView();
+        }
+        return view;
     }
 
     private void setHandler() {
         for (final PieChart.Data data : chart.getData()) {
             data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED,
                     new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent e) {
-                            caption.setTranslateX(e.getSceneX());
-                            caption.setTranslateY(e.getSceneY());
-                            int pct = (int) data.getPieValue();
-                            caption.setText(data.getName() + " " + Integer.toString(pct));
-                        }
-                    });
+                @Override
+                public void handle(MouseEvent e) {
+                    caption.setTranslateX(e.getSceneX());
+                    caption.setTranslateY(e.getSceneY());
+                    int pct = (int) data.getPieValue();
+                    caption.setText(data.getName() + " " + Integer.toString(pct));
+                }
+            });
             data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED,
                     new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent e) {
-                            caption.setText("");
-                        }
-                    });
+                @Override
+                public void handle(MouseEvent e) {
+                    caption.setText("");
+                }
+            });
             data.getNode().addEventHandler(MouseEvent.MOUSE_CLICKED,
                     new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent e) {
-                            caption.setText("");
-                            y = chart.boundsInParentProperty().getValue().getHeight();
-                            x = chart.boundsInParentProperty().getValue().getWidth();
-                            parentCategory.setTranslateX(x-200);
-                            parentCategory.setTranslateY(y);
-                            parentCategory.setText("< " + data.getName());
-                            chartHeader.setText(parentCategory.getText());
-                            Integer id = controller.getCatMap().get(data.getName());
-                            if(controller.hasChildren(id)) {
-                                chart.setData(controller.getSubCat(id));
-                            } else {
-                                chart.setData(controller.getDetail(id));
-                            }
-                            chart.setTitle(data.getName());
-                        }
-                    });
+                @Override
+                public void handle(MouseEvent e) {
+                    caption.setText("");
+                    y = chart.boundsInParentProperty().getValue().getHeight();
+                    x = chart.boundsInParentProperty().getValue().getWidth();
+                    parentCategory.setTranslateX(x - 200);
+                    parentCategory.setTranslateY(y);
+                    parentCategory.setText("< " + data.getName());
+                    chartHeader.setText(parentCategory.getText());
+                    Integer id = controller.getCatMap().get(data.getName());
+                    if (controller.hasChildren(id)) {
+                        chart.setData(controller.getSubCat(id));
+                    } else {
+                        chart.setData(controller.getDetail(id));
+                    }
+                    chart.setTitle(data.getName());
+                }
+            });
         }
         parentCategory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override

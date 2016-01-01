@@ -95,7 +95,7 @@ public final class SearchForm extends AnchorPane {
         FXMLLoader loader = new FXMLLoader(location, resources);
         loader.setRoot(this);
         loader.setController(this);
-        catManager = new CategoryManager();
+        catManager = CategoryManager.getInstance();
 
         stage = new Stage();
         scene = new Scene(this);

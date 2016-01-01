@@ -14,11 +14,13 @@ import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.Stores;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -43,7 +45,7 @@ public class PaymentView extends Pane {
 
     private static PaymentView paymentView;
 
-    private ObservableList<Payment> list;
+    private final ObservableList<Payment> list;
     private ObservableList<Stores> storeList;
     private ObservableList<Category> categoryList;
     private TableView<Payment> table;
@@ -74,12 +76,14 @@ public class PaymentView extends Pane {
 
         paymentManager = new PaymentManager();
         storesManager = new StoresManager();
-        categoryManager = new CategoryManager();
+        categoryManager = CategoryManager.getInstance();
         ledgerManager = new LedgerManager();
 
         storeList = FXCollections.observableArrayList();
         categoryList = (ObservableList<Category>) categoryManager.getCategories();
-        list = paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC");
+        list = FXCollections.<Payment>observableArrayList();
+        Platform.runLater(() -> loadData());
+//        list = paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC");
 
         table = new TableView<>();
         table.setMinWidth(1300.0);
@@ -166,8 +170,15 @@ public class PaymentView extends Pane {
         transAmtColumn.setCellValueFactory(new PropertyValueFactory("transAmt"));
         transAmtColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transAmtColumn.setMinWidth(100.0);
+        
+        list.addListener(new ListChangeListener() {
+            @Override
+            public void onChanged(ListChangeListener.Change c) {
+                table.getItems().addAll(list);
+            }
+        });        
 
-        table.getItems().addAll(list);
+        //table.getItems().addAll(list);
         table.getColumns().add(idColumn);
         table.getColumns().add(transDateColumn);
         table.getColumns().add(transDescColumn);
@@ -213,6 +224,9 @@ public class PaymentView extends Pane {
         return paymentView;
     }
 
+    private void loadData() {
+        list.setAll(paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC"));
+    }
     /**
      * @return the table
      */
@@ -238,7 +252,7 @@ public class PaymentView extends Pane {
      * @param list the list to set
      */
     public void setList(ObservableList<Payment> list) {
-        this.list = list;
+        this.list.setAll(list);
     }
 
     /**

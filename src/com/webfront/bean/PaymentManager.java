@@ -25,7 +25,7 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
     public ObservableList<Payment> getList(String q) {
         Query query = em.createNamedQuery("Payment.findAll");
         List<Payment> list = query.getResultList();
-        ObservableList olist = FXCollections.observableList(list);
+        ObservableList olist = FXCollections.<Payment>observableList(list);
         return olist;
     }
 

@@ -15,52 +15,39 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
-import javax.swing.SwingWorker;
 
-public class LedgerManager extends DBManager implements Serializable {
+public class LedgerManager extends DBManager {
 
     private List<Ledger> selectedItems;
+    private final ObservableList<Ledger> ledgerList;
 
     /**
      *
      */
     public LedgerManager() {
+        this.ledgerList = FXCollections.<Ledger>observableArrayList();
         selectedItems = new ArrayList<>();
+    }
+
+    public List<Ledger> getLedgerList(String acct) {
+        Query query = em.createNamedQuery("Ledger.findByAccountNum");
+        query.setParameter("accountNum", Integer.parseInt(acct));
+        List<Ledger> list = query.getResultList();
+        ledgerList.setAll(list);
+        return list;
     }
 
     @Override
     public ObservableList<Ledger> getList(String q) {
-        ObservableList ledgerList=FXCollections.emptyObservableList();
-        SwingWorker<List<Ledger>, Void> worker;
-        worker = new SwingWorker<List<Ledger>, Void>() {
-            @Override
-            protected List<Ledger> doInBackground() {
-                Query query = em.createNamedQuery("Ledger.findByAccountNum");
-                query.setParameter("accountNum", Integer.parseInt(q));
-                final List<Ledger> list = query.getResultList();
-                return list;
-            }
-
-            @Override
-            protected void done() {
-            }
-        };
-        worker.execute();
-        try {
-            ledgerList = FXCollections.observableList(worker.get());
-        } catch (InterruptedException ex) {
-            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ExecutionException ex) {
-            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return ledgerList;
+        Query query = em.createNamedQuery("Ledger.findByAccountNum");
+        query.setParameter("accountNum", Integer.parseInt(q));
+        List<Ledger> list = query.getResultList();
+        ledgerList.setAll(list);
+        return this.ledgerList;
     }
 
     /**
