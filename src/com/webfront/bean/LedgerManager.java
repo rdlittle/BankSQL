@@ -8,7 +8,6 @@ package com.webfront.bean;
 import com.webfront.model.Account;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,25 +23,25 @@ public class LedgerManager extends DBManager {
 
     private List<Ledger> selectedItems;
     private final ObservableList<Ledger> ledgerList;
+    private static LedgerManager instance = null;
 
     /**
      *
      */
-    public LedgerManager() {
+    protected LedgerManager() {
         this.ledgerList = FXCollections.<Ledger>observableArrayList();
         selectedItems = new ArrayList<>();
     }
-
-    public List<Ledger> getLedgerList(String acct) {
-        Query query = em.createNamedQuery("Ledger.findByAccountNum");
-        query.setParameter("accountNum", Integer.parseInt(acct));
-        List<Ledger> list = query.getResultList();
-        ledgerList.setAll(list);
-        return list;
+    
+    public synchronized static LedgerManager getInstance() {
+        if(instance==null) {
+            instance = new LedgerManager();
+        }
+        return instance;
     }
 
     @Override
-    public ObservableList<Ledger> getList(String q) {
+    public synchronized ObservableList<Ledger> getList(String q) {
         Query query = em.createNamedQuery("Ledger.findByAccountNum");
         query.setParameter("accountNum", Integer.parseInt(q));
         List<Ledger> list = query.getResultList();
@@ -56,7 +55,7 @@ public class LedgerManager extends DBManager {
      * @return
      */
     @Override
-    public ObservableList<Ledger> doSqlQuery(String q) {
+    public synchronized ObservableList<Ledger> doSqlQuery(String q) {
         Query query = em.createNativeQuery(q, Ledger.class);
         List<Ledger> list = query.getResultList();
         ObservableList olist = FXCollections.observableList(list);
@@ -68,7 +67,7 @@ public class LedgerManager extends DBManager {
      * @param qName
      * @return
      */
-    public ObservableList<Ledger> doNamedQuery(String qName) {
+    public synchronized ObservableList<Ledger> doNamedQuery(String qName) {
         Query query = em.createNamedQuery(qName, Ledger.class);
         List<Ledger> list = query.getResultList();
         ObservableList olist = FXCollections.observableList(list);
@@ -121,7 +120,7 @@ public class LedgerManager extends DBManager {
         return 1;
     }
 
-    public void rebalance(int acct, SearchCriteria criteria) {
+    public synchronized void rebalance(int acct, SearchCriteria criteria) {
         Query query = em.createNamedQuery("Account.findById");
         query.setParameter("id", acct);
         Account account = (Account) query.getSingleResult();

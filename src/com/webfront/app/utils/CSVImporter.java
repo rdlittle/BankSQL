@@ -33,7 +33,7 @@ public class CSVImporter extends Importer {
         buffer = new HashMap<>();
         entries = new ArrayList<>();
         lastBalance = new Float(0.0);
-        LedgerManager mgr = new LedgerManager();
+        LedgerManager mgr = LedgerManager.getInstance();
         int lastId = mgr.getLastId(accountId);
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);

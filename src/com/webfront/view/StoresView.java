@@ -8,6 +8,9 @@ package com.webfront.view;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Stores;
 import java.util.Comparator;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -38,31 +41,23 @@ import javafx.stage.Stage;
 public class StoresView extends Pane {
 
     private TableView<Stores> table;
-    private ObservableList<Stores> list;
+    private final ObservableList<Stores> list;
     TableColumn<Stores, Integer> storeIdCol;
     TableColumn<Stores, String> storeNameCol;
     final StoresManager storesManager;
-    static StoresView view;
+    private static StoresView view;
     MenuItem delMenu;
     MenuItem editMenu;
 
-    private StoresView() {
+    protected StoresView() {
         super();
+        list = FXCollections.<Stores>observableArrayList();
         storesManager = new StoresManager();
         VBox vbox = new VBox();
         Button btnAdd;
         btnAdd = new Button("Add store");
         delMenu = new MenuItem("Delete");
         editMenu = new MenuItem("Edit");
-
-        btnAdd.setOnAction(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                table.getItems().add(new Stores());
-                table.getSelectionModel().selectLast();
-                table.edit(0, storeNameCol);
-            }
-        });
 
         EventHandler<MouseEvent> doubleClick = new EventHandler<MouseEvent>() {
             @Override
@@ -84,7 +79,7 @@ public class StoresView extends Pane {
             public void handle(Event event) {
                 int row = table.getSelectionModel().getSelectedIndex();
                 Stores s = table.getItems().get(row);
-                ConfirmDialog cd = new ConfirmDialog("Preparing to delete "+s.getStoreName());
+                ConfirmDialog cd = new ConfirmDialog("Preparing to delete " + s.getStoreName());
                 int r = cd.getResult();
                 System.out.println(r);
                 if (r == ConfirmDialog.CONFIRM_YES) {
@@ -103,10 +98,16 @@ public class StoresView extends Pane {
             }
         });
 
-        list = storesManager.getList("SELECT * FROM stores ORDER BY storeName");
-        table = new TableView<>();
+        Platform.runLater(() -> loadData());
 
+        table = new TableView<>();
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, doubleClick);
+        list.addListener(new ListChangeListener() {
+            @Override
+            public void onChanged(ListChangeListener.Change c) {
+                table.getItems().setAll(list);
+            }
+        });
         table.setEditable(true);
         table.setMaxWidth(USE_PREF_SIZE);
         table.setContextMenu(new ContextMenu(editMenu, delMenu));
@@ -130,23 +131,39 @@ public class StoresView extends Pane {
 
                 });
 
-        table.setItems(list);
         table.getColumns().addAll(storeIdCol, storeNameCol);
+        
+        btnAdd.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                Stores store = new Stores();
+                table.getItems().add(store);
+                table.scrollTo(store);
+                table.getSelectionModel().select(store);
+                int row = table.getSelectionModel().getSelectedIndex();
+                table.getFocusModel().focus(row, storeIdCol);
+                table.edit(row, storeNameCol);
+            }
+        });        
 
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10,10,0,10));
+        buttons.setPadding(new Insets(10, 10, 0, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
         vbox.getChildren().addAll(table, buttons);
         getChildren().addAll(vbox);
     }
-    
-    public static StoresView getInstance() {
-        if(view==null) {
-            view=new StoresView();
+
+    public static synchronized StoresView getInstance() {
+        if (view == null) {
+            view = new StoresView();
         }
         return view;
+    }
+
+    private void loadData() {
+        list.setAll(storesManager.getList("SELECT * FROM stores ORDER BY storeName"));
     }
 
     /**
@@ -174,7 +191,7 @@ public class StoresView extends Pane {
      * @param list the list to set
      */
     public void setList(ObservableList<Stores> list) {
-        this.list = list;
+        this.list.setAll(list);
     }
 
     public static Comparator<Stores> StoreComparator = new Comparator<Stores>() {

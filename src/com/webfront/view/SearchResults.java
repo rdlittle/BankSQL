@@ -165,7 +165,7 @@ public final class SearchResults extends Pane {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         resultsList.clear();
-                        LedgerManager ledgerManager = new LedgerManager();
+                        LedgerManager ledgerManager = LedgerManager.getInstance();
                         resultsList=ledgerManager.doSqlQuery(searchCriteria.getSqlStmt());
                         getTable().getItems().clear();
                         getTable().setItems(resultsList);                        

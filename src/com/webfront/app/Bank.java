@@ -57,66 +57,74 @@ import javafx.stage.WindowEvent;
 public class Bank extends Application {
 
     final int TAB_BOTTOM_MARGIN = 130;
+    
+    private Stage primaryStage;   
+    public Scene scene;    
+    
+    private final StoresView stores;
+    
+    private final Menu fileMenu = new Menu("_File");
+    private final Menu fileNewMenu = new Menu("Ne_w");
+
+    private final Menu editMenu = new Menu("_Edit");
+
+    private final MenuItem fileImport = new MenuItem("_Import");
+    private final MenuItem fileOpen = new MenuItem("_Open");
+    private final MenuItem fileRefresh = new MenuItem("_Refresh");
+    private final MenuItem fileNewCategory = new MenuItem("_Category");
+    private final MenuItem fileNewStore = new MenuItem("Sto_re");
+    private final MenuItem fileExit = new MenuItem("E_xit");
+
+    private final MenuItem editAccounts = new MenuItem("Accounts");
+    private final MenuItem editCategories = new MenuItem("Categories");
+    private final MenuItem editPreferences = new MenuItem("_Preferences");
+    private final MenuItem editRebalance = new MenuItem("_Rebalance"); 
+    
     final ProgressBar progressBar;
 
     private final Config config;
     private final String defaultConfig = ".bankSQL";
 
-    private static Stage stage = null;
     private static List<Tab> ledgers;
 
     public static ArrayList<Account> accountList;
     public static HashMap<Integer, LedgerView> viewList;
-    public Scene scene;
+
+    public final SimpleBooleanProperty importDone;
+    public final SimpleIntegerProperty accountNum;
+    public final SimpleBooleanProperty isLedger;
+    public final SimpleBooleanProperty isRebalance;
+    private final SimpleIntegerProperty backgroundActive = new SimpleIntegerProperty(0);
 
     ResourceBundle bundle;
-    Thread importThread;
-    public static SimpleBooleanProperty importDone;
-    public static SimpleIntegerProperty accountNum;
-    public static SimpleBooleanProperty isLedger;
-    public static SimpleBooleanProperty isRebalance;
+    Thread importThread;    
     Importer importer;
     String tmpDir;
+    private final TabPane tabPane;
 
-    TabPane tabPane;
-
-    int accountId;
+    int accountId;    
 
     public Bank() {
+        this.importDone = new SimpleBooleanProperty(false);
+        this.tabPane = new TabPane();
         this.progressBar = new ProgressBar(0);
-        importDone = new SimpleBooleanProperty(false);
         accountNum = new SimpleIntegerProperty();
         isLedger = new SimpleBooleanProperty(false);
         isRebalance = new SimpleBooleanProperty(false);
         config = Config.getInstance();
         viewList = new HashMap<>();
         config.getConfig();
+        stores = StoresView.getInstance();
     }
 
     @Override
-    public void start(Stage primaryStage) {
-
+    public void start(Stage stage) {
+        primaryStage = stage;
         scene = new Scene(new VBox(), Double.parseDouble(config.getWidth()), Double.parseDouble(config.getHeight()));
         primaryStage.setX(Double.parseDouble(config.getX()));
         primaryStage.setY(Double.parseDouble(config.getY()));
 
         MenuBar menuBar = new MenuBar();
-        Menu fileMenu = new Menu("_File");
-        Menu fileNewMenu = new Menu("Ne_w");
-
-        Menu editMenu = new Menu("_Edit");
-
-        MenuItem fileImport = new MenuItem("_Import");
-        MenuItem fileOpen = new MenuItem("_Open");
-        MenuItem fileRefresh = new MenuItem("_Refresh");
-        MenuItem fileNewCategory = new MenuItem("_Category");
-        MenuItem fileNewStore = new MenuItem("Sto_re");
-        MenuItem fileExit = new MenuItem("E_xit");
-
-        MenuItem editAccounts = new MenuItem("Accounts");
-        MenuItem editCategories = new MenuItem("Categories");
-        MenuItem editPreferences = new MenuItem("_Preferences");
-        MenuItem editRebalance = new MenuItem("_Rebalance");
 
         fileMenu.setMnemonicParsing(true);
         fileOpen.setMnemonicParsing(true);
@@ -131,8 +139,6 @@ public class Bank extends Application {
         editMenu.getItems().addAll(editAccounts, editCategories, editPreferences, editRebalance);
 
         menuBar.getMenus().addAll(fileMenu, editMenu);
-
-        tabPane = new TabPane();
 
         Tab summaryTab = new Tab("Summary");
         Tab storesTab = new Tab("Stores");
@@ -154,12 +160,108 @@ public class Bank extends Application {
         importTypes.add(".txt");
         importTypes.add(".csv");
 
-        StoresView stores = StoresView.getInstance();
         storesTab.setContent(stores);
 
         PaymentView payment = PaymentView.getInstance();
         paymentTab.setContent(payment);
 
+        editRebalance.disableProperty().bindBidirectional(isLedger);
+        fileRefresh.disableProperty().bindBidirectional(isLedger);
+        
+        summaryTab.setContent(SummaryView.getInstance());
+        
+        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
+            @Override
+            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
+                isLedger.set(!"LedgerView".equalsIgnoreCase(newTab.getContent().getClass().getSimpleName()));
+            }
+        });        
+        
+        tabPane.getTabs().add(summaryTab);
+        tabPane.getTabs().addAll(ledgers);
+        tabPane.getTabs().add(storesTab);
+        tabPane.getTabs().add(paymentTab);
+        
+        Pane statusPanel = new Pane();
+        statusPanel.setPrefSize(scene.getWidth(), 100);
+        statusPanel.setMaxHeight(100);
+        statusPanel.setPadding(new Insets(1, 5, 1, 5));
+        statusPanel.getChildren().add(progressBar);
+        progressBar.setPrefWidth(scene.getWidth() / 2);
+        progressBar.setVisible(false);
+        progressBar.visibleProperty().bind(backgroundActive.greaterThan(0));
+
+        ((VBox) scene.getRoot()).getChildren().add(menuBar);
+        ((VBox) scene.getRoot()).getChildren().add(tabPane);
+        ((VBox) scene.getRoot()).getChildren().add(statusPanel);
+
+        payment.setPrefSize(scene.getWidth(), scene.getHeight());
+        payment.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+
+        stores.setPrefSize(scene.getWidth(), scene.getHeight());
+        stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
+
+        payment.setStoreList(stores.getList());
+        payment.getStoreAdded().addListener((Observable observable) -> {
+            payment.getStoreAdded().setValue(Boolean.FALSE);
+            stores.getList().sort(StoresView.StoreComparator);
+        });
+
+        scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
+        primaryStage.setTitle("Bank");
+        primaryStage.setScene(scene);
+        primaryStage.setOnCloseRequest(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                config.setWidth(Double.toString(scene.getWidth()));
+                config.setHeight(Double.toString(scene.getHeight()));
+                config.setX(Double.toString(primaryStage.getX()));
+                config.setY(Double.toString(primaryStage.getY()));
+                config.setConfig();
+            }
+        });
+
+        primaryStage.show();
+    }
+
+    public void setAccounts() {
+        accountList = new ArrayList<>();
+        AccountManager am = new AccountManager();
+        ObservableList<Account> l = FXCollections.observableArrayList(am.getList("Account.findAll"));
+        l.stream().forEach((acct) -> {
+            accountList.add(acct);
+        });
+    }
+
+    public ArrayList<Account> getAccountList() {
+        return accountList;
+    }
+
+    private void addLedger(Account acct) {
+        LedgerView lv = LedgerView.newInstance(acct.getId());
+        isRebalance.bind(lv.isRebalance);
+        viewList.put(acct.getId(), lv);
+        Tab t = new LedgerTab(acct.getBankName(), acct.getId());
+        t.setClosable(true);
+        t.setContent(lv);
+        getLedgers().add(t);
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    /**
+     * @return the ledgers
+     */
+    public static List<Tab> getLedgers() {
+        return ledgers;
+    }
+
+    private void setHandlers() {
         fileOpen.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -186,10 +288,7 @@ public class Bank extends Application {
                     }
                 }
             }
-        });
-
-        editRebalance.disableProperty().bindBidirectional(isLedger);
-        fileRefresh.disableProperty().bindBidirectional(isLedger);
+        });  
         
         fileImport.setOnAction(new EventHandler() {
             @Override
@@ -274,49 +373,8 @@ public class Bank extends Application {
                 LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
                 lv.doRebalance();
             }
-        });
+        }); 
         
-
-        summaryTab.setContent(new SummaryView());
-
-        
-        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
-            @Override
-            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
-                isLedger.set(!"LedgerView".equalsIgnoreCase(newTab.getContent().getClass().getSimpleName()));
-            }
-        });        
-        
-        tabPane.getTabs().add(summaryTab);
-        tabPane.getTabs().addAll(ledgers);
-        tabPane.getTabs().add(storesTab);
-        tabPane.getTabs().add(paymentTab);
-
-        
-        Pane statusPanel = new Pane();
-        statusPanel.setPrefSize(scene.getWidth(), 100);
-        statusPanel.setMaxHeight(100);
-        statusPanel.setPadding(new Insets(1, 5, 1, 5));
-        statusPanel.getChildren().add(progressBar);
-        progressBar.setPrefWidth(scene.getWidth() / 2);
-        progressBar.setVisible(false);
-
-        ((VBox) scene.getRoot()).getChildren().add(menuBar);
-        ((VBox) scene.getRoot()).getChildren().add(tabPane);
-        ((VBox) scene.getRoot()).getChildren().add(statusPanel);
-
-        payment.setPrefSize(scene.getWidth(), scene.getHeight());
-        payment.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-
-        stores.setPrefSize(scene.getWidth(), scene.getHeight());
-        stores.getTable().setPrefSize(scene.getWidth(), scene.getHeight() - TAB_BOTTOM_MARGIN);
-
-        payment.setStoreList(stores.getList());
-        payment.getStoreAdded().addListener((Observable observable) -> {
-            payment.getStoreAdded().setValue(Boolean.FALSE);
-            stores.getList().sort(StoresView.StoreComparator);
-        });
-
         importDone.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
@@ -332,63 +390,9 @@ public class Bank extends Application {
                 }
             }
         });
-        
-        scene.getStylesheets().add("com/webfront/app/bank/css/styles.css");
-        primaryStage.setTitle("Bank");
-        primaryStage.setScene(scene);
-        primaryStage.setOnCloseRequest(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                config.setWidth(Double.toString(scene.getWidth()));
-                config.setHeight(Double.toString(scene.getHeight()));
-                config.setX(Double.toString(primaryStage.getX()));
-                config.setY(Double.toString(primaryStage.getY()));
-                config.setConfig();
-            }
-        });
-        if (stage == null) {
-            stage = primaryStage;
-        }
-        stage.show();
+                
     }
-
-    public void setAccounts() {
-        accountList = new ArrayList<>();
-        AccountManager am = new AccountManager();
-        ObservableList<Account> l = FXCollections.observableArrayList(am.getList("Account.findAll"));
-        l.stream().forEach((acct) -> {
-            accountList.add(acct);
-        });
-    }
-
-    public ArrayList<Account> getAccountList() {
-        return accountList;
-    }
-
-    private void addLedger(Account acct) {
-        LedgerView lv = LedgerView.newInstance(acct.getId());
-        isRebalance.bind(lv.isRebalance);
-        viewList.put(acct.getId(), lv);
-        Tab t = new LedgerTab(acct.getBankName(), acct.getId());
-        t.setClosable(true);
-        t.setContent(lv);
-        getLedgers().add(t);
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        launch(args);
-    }
-
-    /**
-     * @return the ledgers
-     */
-    public static List<Tab> getLedgers() {
-        return ledgers;
-    }
-
+    
     /**
      * @param ledgers the ledgers to set
      */

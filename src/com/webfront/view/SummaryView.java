@@ -25,19 +25,18 @@ import javafx.scene.paint.Color;
 public final class SummaryView extends Group {
 
     private final PieChart chart;
-    private static SummaryView view = null;
-    private final SummaryController controller;
+    private static SummaryView instance = null;
+    private static SummaryController controller;
     final Label caption = new Label("");
     final Label parentCategory = new Label("");
     final Label subTitle = new Label("");
     final Label chartHeader = new Label("");
     double x, y;
 
-    public SummaryView() {
+    protected SummaryView() {
         super();
 
-        controller = new SummaryController();
-        controller.buildSummary(0);
+        controller = SummaryController.getInstance();
 
         DropShadow ds = new DropShadow();
         ds.setOffsetY(4.0f);
@@ -76,28 +75,20 @@ public final class SummaryView extends Group {
     }
 
     public void buildData() {
-//        Runnable task = () -> {
-//            Platform.runLater(() -> {
-//
-//            });
-//        };
-//        new Thread(task).start();
-//        Platform.runLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                chart.setData(controller.getDataList());
-//                getChildren().addAll(chart, parentCategory, caption, subTitle);
-//            }
-//        });
+        if (Platform.isFxApplicationThread()) {
+            controller.buildSummary(0);
+        } else {
+            Platform.runLater(() -> controller.buildSummary(0));
+        }
         chart.setData(controller.getDataList());
         getChildren().addAll(chart, parentCategory, caption, subTitle);
     }
 
-    public SummaryView getView() {
-        if (view == null) {
-            view = new SummaryView();
+    public synchronized static SummaryView getInstance() {
+        if (instance == null) {
+            instance = new SummaryView();
         }
-        return view;
+        return instance;
     }
 
     private void setHandler() {

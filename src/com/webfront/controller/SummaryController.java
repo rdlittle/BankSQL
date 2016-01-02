@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.PieChart;
 
@@ -24,21 +26,28 @@ import javafx.scene.chart.PieChart;
  */
 public class SummaryController {
 
-    private ObservableList<PieChart.Data> dataList;
+    private final ObservableList<PieChart.Data> dataList;
     private HashMap<String, Integer> catMap;
-    private static final SummaryController controller = null;
+    private static SummaryController instance = null;
     private final LedgerManager ledgerMgr;
     private String startDate;
     private String endDate;
     private final ArrayList<Category> selectedCategory;
 
-    public SummaryController() {
-        ledgerMgr = new LedgerManager();
-        dataList = FXCollections.observableArrayList();
+    protected SummaryController() {
+        ledgerMgr = LedgerManager.getInstance();
+        dataList = FXCollections.<PieChart.Data>observableArrayList();
         catMap = CategoryManager.getInstance().getMapByDescription();
         startDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
         endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
         selectedCategory = new ArrayList<>();
+    }
+    
+    public synchronized static SummaryController getInstance() {
+        if(instance==null) {
+            instance = new SummaryController();
+        }
+        return instance;
     }
 
     public void buildSummary(int category) {
@@ -47,8 +56,8 @@ public class SummaryController {
         stmt += "join categories c on l.primaryCat = c.id ";
         stmt += "where l.transDate > \"" + sDate + "\" group by l.primaryCat WITH ROLLUP";
         List<Object[]> list = ledgerMgr.getResults(stmt);
+        dataList.clear();
         class Item {
-
             Float amt;
             String label;
         }
@@ -60,12 +69,12 @@ public class SummaryController {
             item.amt = Float.parseFloat(s.replaceAll(",", ""));
             item.label = (String) obj[1];
             PieChart.Data data = new PieChart.Data(item.label, item.amt);
-            getDataList().add(data);
+            dataList.add(data);
         }
     }
 
     public ObservableList<PieChart.Data> getSubCat(int category) {
-        ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
+        final ObservableList<PieChart.Data> list = FXCollections.<PieChart.Data>observableArrayList();
         String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
         String stmt;
         Category cat = CategoryManager.getInstance().getCategory(category);
@@ -157,6 +166,22 @@ public class SummaryController {
         return list;
     }
     
+    public synchronized void addListener(ListChangeListener<PieChart.Data> listener) {
+        dataList.addListener(listener);
+    }
+    
+    public synchronized void removeListener(ListChangeListener<PieChart.Data> listener) {
+        dataList.removeListener(listener);
+    }
+    
+    public synchronized void addListener(InvalidationListener listener) {
+        dataList.addListener(listener);
+    }
+    
+    public synchronized void removeListener(InvalidationListener listener) {
+        dataList.removeListener(listener);
+    }    
+    
     public boolean hasChildren(int id) {
         return CategoryManager.getInstance().hasChildren(id);
     }
@@ -172,7 +197,7 @@ public class SummaryController {
      * @param dataList the dataList to set
      */
     public void setDataList(ObservableList<PieChart.Data> dataList) {
-        this.dataList = dataList;
+        this.dataList.setAll(dataList);
     }
 
     /**

@@ -77,13 +77,12 @@ public class PaymentView extends Pane {
         paymentManager = new PaymentManager();
         storesManager = new StoresManager();
         categoryManager = CategoryManager.getInstance();
-        ledgerManager = new LedgerManager();
+        ledgerManager = LedgerManager.getInstance();
 
         storeList = FXCollections.observableArrayList();
         categoryList = (ObservableList<Category>) categoryManager.getCategories();
         list = FXCollections.<Payment>observableArrayList();
         Platform.runLater(() -> loadData());
-//        list = paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC");
 
         table = new TableView<>();
         table.setMinWidth(1300.0);
@@ -101,7 +100,7 @@ public class PaymentView extends Pane {
 
         transDescColumn = new TableColumn("Description");
         transDescColumn.setCellValueFactory(new PropertyValueFactory("transDesc"));
-        transDescColumn.setMinWidth(300.0);
+        transDescColumn.setMinWidth(290.0);
         transDescColumn.setMaxWidth(315.0);
 
         transIdColumn = new TableColumn("Trans");
@@ -136,7 +135,7 @@ public class PaymentView extends Pane {
                 return null;
             }
         });
-        storeColumn.setMinWidth(50.0);
+        storeColumn.setMinWidth(180.0);
 
         primaryCatColumn = new TableColumn("Cat 1");
         primaryCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
@@ -148,7 +147,7 @@ public class PaymentView extends Pane {
                 return null;
             }
         });
-        primaryCatColumn.setMinWidth(50.0);
+        primaryCatColumn.setMinWidth(180.0);
 
         subCatColumn = new TableColumn("Cat 2");
         subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, ObservableValue<String>>() {
@@ -160,11 +159,11 @@ public class PaymentView extends Pane {
                 return null;
             }
         });
-        subCatColumn.setMinWidth(50.0);
+        subCatColumn.setMinWidth(220.0);
 
         accountNumColumn = new TableColumn("Acct");
         accountNumColumn.setCellValueFactory(new PropertyValueFactory("accountNum"));
-        accountNumColumn.setMinWidth(50.0);
+        accountNumColumn.setMinWidth(20.0);
 
         transAmtColumn = new TableColumn("Amount");
         transAmtColumn.setCellValueFactory(new PropertyValueFactory("transAmt"));
@@ -178,7 +177,6 @@ public class PaymentView extends Pane {
             }
         });        
 
-        //table.getItems().addAll(list);
         table.getColumns().add(idColumn);
         table.getColumns().add(transDateColumn);
         table.getColumns().add(transDescColumn);

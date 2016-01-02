@@ -68,7 +68,7 @@ public class PDFImporter extends Importer {
         buffer = new HashMap<>();
         markers = new HashMap<>();
         currentLine = 0;
-        LedgerManager mgr = new LedgerManager();
+        LedgerManager mgr = LedgerManager.getInstance();
         int lastId = mgr.getLastId(accountId);
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);

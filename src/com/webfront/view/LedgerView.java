@@ -65,7 +65,11 @@ public class LedgerView extends AnchorPane {
     public SimpleBooleanProperty isRebalance;
     public Ledger selectedItem;
 
-    public LedgerView(int acctNum) {
+    /**
+     *
+     * @param acctNum
+     */
+    protected LedgerView(int acctNum) {
         super();
         this.setStyle("-fx-background-color: #336699;");
         isRebalance = new SimpleBooleanProperty(false);
@@ -77,7 +81,7 @@ public class LedgerView extends AnchorPane {
         buttonBox.setSpacing(10);
 
         accountNumber = acctNum;
-        ledgerManager = new LedgerManager();
+        ledgerManager = LedgerManager.getInstance();
         categoryManager = CategoryManager.getInstance();
 
         table = new TableView<>();
@@ -231,7 +235,7 @@ public class LedgerView extends AnchorPane {
         list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
     }
 
-    public LedgerView getInstance(int acctNum) {
+    public synchronized LedgerView getInstance(int acctNum) {
         if (ledgerView == null) {
             ledgerView = new LedgerView(acctNum);
         }
