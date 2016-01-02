@@ -1,1 +1,6 @@
 /dist/
+*.csv
+*.ods
+build/
+nbproject/
+.gitignore
