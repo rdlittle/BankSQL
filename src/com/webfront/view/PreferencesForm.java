@@ -56,19 +56,21 @@ public class PreferencesForm extends AnchorPane {
 
     @FXML
     TabPane tabPane;
-    
+
     @FXML
     Tab accountTab;
-    
+
     @FXML
     Tab generalTab;
-    
+
     @FXML
     TextField txtInstallLocation;
     @FXML
     Button btnBrowse;
     @FXML
     TextField txtTmpLoc;
+    @FXML
+    TextField txtImportDir;
 
     @FXML
     ComboBox<String> cbAccounts;
@@ -82,7 +84,7 @@ public class PreferencesForm extends AnchorPane {
     @FXML
     TextField txtRoutingNumber;
     @FXML
-    ChoiceBox cbStatementFormat;
+    ComboBox cbStatementFormat;
     @FXML
     TextField txtConfigName;
     @FXML
@@ -161,6 +163,7 @@ public class PreferencesForm extends AnchorPane {
 
         txtInstallLocation = new TextField();
         txtTmpLoc = new TextField();
+        txtImportDir = new TextField();
         txtAccountNumber = new TextField();
         txtAccountName = new TextField();
         txtRoutingNumber = new TextField();
@@ -173,7 +176,7 @@ public class PreferencesForm extends AnchorPane {
 
         cbAccounts = new ComboBox<>();
         cbStates = new ComboBox<>();
-        cbStatementFormat = new ChoiceBox();
+        cbStatementFormat = new ComboBox();
         btnBrowse = new Button();
 
         rbChecking = new RadioButton();
@@ -227,6 +230,17 @@ public class PreferencesForm extends AnchorPane {
     }
 
     @FXML
+    public void btnBrowseImportDirOnAction() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select import location");
+        File selectedFile = directoryChooser.showDialog(stage);
+        String importDir = selectedFile.getAbsolutePath();
+        txtImportDir.setText(importDir);
+        config.setImportDir(importDir);
+        hasChanged.set(true);
+    }
+    
+    @FXML
     public void btnBrowseTmpOnAction() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select install location");
@@ -266,6 +280,7 @@ public class PreferencesForm extends AnchorPane {
                 form.cbAccounts.getItems().addAll(form.accountMap.keySet());
                 form.txtInstallLocation.setText(form.config.getInstallDir());
                 form.txtTmpLoc.setText(form.config.getTmpDir());
+                form.txtImportDir.setText(form.config.getImportDir());
 
                 form.rbChecking.setUserData(AccountType.CHECKING);
                 form.rbSavings.setUserData(AccountType.SAVINGS);
@@ -297,7 +312,7 @@ public class PreferencesForm extends AnchorPane {
 
                 form.cbStates.getItems().addAll(new States().names.values());
                 form.cbStatementFormat.getItems().addAll(Account.StatementFormat.values());
-                form.cbStatementFormat.selectionModelProperty().addListener(new ChangeListener() {
+                form.cbStatementFormat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         StatementFormat fmt = (StatementFormat) newValue;
@@ -379,7 +394,7 @@ public class PreferencesForm extends AnchorPane {
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         if (newValue != null) {
                             if (!newValue.equals(oldValue)) {
-                                form.account.setConfigName((String)newValue);
+                                form.account.setConfigName((String) newValue);
                                 form.hasChanged.set(true);
                             }
                         }
@@ -450,20 +465,22 @@ public class PreferencesForm extends AnchorPane {
             int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
             form.cbAccounts.getItems().set(idx, form.account.getAccountName());
         } else {
-            form.account.setBankName(form.txtBankName.getText());
-            form.account.setAccountName(form.txtAccountName.getText());
-            form.account.setAccountNumber(form.txtAccountNumber.getText());
-            form.account.setRoutingNumber(form.txtRoutingNumber.getText());
-            form.account.setAddress1(form.txtAddress1.getText());
-            form.account.setCity(form.txtCity.getText());
-            form.account.setStateAbbr(form.cbStates.getValue());
-            form.account.setPostalCode(form.txtPostalCode.getText());
-            form.account.setPhoneNumber(form.txtPhone.getText());
-            form.account.setConfigName(form.txtConfigName.getText());
-            if(form.account.getAccountName()==null || form.account.getAccountName().isEmpty()) {
-                form.account.setAccountName(form.account.getId().toString());
+            if (form.account != null) {
+                form.account.setBankName(form.txtBankName.getText());
+                form.account.setAccountName(form.txtAccountName.getText());
+                form.account.setAccountNumber(form.txtAccountNumber.getText());
+                form.account.setRoutingNumber(form.txtRoutingNumber.getText());
+                form.account.setAddress1(form.txtAddress1.getText());
+                form.account.setCity(form.txtCity.getText());
+                form.account.setStateAbbr(form.cbStates.getValue());
+                form.account.setPostalCode(form.txtPostalCode.getText());
+                form.account.setPhoneNumber(form.txtPhone.getText());
+                form.account.setConfigName(form.txtConfigName.getText());
+                if (form.account.getAccountName() == null || form.account.getAccountName().isEmpty()) {
+                    form.account.setAccountName(form.account.getId().toString());
+                }
+                acctMgr.update(form.account);
             }
-            acctMgr.update(form.account);
         }
         form.accountSelected.set(false);
         form.hasChanged.set(false);
@@ -477,5 +494,17 @@ public class PreferencesForm extends AnchorPane {
     @FXML
     public void closeForm() {
         form.stage.close();
+    }
+    
+    public TabPane getTabPane() {
+        return tabPane;
+    }
+    
+    public Tab getGeneralTab() {
+        return generalTab;
+    }
+    
+    public Tab getAccountTab() {
+        return accountTab;
     }
 }

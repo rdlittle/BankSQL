@@ -5,7 +5,7 @@
  */
 package com.webfront.bean;
 
-import com.webfront.model.Receipts;
+import com.webfront.model.Payment;
 import java.io.Serializable;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -16,21 +16,21 @@ import javax.persistence.Query;
  *
  * @author rlittle
  */
-public class ReceiptsManager extends DBManager<Receipts> implements Serializable {
+public class PaymentManager extends DBManager<Payment> implements Serializable {
 
-    public ReceiptsManager() {
+    public PaymentManager() {
     }
     
     @Override
-    public ObservableList<Receipts> getList(String q) {
-        Query query = em.createNamedQuery("Receipts.findAll");
-        List<Receipts> list = query.getResultList();
-        ObservableList olist = FXCollections.observableList(list);
+    public ObservableList<Payment> getList(String q) {
+        Query query = em.createNamedQuery("Payment.findAll");
+        List<Payment> list = query.getResultList();
+        ObservableList olist = FXCollections.<Payment>observableList(list);
         return olist;
     }
 
     @Override
-    public ObservableList<Receipts> doSqlQuery(String q) {
+    public ObservableList<Payment> doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

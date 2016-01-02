@@ -6,15 +6,16 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<fx:root prefHeight="139.0" prefWidth="531.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root prefHeight="186.0" prefWidth="531.0" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label layoutX="14.0" layoutY="14.0" text="File" />
       <TextField fx:id="txtFileName" layoutX="87.0" layoutY="9.0" prefHeight="25.0" prefWidth="334.0" />
       <Button fx:id="btnBrowse" layoutX="440.0" layoutY="9.0" mnemonicParsing="false" onAction="#btnBrowseClicked" text="Browse" />
       <ComboBox fx:id="cbAccount" layoutX="87.0" layoutY="54.0" prefHeight="25.0" prefWidth="334.0" />
       <Label layoutX="11.0" layoutY="59.0" text="Account" />
-      <Button fx:id="btnOK" layoutX="371.0" layoutY="105.0" mnemonicParsing="false" onAction="#btnOKClicked" prefHeight="25.0" prefWidth="63.0" text="OK" />
-      <Button fx:id="btnCancel" layoutX="442.0" layoutY="105.0" mnemonicParsing="false" onAction="#btnCancelClicked" text="Cancel" />
-      <Label fx:id="lblMessage" layoutX="8.0" layoutY="110.0" prefHeight="15.0" prefWidth="341.0" />
+      <Button fx:id="btnOK" layoutX="365.0" layoutY="137.0" mnemonicParsing="false" onAction="#btnOKClicked" prefHeight="25.0" prefWidth="63.0" text="OK" />
+      <Button fx:id="btnCancel" layoutX="442.0" layoutY="137.0" mnemonicParsing="false" onAction="#btnCancelClicked" text="Cancel" />
+      <Label fx:id="lblMessage" layoutX="14.0" layoutY="142.0" prefHeight="15.0" prefWidth="341.0" />
+      <ProgressBar fx:id="importProgress" layoutX="23.0" layoutY="98.0" prefHeight="20.0" prefWidth="485.0" progress="0.0" />
    </children>
 </fx:root>

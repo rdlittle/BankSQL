@@ -5,7 +5,10 @@
  */
 package com.webfront.model;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -23,6 +26,11 @@ public class SearchCriteria {
     private Category secondaryCat;
     private String sqlStmt;
     private SimpleStringProperty sqlProperty;
+    private Integer storeId;
+    private String amount;
+    private String date;
+    private Float beginningBalance;
+    private LocalDate[] dateRange;
 
     /**
      *
@@ -37,6 +45,10 @@ public class SearchCriteria {
         maxAmount = new String();
         sqlProperty = new SimpleStringProperty();
         sqlProperty.setValue("");
+        beginningBalance = new Float(0);
+        dateRange = new LocalDate[2];
+        storeId = null;
+        
     }
 
     public void validateRange(LocalDate sDate, LocalDate eDate) throws Exception {
@@ -53,6 +65,11 @@ public class SearchCriteria {
      */
     public String getStartDate() {
         return startDate;
+    }
+    
+    public Date asDate(LocalDate ld) {
+        Instant instant = ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        return Date.from(instant);
     }
 
     /**
@@ -184,5 +201,75 @@ public class SearchCriteria {
      */
     public void setSqlProperty(SimpleStringProperty sqlProperty) {
         this.sqlProperty = sqlProperty;
+    }
+
+    /**
+     * @return the storeId
+     */
+    public Integer getStoreId() {
+        return storeId;
+    }
+
+    /**
+     * @param storeId the storeId to set
+     */
+    public void setStoreId(Integer storeId) {
+        this.storeId = storeId;
+    }
+
+    /**
+     * @return the amount
+     */
+    public String getAmount() {
+        return amount;
+    }
+
+    /**
+     * @param amount the amount to set
+     */
+    public void setAmount(String amount) {
+        this.amount = amount;
+    }
+
+    /**
+     * @return the date
+     */
+    public String getDate() {
+        return date;
+    }
+
+    /**
+     * @param date the date to set
+     */
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    /**
+     * @return the beginningBalance
+     */
+    public Float getBeginningBalance() {
+        return beginningBalance;
+    }
+
+    /**
+     * @param beginningBalance the beginningBalance to set
+     */
+    public void setBeginningBalance(Float beginningBalance) {
+        this.beginningBalance = beginningBalance;
+    }
+
+    /**
+     * @return the dateRange
+     */
+    public LocalDate[] getDateRange() {
+        return dateRange;
+    }
+
+    /**
+     * @param dateRange the dateRange to set
+     */
+    public void setDateRange(LocalDate[] dateRange) {
+        this.dateRange = dateRange;
     }
 }

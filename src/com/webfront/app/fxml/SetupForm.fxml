@@ -44,9 +44,8 @@
                               <Label layoutX="287.0" layoutY="301.0" text="Postal Code" />
                               <Label layoutX="287.0" layoutY="254.0" text="Phone#" />
                               <TextField fx:id="txtPhone" layoutX="287.0" layoutY="269.0" />
-                              <ComboBox fx:id="cbStates" layoutX="192.0" layoutY="316.0" prefHeight="25.0" prefWidth="77.0" />
+                              <ComboBox fx:id="cbStatementFormat" layoutX="171.0" layoutY="172.0" prefHeight="25.0" prefWidth="121.0" />
                               <Label layoutX="171.0" layoutY="155.0" text="Statement Format" />
-                              <ChoiceBox fx:id="cbStatementFormat" layoutX="171.0" layoutY="172.0" prefHeight="25.0" prefWidth="123.0" />
                               <TextField fx:id="txtConfigName" layoutX="308.0" layoutY="172.0" prefHeight="25.0" prefWidth="170.0" />
                               <Label layoutX="308.0" layoutY="155.0" text="Config name" />
                               </children>
@@ -69,12 +68,15 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="316.0" prefWidth="520.0">
                      <children>
-                          <TextField fx:id="txtInstallLocation" layoutX="6.0" layoutY="30.0" prefHeight="25.0" prefWidth="261.0" />
-                          <Button fx:id="btnBrowse" layoutX="273.0" layoutY="30.0" mnemonicParsing="false" onAction="#btnBrowseOnAction" text="Browse" />
+                          <TextField fx:id="txtInstallLocation" layoutX="6.0" layoutY="30.0" prefHeight="25.0" prefWidth="398.0" />
+                          <Button fx:id="btnBrowse" layoutX="423.0" layoutY="30.0" mnemonicParsing="false" onAction="#btnBrowseOnAction" text="Browse" />
                           <Label layoutX="6.0" layoutY="13.0" text="Install Location" />
-                        <TextField fx:id="txtTmpLoc" layoutX="6.0" layoutY="88.0" prefHeight="25.0" prefWidth="261.0" />
-                        <Label layoutX="6.0" layoutY="73.0" text="Temporary File Location" />
-                        <Button fx:id="btnBrowseTmp" layoutX="275.0" layoutY="88.0" mnemonicParsing="false" onAction="#btnBrowseTmpOnAction" text="Browse" />
+                        <TextField fx:id="txtTmpLoc" layoutX="6.0" layoutY="137.0" prefHeight="25.0" prefWidth="398.0" />
+                        <Label layoutX="6.0" layoutY="119.0" text="Temporary File Location" />
+                        <Button fx:id="btnBrowseTmp" layoutX="423.0" layoutY="137.0" mnemonicParsing="false" onAction="#btnBrowseTmpOnAction" text="Browse" />
+                        <TextField fx:id="txtImportDir" layoutX="7.0" layoutY="81.0" prefHeight="25.0" prefWidth="396.0" />
+                        <Button layoutX="423.0" layoutY="81.0" mnemonicParsing="false" onAction="#btnBrowseImportDirOnAction" text="Browse" />
+                        <Label layoutX="8.0" layoutY="63.0" text="Import Directory" />
                      </children>
                   </AnchorPane>
             </content>

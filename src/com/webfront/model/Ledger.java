@@ -44,7 +44,10 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByTransBal", query = "SELECT l FROM Ledger l WHERE l.transBal = :transBal"),
     @NamedQuery(name = "Ledger.findByPrimaryCat", query = "SELECT l FROM Ledger l WHERE l.primaryCat = :primaryCat"),
     @NamedQuery(name = "Ledger.findByCheckNum", query = "SELECT l FROM Ledger l WHERE l.checkNum = :checkNum"),
-    @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.id desc"),
+    @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.transDate desc,l.id desc"),
+    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findByQifUpdate", query = "SELECT l FROM Ledger l WHERE l.qifUpdate = :qifUpdate")})
 public class Ledger implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -88,7 +91,7 @@ public class Ledger implements Serializable {
     private List<Distribution> distribution;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
-    private List<Receipts> receipts;
+    private List<Payment> receipts;
     
     public Ledger() {
         this.id=null;
@@ -201,10 +204,7 @@ public class Ledger implements Serializable {
             return false;
         }
         Ledger other = (Ledger) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
+        return !((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id)));
     }
 
     @Override
@@ -229,14 +229,14 @@ public class Ledger implements Serializable {
     /**
      * @return the receipt
      */
-    public List<Receipts> getReceipts() {
+    public List<Payment> getPayment() {
         return receipts;
     }
 
     /**
      * @param receipt the receipt to set
      */
-    public void setReceipts(List<Receipts> receipt) {
+    public void setPayment(List<Payment> receipt) {
         this.receipts = receipt;
     }
 

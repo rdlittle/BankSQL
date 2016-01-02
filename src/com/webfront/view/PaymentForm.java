@@ -5,11 +5,15 @@
  */
 package com.webfront.view;
 
+import com.webfront.app.Bank;
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.StoresManager;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
-import com.webfront.model.Receipts;
+import com.webfront.model.Payment;
 import com.webfront.model.SearchCriteria;
+import com.webfront.model.SelectItem;
 import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
@@ -31,7 +35,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
@@ -47,12 +50,12 @@ import javafx.stage.Stage;
  *
  * @author rlittle
  */
-public class ReceiptForm extends AnchorPane {
+public final class PaymentForm extends AnchorPane {
 
     @FXML
     DatePicker transDate;
     @FXML
-    ChoiceBox accountNum;
+    ComboBox<SelectItem> cbAccount;
     @FXML
     ComboBox<String> primaryCat;
     @FXML
@@ -82,17 +85,19 @@ public class ReceiptForm extends AnchorPane {
 
     Stage stage;
 
-    static ReceiptsView view;
+    static PaymentView view;
     private HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
-    Receipts oldReceipt, newReceipt;
+    Payment oldPayment;
+    Payment newPayment;
     private SearchCriteria searchCriteria;
 
-    public ReceiptForm(ReceiptsView parent, Receipts prevReceipt) {
+    public PaymentForm(PaymentView parent, Payment prevPayment) {
         view = parent;
-        oldReceipt = prevReceipt;
-        newReceipt = new Receipts();
+        oldPayment = prevPayment;
+        newPayment = new Payment();
         transDate = new DatePicker();
+        cbAccount = new ComboBox<>();
         primaryCat = new ComboBox<>();
         subCat = new ComboBox<>();
         storeMap = new HashMap<>();
@@ -108,7 +113,7 @@ public class ReceiptForm extends AnchorPane {
 
     public void buildForm() {
         try {
-            URL location = getClass().getResource("/com/webfront/app/fxml/ReceiptForm.fxml");
+            URL location = getClass().getResource("/com/webfront/app/fxml/PaymentForm.fxml");
             ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
             FXMLLoader loader = new FXMLLoader(location, resources);
 
@@ -119,14 +124,18 @@ public class ReceiptForm extends AnchorPane {
             loader.load();
 
             stage.setScene(scene);
-            stage.setTitle("Receipt Form");
+            stage.setTitle("Payment Form");
 
             // Populate store list
             for (Stores s : view.getStoreList()) {
                 storeMap.put(s.getStoreName(), s);
                 cbStores.getItems().add(s.getStoreName());
-            };
+            }
 
+            for (Account acct : Bank.accountList) {
+                SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
+                cbAccount.getItems().add(se);
+            }
             cbStores.setEditable(true);
             cbStores.setPromptText("Enter store name...");
             cbStores.setOnAction(new EventHandler() {
@@ -153,8 +162,8 @@ public class ReceiptForm extends AnchorPane {
             transDate.setOnAction(new EventHandler() {
                 @Override
                 public void handle(Event event) {
-                    if (oldReceipt.getId() != null) {
-                        Date d = new Date(oldReceipt.getTransDate().getTime());
+                    if (oldPayment.getId() != null) {
+                        Date d = new Date(oldPayment.getTransDate().getTime());
                         LocalDate oDate = d.toLocalDate();
                         String oldDate = oDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
                         String newDate = transDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -168,8 +177,8 @@ public class ReceiptForm extends AnchorPane {
             cbStores.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    if (oldReceipt.getId() != null) {
-                        if (!oldReceipt.getStore().getStoreName().equals(cbStores.getValue())) {
+                    if (oldPayment.getId() != null) {
+                        if (!oldPayment.getStore().getStoreName().equals(cbStores.getValue())) {
                             btnOk.setDisable(false);
                         }
                     }
@@ -192,8 +201,8 @@ public class ReceiptForm extends AnchorPane {
                         }
                         subCat.getItems().addAll(subCatMap.keySet());
                         subCat.getSelectionModel().selectFirst();
-                        if (oldReceipt.getId() != null) {
-                            if (oldReceipt.getPrimaryCat().getDescription() != primaryCat.getValue()) {
+                        if (oldPayment.getId() != null) {
+                            if (oldPayment.getPrimaryCat().getDescription() != primaryCat.getValue()) {
                                 btnOk.setDisable(false);
                             }
                         }
@@ -204,9 +213,11 @@ public class ReceiptForm extends AnchorPane {
             subCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    if (oldReceipt.getId() != null) {
-                        if (oldReceipt.getSubCat().getDescription() != subCat.getValue()) {
-                            btnOk.setDisable(false);
+                    if (oldPayment.getId() != null) {
+                        if (oldPayment.getSubCat() != null) {
+                            if (oldPayment.getSubCat().getDescription() != subCat.getValue()) {
+                                btnOk.setDisable(false);
+                            }
                         }
                     }
                 }
@@ -215,10 +226,8 @@ public class ReceiptForm extends AnchorPane {
             transDescription.setOnKeyPressed(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
-                    if (event.getCode() == KeyCode.TAB) {
-                        if (!transDescription.getText().equals(oldReceipt.getTransDesc())) {
-                            btnOk.setDisable(false);
-                        }
+                    if (!transDescription.getText().equals(oldPayment.getTransDesc())) {
+                        btnOk.setDisable(false);
                     }
                 }
             });
@@ -247,7 +256,7 @@ public class ReceiptForm extends AnchorPane {
                 @Override
                 public void handle(KeyEvent event) {
                     if (event.getCode() == KeyCode.TAB) {
-                        if (!transAmt.getText().equals(oldReceipt.getTransAmt())) {
+                        if (!transAmt.getText().equals(oldPayment.getTransAmt())) {
                             btnOk.setDisable(false);
                         }
                     }
@@ -258,35 +267,48 @@ public class ReceiptForm extends AnchorPane {
             searchLink.setOnAction((ActionEvent e) -> {
                 System.out.println("This link is clicked");
             });
-           stage.show();
+            stage.show();
         } catch (IOException ex) {
-            Logger.getLogger(ReceiptForm.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PaymentForm.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void setFormData() {
         // Set default values depending on whether you're editing an existing receipt or creating a new one
-        if (oldReceipt.getId() != null) {
+        if (oldPayment.getId() != null) {
             btnOk.setDisable(true);
-            long ldate = oldReceipt.getTransDate().getTime();
+            long ldate = oldPayment.getTransDate().getTime();
             Date d2 = new Date(ldate);
             LocalDate localDate = d2.toLocalDate();
             transDate.setValue(localDate);
-            transDescription.setText(oldReceipt.getTransDesc());
-            transAmt.setText(Float.toString(oldReceipt.getTransAmt()));
-            accountNum.setValue(oldReceipt.getAccountNum().toString());
-            Ledger l = oldReceipt.getLedgerEntry();
+            transDescription.setText(oldPayment.getTransDesc());
+            transAmt.setText(Float.toString(oldPayment.getTransAmt()));
+            Ledger l = oldPayment.getLedgerEntry();
             if (l != null) {
                 transId.setText(l.getId().toString());
+                Integer aid = l.getAccountNum();
+                Account acct = AccountManager.getInstance().getAccount(aid);
+                SelectItem<Integer, String> se = new SelectItem<>(aid, acct.getAccountName());
+                cbAccount.setValue(se);
+            } else {
+                cbAccount.getSelectionModel().selectFirst();
+                for (SelectItem se : cbAccount.getItems()) {
+                    if (se.getKey() == oldPayment.getAccountNum()) {
+                        cbAccount.getSelectionModel().select(se);
+                        break;
+                    }
+                }
             }
-            primaryCat.setValue(oldReceipt.getPrimaryCat().getDescription());
-            subCat.setValue(oldReceipt.getSubCat().getDescription());
-            if (oldReceipt.getStore().getStoreName() != null) {
-                cbStores.setValue(oldReceipt.getStore().getStoreName());
+            primaryCat.setValue(oldPayment.getPrimaryCat().getDescription());
+            if (oldPayment.getSubCat() != null) {
+                subCat.setValue(oldPayment.getSubCat().getDescription());
+            }
+            if (oldPayment.getStore().getStoreName() != null) {
+                cbStores.setValue(oldPayment.getStore().getStoreName());
             }
         } else {
             transDate.setValue(LocalDate.now());
-            accountNum.setValue("1");
+            cbAccount.getSelectionModel().selectFirst();
             transId.setText("0");
             transAmt.setText("0");
             btnDelete.setDisable(true);
@@ -295,7 +317,7 @@ public class ReceiptForm extends AnchorPane {
 
     @FXML
     void addItem() {
-        Receipts receipt = newReceipt;
+        Payment receipt = newPayment;
         String newStoreName = cbStores.getValue();
         String storeKey;
         Stores store = new Stores();
@@ -309,34 +331,33 @@ public class ReceiptForm extends AnchorPane {
             view.getStoreList().add(store);
             view.getStoreAdded().set(true);
             cbStores.getItems().sort(comparator);
-            System.out.println("Store added");
         }
 
-        if (oldReceipt.getId() != null) {
+        if (oldPayment.getId() != null) {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-            oldReceipt.setTransDate(Date.valueOf(dateStr));
-            oldReceipt.setTransDesc(transDescription.getText());
-            oldReceipt.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
-            oldReceipt.setTransAmt(Float.parseFloat(transAmt.getText()));
+            oldPayment.setTransDate(Date.valueOf(dateStr));
+            oldPayment.setTransDesc(transDescription.getText());
+            oldPayment.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
+            oldPayment.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
-            oldReceipt.setPrimaryCat(cat1);
-            oldReceipt.setSubCat(cat2);
-            oldReceipt.setStore(store);
-            view.getReceiptsManager().update(oldReceipt);
+            oldPayment.setPrimaryCat(cat1);
+            oldPayment.setSubCat(cat2);
+            oldPayment.setStore(store);
+            view.getPaymentManager().update(oldPayment);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
-            view.getTable().getItems().set(idx, oldReceipt);
-            view.getReceiptsManager().refresh(oldReceipt);
+            view.getTable().getItems().set(idx, oldPayment);
+            view.getPaymentManager().refresh(oldPayment);
             closeForm();
         } else {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             receipt.setTransDate(Date.valueOf(dateStr));
             receipt.setTransDesc(transDescription.getText());
-            receipt.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+            receipt.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
             receipt.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
@@ -345,11 +366,11 @@ public class ReceiptForm extends AnchorPane {
             receipt.setPrimaryCat(cat1);
             receipt.setSubCat(cat2);
             receipt.setStore(store);
-            view.getReceiptsManager().create(receipt);
+            view.getPaymentManager().create(receipt);
             view.getTable().getItems().add(receipt);
-            view.getTable().getItems().sort(Receipts.ReceiptsComparator);
+            view.getTable().getItems().sort(Payment.PaymentComparator);
             view.getTable().getSelectionModel().selectFirst();
-            newReceipt = new Receipts();
+            newPayment = new Payment();
         }
         transDescription.clear();
         transId.clear();
@@ -358,10 +379,10 @@ public class ReceiptForm extends AnchorPane {
 
     @FXML
     public void deleteItem() {
-        if (oldReceipt != null) {
-            if (oldReceipt.getId() != null) {
-                view.getReceiptsManager().delete(oldReceipt);
-                view.getTable().getItems().remove(oldReceipt);
+        if (oldPayment != null) {
+            if (oldPayment.getId() != null) {
+                view.getPaymentManager().delete(oldPayment);
+                view.getTable().getItems().remove(oldPayment);
                 closeForm();
             }
         }
@@ -391,20 +412,26 @@ public class ReceiptForm extends AnchorPane {
         searchCriteria = new SearchCriteria();
         String sql = "SELECT * from ledger where transDate >= \"";
         LocalDate localDate = transDate.getValue();
+        searchCriteria.setDate(localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
         LocalDate startDate = localDate.minusDays(5);
         LocalDate endDate = localDate.plusDays(5);
         String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
         sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
-        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\"";
+        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
+        sql += "AND accountNum = "+oldPayment.getAccountNum()+" ";
+        sql += "ORDER BY transDate";
         ObservableList<Ledger> results;
         results = view.getLedgerManager().doSqlQuery(sql);
 
         SearchResults searchResults = new SearchResults();
         searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        searchCriteria.setAmount(Float.toString(oldPayment.getTransAmt()));
+        if (oldPayment.getStore() != null) {
+            searchCriteria.setStoreId(oldPayment.getStore().getId());
+        }
         searchResults.searchCriteria = this.searchCriteria;
-
         searchResults.resultProperty.addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
@@ -431,7 +458,12 @@ public class ReceiptForm extends AnchorPane {
         };
 
         searchResults.getTable().addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-        searchResults.setResultsList(results);
+        if (results.size() > 0) {
+            searchResults.setResultsList(results);
+            statusMessage.setText(null);
+        } else {
+            statusMessage.setText("No items found");
+        }
     }
 
     private void updateTrans(String id) {
@@ -439,7 +471,7 @@ public class ReceiptForm extends AnchorPane {
             try {
                 Ledger ledger;
                 ledger = view.getLedgerManager().getItem(Integer.parseInt(id));
-                oldReceipt.setLedgerEntry(ledger);
+                oldPayment.setLedgerEntry(ledger);
                 btnOk.setDisable(false);
                 statusMessage.setText("");
             } catch (javax.persistence.NoResultException ex) {

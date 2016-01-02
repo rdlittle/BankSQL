@@ -68,12 +68,12 @@ public class PDFImporter extends Importer {
         buffer = new HashMap<>();
         markers = new HashMap<>();
         currentLine = 0;
-        LedgerManager mgr = new LedgerManager();
+        LedgerManager mgr = LedgerManager.getInstance();
         int lastId = mgr.getLastId(accountId);
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);
             if (item != null) {
-                lastBalance += item.getTransBal();
+                lastBalance = item.getTransBal();
             }
         }
     }
@@ -184,7 +184,7 @@ public class PDFImporter extends Importer {
                 lastBalance += amount;
                 totalDeposits += amount;
             } else {
-                lastBalance -= amount;
+                lastBalance += amount;
                 totalWithdrawals += amount;
             }
             Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);

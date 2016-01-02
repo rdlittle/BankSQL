@@ -11,38 +11,49 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
 import java.util.Comparator;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 /**
  *
  * @author rlittle
  */
-public class LedgerView extends Pane {
+public class LedgerView extends AnchorPane {
 
     public int accountNumber;
     private static LedgerView ledgerView;
     private TableView<Ledger> table;
-    private ObservableList<Ledger> list;
+    private final ObservableList<Ledger> list = FXCollections.<Ledger>observableArrayList();
     private final LedgerManager ledgerManager;
     private CategoryManager categoryManager;
     Button btnSearch;
     Button btnReset;
+
+    ContextMenu contextMenu;
 
     TableColumn dateColumn;
     TableColumn descColumn;
@@ -50,22 +61,36 @@ public class LedgerView extends Pane {
     TableColumn<Ledger, String> subCatColumn;
     TableColumn<Ledger, Float> transAmtColumn;
     TableColumn<Ledger, Float> transBalColumn;
-    
-    public LedgerView(int acctNum) {
-        super();
-        
-        accountNumber = acctNum;
-        ledgerManager = new LedgerManager();
-        categoryManager = new CategoryManager();
 
-        list = ledgerManager.getList(Integer.toString(acctNum));
+    public SimpleBooleanProperty isRebalance;
+    public Ledger selectedItem;
+    public SimpleBooleanProperty isLoading = new SimpleBooleanProperty(true);
+
+    /**
+     *
+     * @param acctNum
+     */
+    protected LedgerView(int acctNum) {
+        super();
+        this.setStyle("-fx-background-color: #336699;");
+        isRebalance = new SimpleBooleanProperty(false);
+
+        HBox buttonBox = new HBox();
+        buttonBox.getStyleClass().add("panel");
+        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
+        buttonBox.setPadding(new Insets(8));
+        buttonBox.setSpacing(10);
+
+        accountNumber = acctNum;
+        ledgerManager = LedgerManager.getInstance();
+        categoryManager = CategoryManager.getInstance();
 
         table = new TableView<>();
-        table.setMaxWidth(USE_PREF_SIZE);
 
         dateColumn = new TableColumn("Date");
         dateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
         dateColumn.setCellFactory(new CellFormatter<>());
+        dateColumn.setMinWidth(85.0);
 
         descColumn = new TableColumn("Description");
         descColumn.setCellValueFactory(new PropertyValueFactory("transDesc"));
@@ -112,24 +137,67 @@ public class LedgerView extends Pane {
         transBalColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transBalColumn.setMinWidth(100.0);
 
+        contextMenu = new ContextMenu();
+        contextMenu.setOnShown(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent e) {
+//                System.out.println("shown");
+            }
+        });
+
+        MenuItem ctxItem1 = new MenuItem("Edit");
+        ctxItem1.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        MenuItem ctxItem2 = new MenuItem("Delete");
+        ctxItem2.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        MenuItem ctxItem3 = new MenuItem("Refresh");
+        ctxItem3.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e) {
+                System.out.println("About");
+            }
+        });
+        contextMenu.getItems().addAll(ctxItem1, ctxItem2, ctxItem3);
+
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                selectedItem = (Ledger) table.getSelectionModel().getSelectedItem();
+                if (event.getButton() == MouseButton.SECONDARY) {
+                    contextMenu.show(LedgerView.this, Side.TOP, event.getSceneX(), event.getSceneY());
+                }
                 if (event.getClickCount() == 2) {
-                    Ledger item = (Ledger) table.getSelectionModel().getSelectedItem();
-                    if (item != null) {
-                        getLedgerManager().refresh(item);
-                        LedgerForm form = new LedgerForm(LedgerView.this, item);
+                    if (selectedItem != null) {
+                        getLedgerManager().refresh(selectedItem);
+                        LedgerForm form = new LedgerForm(LedgerView.this, selectedItem);
                     }
                 }
             }
         };
 
+        Platform.runLater(() -> loadData());
+        
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
+        list.addListener(new ListChangeListener() {
+            @Override
+            public void onChanged(ListChangeListener.Change c) {
+                table.getItems().addAll(list);
+                isLoading.set(false);
+            }
+        });
+        
+        
         table.getItems().addAll(list);
+
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
-        VBox vbox = new VBox();
+
         btnSearch = new Button("Search");
         btnSearch.setOnAction(new EventHandler() {
             @Override
@@ -142,44 +210,81 @@ public class LedgerView extends Pane {
         btnReset.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                list = ledgerManager.getList("Ledger.findAll");
+                ObservableList<Ledger> copyOfList;
+                copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+                list.clear();
+                list.addAll(copyOfList);
                 table.getItems().clear();
                 table.setItems(list);
             }
         });
-        HBox buttons = new HBox();
-        buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10, 10, 0, 10));
-        buttons.setSpacing(10.0);
-        buttons.getChildren().addAll(btnSearch, btnReset);
-        vbox.getChildren().addAll(table, buttons);
 
-        getChildren().addAll(vbox);
-        ledgerView = this;
+        buttonBox.getChildren().addAll(btnSearch, btnReset);
+
+        AnchorPane.setTopAnchor(table, 0.0);
+        AnchorPane.setLeftAnchor(table, 0.0);
+        AnchorPane.setRightAnchor(table, 0.0);
+        AnchorPane.setBottomAnchor(table, 0.0);
+
+        AnchorPane.setBottomAnchor(buttonBox, 0.0);
+        AnchorPane.setLeftAnchor(buttonBox, 0.0);
+        AnchorPane.setRightAnchor(buttonBox, 0.0);
+
+        getChildren().addAll(table, buttonBox);
     }
 
-    public LedgerView getInstance(int acctNum) {
+    public void loadData() {
+        list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
+    }
+
+    public synchronized LedgerView getInstance(int acctNum) {
         if (ledgerView == null) {
             ledgerView = new LedgerView(acctNum);
         }
         return ledgerView;
     }
-    
-    public LedgerView newInstance(int acctNum) {
+
+    public static LedgerView newInstance(int acctNum) {
         LedgerView view = new LedgerView(acctNum);
-        view.accountNumber=acctNum;
+        view.accountNumber = acctNum;
         ledgerView = view;
         return view;
     }
-    
+
     public void doSearch(String sql) {
         SearchForm form = new SearchForm(this, new SearchCriteria());
         form.showForm();
         if (form.criteria.getSqlStmt() != null) {
-            list = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
+            ObservableList<Ledger> copyOfList;
+            copyOfList = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
+            list.clear();
+            list.addAll(copyOfList);
             table.getItems().clear();
             table.setItems(list);
         }
+    }
+
+    public void doRebalance() {
+        RebalanceForm rebal = RebalanceForm.getInstance(LedgerView.this);
+        rebal.showForm();
+        if (rebal.hasChanged.get()) {
+            ledgerManager.rebalance(accountNumber, rebal.getCriteria());
+            ObservableList<Ledger> copyOfList;
+            copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+            list.clear();
+            list.addAll(copyOfList);
+            table.getItems().clear();
+            table.setItems(list);
+        }
+    }
+
+    public void doRefresh() {
+        ObservableList<Ledger> copyOfList;
+        copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
+        list.clear();
+        list.addAll(copyOfList);
+        table.getItems().clear();
+        table.setItems(list);
     }
 
     /**
@@ -207,7 +312,8 @@ public class LedgerView extends Pane {
      * @param list the list to set
      */
     public void setList(ObservableList<Ledger> list) {
-        this.list = list;
+        this.list.clear();
+        this.list.addAll(list);
     }
 
     /**

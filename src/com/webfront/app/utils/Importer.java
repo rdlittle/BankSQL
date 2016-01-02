@@ -167,11 +167,6 @@ public abstract class Importer implements Runnable {
             doImport(in);
             in.close();
             doSort();
-            balance = beginningBalance;
-            for (Ledger l : getItemList()) {
-                balance += l.getTransAmt();
-                l.setTransBal(balance);
-            }
         } catch (MissingResourceException | NullPointerException e) {
             System.out.println(e.toString());
         } catch (IOException ex) {

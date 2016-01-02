@@ -30,17 +30,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author rlittle
  */
 @Entity
-@Table(name = "receipts")
+@Table(name = "payment")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Receipts.findAll", query = "SELECT r FROM Receipts r ORDER BY r.transDate DESC"),
-    @NamedQuery(name = "Receipts.findById", query = "SELECT r FROM Receipts r WHERE r.id = :id"),
-    @NamedQuery(name = "Receipts.findByTransDate", query = "SELECT r FROM Receipts r WHERE r.transDate = :transDate"),
-    @NamedQuery(name = "Receipts.findByTransDesc", query = "SELECT r FROM Receipts r WHERE r.transDesc = :transDesc"),
-    @NamedQuery(name = "Receipts.findBySubCat", query = "SELECT r FROM Receipts r WHERE r.subCat = :subCat"),
-    @NamedQuery(name = "Receipts.findByAccountNum", query = "SELECT r FROM Receipts r WHERE r.accountNum = :accountNum"),
-    @NamedQuery(name = "Receipts.findByTransAmt", query = "SELECT r FROM Receipts r WHERE r.transAmt = :transAmt")})
-public class Receipts implements Serializable {
+    @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC"),
+    @NamedQuery(name = "Payment.findById", query = "SELECT r FROM Payment r WHERE r.id = :id"),
+    @NamedQuery(name = "Payment.findByTransDate", query = "SELECT r FROM Payment r WHERE r.transDate = :transDate"),
+    @NamedQuery(name = "Payment.findByTransDesc", query = "SELECT r FROM Payment r WHERE r.transDesc = :transDesc"),
+    @NamedQuery(name = "Payment.findBySubCat", query = "SELECT r FROM Payment r WHERE r.subCat = :subCat"),
+    @NamedQuery(name = "Payment.findByAccountNum", query = "SELECT r FROM Payment r WHERE r.accountNum = :accountNum"),
+    @NamedQuery(name = "Payment.findByTransAmt", query = "SELECT r FROM Payment r WHERE r.transAmt = :transAmt")})
+public class Payment implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -78,14 +78,14 @@ public class Receipts implements Serializable {
     @Column(name = "transAmt")
     private float transAmt;
 
-    public Receipts() {
+    public Payment() {
     }
 
-    public Receipts(Integer id) {
+    public Payment(Integer id) {
         this.id = id;
     }
 
-    public Receipts(Integer id, Date transDate, float transAmt) {
+    public Payment(Integer id, Date transDate, float transAmt) {
         this.id = id;
         this.transDate = transDate;
         this.transAmt = transAmt;
@@ -162,9 +162,9 @@ public class Receipts implements Serializable {
         return hash;
     }
 
-    public static Comparator<Receipts> ReceiptsComparator = new Comparator<Receipts>() {
+    public static Comparator<Payment> PaymentComparator = new Comparator<Payment>() {
         @Override
-        public int compare(Receipts receipt1, Receipts receipt2) {
+        public int compare(Payment receipt1, Payment receipt2) {
             Long entry1 = receipt1.transDate.getTime();
             Long entry2 = receipt2.transDate.getTime();
             return entry2.compareTo(entry1);
@@ -174,10 +174,10 @@ public class Receipts implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Receipts)) {
+        if (!(object instanceof Payment)) {
             return false;
         }
-        Receipts other = (Receipts) object;
+        Payment other = (Payment) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -186,7 +186,7 @@ public class Receipts implements Serializable {
 
     @Override
     public String toString() {
-        return "com.webfront.model.Receipts[ id=" + id + " ]";
+        return "com.webfront.model.Payment[ id=" + id + " ]";
     }
 
     /**

@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -32,7 +33,7 @@ import javafx.stage.Stage;
  *
  * @author rlittle
  */
-public class CategoryForm extends AnchorPane {
+public final class CategoryForm extends AnchorPane {
 
     @FXML
     ComboBox<String> cbPrimeCat;
@@ -49,6 +50,8 @@ public class CategoryForm extends AnchorPane {
     @FXML
     Button btnCancel;
 
+    private static CategoryForm instance = null;
+
     private ObservableList<Category> catList;
     CategoryManager catMgr;
     ArrayList<Category> addedCats;
@@ -57,10 +60,15 @@ public class CategoryForm extends AnchorPane {
     HashMap<String, Integer> subCatMap;
     HashMap<Integer, Category> parentCategories;
     HashMap<Integer, Category> childCategories;
-    
-    Stage stage;
 
-    public CategoryForm() {
+    private final URL location = getClass().getResource("/com/webfront/app/fxml/CategoryForm.fxml");
+    private final ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
+
+    private final Stage stage;
+
+    private static ListChangeListener<Category> listChangeListener;
+
+    private CategoryForm() {
         primeCatMap = new HashMap<>();
         subCatMap = new HashMap<>();
         parentCategories = new HashMap<>();
@@ -73,33 +81,23 @@ public class CategoryForm extends AnchorPane {
         btnDeleteAll = new Button();
         cbPrimeCat = new ComboBox<>();
         cbSubCat = new ComboBox<>();
-
-        URL location = getClass().getResource("/com/webfront/app/fxml/CategoryForm.fxml");
-        ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
-        FXMLLoader loader = new FXMLLoader(location, resources);
-        loader.setRoot(this);
-        loader.setController(this);
         stage = new Stage();
-        Scene scene = new Scene(this);
-        try {
-            loader.load();
-        } catch (IOException ex) {
-            Logger.getLogger(CategoryForm.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        stage.setScene(scene);
-        stage.setTitle("Categories");
 
-        catList = FXCollections.observableArrayList();
-        catMgr = new CategoryManager();
-        catList = catMgr.getCategories("SELECT * FROM categories WHERE parent = 0 ORDER BY description");
+        listChangeListener = new ListChangeListener() {
+            @Override
+            public void onChanged(ListChangeListener.Change c) {
+                if(c.wasAdded() && c.wasRemoved()) {
+                    System.out.println("category item updated");
+                } else if(c.wasAdded()) {
+                    System.out.println("category item added");
+                } else if(c.wasRemoved()) {
+                    System.out.println("category item removed");
+                }
+            }
+        }; 
+    }
 
-        catList.stream().forEach((c) -> {
-            primeCatMap.put(c.getDescription(), c.getId());
-            parentCategories.put(c.getId(), c);
-        });
-
-        cbPrimeCat.getItems().addAll(primeCatMap.keySet());
-        cbPrimeCat.setEditable(true);
+    private void addHandlers() {
         cbPrimeCat.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -122,13 +120,11 @@ public class CategoryForm extends AnchorPane {
                 String newCat = newValue.toString();
                 if (primeCatMap.containsKey(newCat)) {
                     Category c = parentCategories.get(primeCatMap.get(newCat));
-                    String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
-                    sqlStmt += " order by description";
                     childCategories.clear();
                     subCatMap.clear();
                     catList.clear();
                     childCategories.clear();
-                    catList = catMgr.getCategories(sqlStmt);
+                    catList = catMgr.getChildren(c.getId());
                     for (Category cat2 : catList) {
                         subCatMap.put(cat2.getDescription(), cat2.getId());
                         childCategories.put(cat2.getId(), cat2);
@@ -138,7 +134,6 @@ public class CategoryForm extends AnchorPane {
             }
         });
 
-        cbSubCat.setEditable(true);
         cbSubCat.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -149,8 +144,8 @@ public class CategoryForm extends AnchorPane {
                         btnOK.setDisable(false);
                         Category newCat = new Category();
                         newCat.setDescription(sName);
-                        String parentName=cbPrimeCat.getSelectionModel().getSelectedItem();
-                        Integer parentId=primeCatMap.get(parentName);
+                        String parentName = cbPrimeCat.getSelectionModel().getSelectedItem();
+                        Integer parentId = primeCatMap.get(parentName);
                         Category parent = parentCategories.get(parentId);
                         newCat.setParent(parent.getId());
                         addedCats.add(newCat);
@@ -158,6 +153,7 @@ public class CategoryForm extends AnchorPane {
                 }
             }
         });
+
         btnCancel.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -179,13 +175,53 @@ public class CategoryForm extends AnchorPane {
             }
         });
 
-        btnOK.setDisable(true);
-        
+    }
+
+    public synchronized static CategoryForm getInstance() {
+        if (instance == null) {
+            instance = new CategoryForm();
+            FXMLLoader loader = new FXMLLoader(instance.location, instance.resources);
+            loader.setRoot(instance);
+            loader.setController(instance);
+            try {
+                loader.load();
+                instance.addHandlers();
+
+                instance.catMgr = CategoryManager.getInstance();
+                instance.catMgr.addListener(listChangeListener);
+
+                instance.setCatList(FXCollections.observableArrayList(instance.catMgr.getList("Category.findAllParent")));
+
+                instance.catList.stream().map((c) -> {
+                    instance.primeCatMap.put(c.getDescription(), c.getId());
+                    return c;
+                }).forEach((c) -> {
+                    instance.parentCategories.put(c.getId(), c);
+                });
+
+                instance.cbPrimeCat.getItems().addAll(instance.primeCatMap.keySet());
+                instance.cbPrimeCat.setEditable(true);
+                instance.cbSubCat.setEditable(true);
+
+                instance.btnOK.setDisable(true);
+
+                instance.stage.setTitle("Categories");
+                Scene scene = new Scene(instance);
+                instance.stage.setScene(scene);
+            } catch (IOException ex) {
+                Logger.getLogger(CategoryForm.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return instance;
     }
 
     public void showForm() {
-        stage.showAndWait();
+        if (instance == null) {
+            instance = getInstance();
+        }
+        instance.stage.showAndWait();
     }
+
     /**
      * @return the catList
      */

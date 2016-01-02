@@ -79,7 +79,7 @@ public class LedgerItem {
         int currYear = cal.get(Calendar.YEAR);
         int currMonth = cal.get(Calendar.MONTH) + 1;
         date = date.replaceAll("-", "/");
-        if (date.matches("\\d{1,2}(/|-)\\d{1,2}((/|-)\\d{2,4}){1}")) {
+        if (date.matches("\\d{1,2}(/|-)\\d{1,2}((/|-)\\d{2,4})?")) {
             if (date.matches("\\d{1,2}(/|-)\\d{1,2}")) {
                 int dateMonth = Integer.parseInt(date.substring(0, date.indexOf("/")));
                 if (dateMonth > currMonth) {

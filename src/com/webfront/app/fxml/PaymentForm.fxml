@@ -17,15 +17,9 @@
         <ComboBox fx:id="primaryCat" layoutX="101.0" layoutY="126.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
         </ComboBox>
         <Label layoutX="10.0" layoutY="131.0" text="Category 1" />
-        <Label layoutX="448.5" layoutY="34.0" text="Account" />
-        <ChoiceBox fx:id="accountNum" layoutX="535.0" layoutY="26.0" xmlns:fx="http://javafx.com/fxml">
-            <items>
-                <FXCollections fx:factory="observableArrayList">
-                    <String fx:value="1" />
-                    <String fx:value="2" />
-                </FXCollections>
-            </items>
-        </ChoiceBox>
+        <Label layoutX="338.5" layoutY="27.0" text="Account" />
+        <ComboBox fx:id="cbAccount" layoutX="400.0" layoutY="22.0" prefHeight="25.0" prefWidth="175.0" xmlns:fx="http://javafx.com/fxml">
+        </ComboBox>
         <Label layoutX="446.5" layoutY="81.0" text="Trans ID" />
         <TextField fx:id="transId" layoutX="511.0" layoutY="77.0" prefHeight="26.0" prefWidth="63.0" />
         <Label layoutX="10.0" layoutY="180.0" text="Category 2" />
@@ -35,7 +29,7 @@
         <Button fx:id="btnDelete" layoutX="432.5" layoutY="290.0" mnemonicParsing="false" onAction="#deleteItem" prefHeight="26.0" prefWidth="63.0" text="Delete" />
         <Button fx:id="btnCancel" layoutX="515.5" layoutY="289.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
         <ComboBox fx:id="cbStores" layoutX="101.0" layoutY="78.0" prefHeight="25.0" prefWidth="291.0" />
-      <Label fx:id="statusMessage" layoutX="17.0" layoutY="330.0" prefHeight="15.0" prefWidth="564.0" />
+      <Label fx:id="statusMessage" layoutX="17.0" layoutY="330.0" prefHeight="26.0" prefWidth="564.0" />
       <Hyperlink fx:id="searchLink" layoutX="516.0" layoutY="110.0" onAction="#doSearch" text="Find It" />
     </children>
 </fx:root>

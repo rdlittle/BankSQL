@@ -20,6 +20,7 @@ import javax.persistence.Query;
 public class AccountManager extends DBManager<Account> implements Serializable {
 
     private ObservableList<Account> list;
+    private static AccountManager manager=null;
     
     public AccountManager() {
         super();
@@ -41,10 +42,24 @@ public class AccountManager extends DBManager<Account> implements Serializable {
         setList("Account.findAll");
         return list;
     }
+    
+    public Account getAccount(int id) {
+        Query query = em.createNamedQuery("Account.findById");
+        query.setParameter("id", id);
+        Account acct = (Account) query.getSingleResult();
+        return acct;
+    }
 
     @Override
     public ObservableList<Account> doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public static AccountManager getInstance() {
+        if(manager == null) {
+            manager = new AccountManager();
+        }
+        return manager;
     }
 
 }

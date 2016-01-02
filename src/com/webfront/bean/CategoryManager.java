@@ -6,10 +6,18 @@
 package com.webfront.bean;
 
 import com.webfront.model.Category;
+import com.webfront.model.Ledger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javax.persistence.Query;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -18,10 +26,18 @@ import javax.persistence.Query;
 public class CategoryManager extends DBManager<Category> {
 
     private ObservableList<Category> categories;
+    private static CategoryManager instance = null;
 
-    public CategoryManager() {
+    protected CategoryManager() {
         super();
         categories = FXCollections.emptyObservableList();
+    }
+
+    public synchronized static CategoryManager getInstance() {
+        if (instance == null) {
+            instance = new CategoryManager();
+        }
+        return instance;
     }
 
     public ObservableList<Category> getCategories() {
@@ -39,6 +55,42 @@ public class CategoryManager extends DBManager<Category> {
         return FXCollections.observableList(list);
     }
 
+    public HashMap<String, Integer> getMapByDescription() {
+        HashMap<String, Integer> map = new HashMap<>();
+        for (Category c : getCategories()) {
+            map.put(c.getDescription(), c.getId());
+        }
+        return map;
+    }
+
+    public HashMap<String, Integer> getMapById() {
+        HashMap<String, Integer> map = new HashMap<>();
+        for (Category c : getCategories()) {
+            map.put(c.getDescription(), c.getId());
+        }
+        return map;
+    }
+
+    public Category getCategory(int id) {
+        Query query = em.createNamedQuery("Category.findById");
+        query.setParameter("id", id);
+        Category cat = (Category) query.getSingleResult();
+        return cat;
+    }
+
+    public ObservableList<Category> getChildren(Integer parentId) {
+        Query query = em.createNamedQuery("Category.findByParent");
+        query.setParameter("parent", parentId);
+        final List<Category> list = query.getResultList();
+        return FXCollections.observableArrayList(list);
+    }
+
+    public boolean hasChildren(int id) {
+        Query query = em.createNamedQuery("Category.findByParent");
+        query.setParameter("parent", id);
+        return (!query.getResultList().isEmpty());
+    }
+
     /**
      * @param categories the categories to set
      */
@@ -48,9 +100,27 @@ public class CategoryManager extends DBManager<Category> {
 
     @Override
     public List<Category> getList(String s) {
-        Query query = em.createNamedQuery(s);
-        List<Category> list = query.getResultList();
-        categories = (ObservableList<Category>) FXCollections.observableList(list);
+        SwingWorker<List<Category>, Void> worker;
+        worker = new SwingWorker<List<Category>, Void>() {
+            @Override
+            protected List<Category> doInBackground() {
+                Query query = em.createNamedQuery(s);
+                final List<Category> list = query.getResultList();
+                return list;
+            }
+
+            @Override
+            protected void done() {
+            }
+        };
+        worker.execute();
+        try {
+            categories = FXCollections.observableList(worker.get());
+        } catch (InterruptedException ex) {
+            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ExecutionException ex) {
+            Logger.getLogger(LedgerManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return categories;
     }
 
@@ -58,5 +128,21 @@ public class CategoryManager extends DBManager<Category> {
     public ObservableList<Category> doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
+    public void addListener(ListChangeListener<? super Category> listListener) {
+        categories.addListener(listListener);
+    }
+
+    public void removeListener(ListChangeListener<? super Category> listListener) {
+        categories.removeListener(listListener);
+    }
+
+    public void addListener(InvalidationListener listener) {
+        categories.addListener(listener);
+    }
+
+    public void removeListener(InvalidationListener listener) {
+        categories.removeListener(listener);
+    }
+
 }
