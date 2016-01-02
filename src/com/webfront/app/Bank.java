@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -33,6 +34,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -57,12 +60,12 @@ import javafx.stage.WindowEvent;
 public class Bank extends Application {
 
     final int TAB_BOTTOM_MARGIN = 130;
-    
-    private Stage primaryStage;   
-    public Scene scene;    
-    
+
+    private Stage primaryStage;
+    public Scene scene;
+
     private final StoresView stores;
-    
+
     private final Menu fileMenu = new Menu("_File");
     private final Menu fileNewMenu = new Menu("Ne_w");
 
@@ -78,8 +81,8 @@ public class Bank extends Application {
     private final MenuItem editAccounts = new MenuItem("Accounts");
     private final MenuItem editCategories = new MenuItem("Categories");
     private final MenuItem editPreferences = new MenuItem("_Preferences");
-    private final MenuItem editRebalance = new MenuItem("_Rebalance"); 
-    
+    private final MenuItem editRebalance = new MenuItem("_Rebalance");
+
     final ProgressBar progressBar;
 
     private final Config config;
@@ -97,12 +100,12 @@ public class Bank extends Application {
     private final SimpleIntegerProperty backgroundActive = new SimpleIntegerProperty(0);
 
     ResourceBundle bundle;
-    Thread importThread;    
+    Thread importThread;
     Importer importer;
     String tmpDir;
     private final TabPane tabPane;
 
-    int accountId;    
+    int accountId;
 
     public Bank() {
         this.importDone = new SimpleBooleanProperty(false);
@@ -167,21 +170,21 @@ public class Bank extends Application {
 
         editRebalance.disableProperty().bindBidirectional(isLedger);
         fileRefresh.disableProperty().bindBidirectional(isLedger);
-        
+
         summaryTab.setContent(SummaryView.getInstance());
-        
+
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
             public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
                 isLedger.set(!"LedgerView".equalsIgnoreCase(newTab.getContent().getClass().getSimpleName()));
             }
-        });        
-        
+        });
+
         tabPane.getTabs().add(summaryTab);
         tabPane.getTabs().addAll(ledgers);
         tabPane.getTabs().add(storesTab);
         tabPane.getTabs().add(paymentTab);
-        
+
         Pane statusPanel = new Pane();
         statusPanel.setPrefSize(scene.getWidth(), 100);
         statusPanel.setMaxHeight(100);
@@ -238,6 +241,15 @@ public class Bank extends Application {
     }
 
     private void addLedger(Account acct) {
+        LedgerTask task = new LedgerTask(acct.getId());
+//        LedgerView lv;
+//        task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+//            @Override
+//            public void handle(WorkerStateEvent event) {
+//                lv = (LedgerView)event.getSource().getValue();
+//            }
+//        });
+        
         LedgerView lv = LedgerView.newInstance(acct.getId());
         isRebalance.bind(lv.isRebalance);
         viewList.put(acct.getId(), lv);
@@ -288,8 +300,8 @@ public class Bank extends Application {
                     }
                 }
             }
-        });  
-        
+        });
+
         fileImport.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
@@ -298,15 +310,14 @@ public class Bank extends Application {
                 accountNum.bind(ImportForm.accountNum);
             }
         });
-        
+
         fileRefresh.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
                 LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
-                lv.doRefresh();                
+                lv.doRefresh();
             }
         });
-        
 
         fileNewStore.setOnAction(new EventHandler() {
             @Override
@@ -366,15 +377,15 @@ public class Bank extends Application {
                 prefs.showForm();
             }
         });
-        
+
         editRebalance.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
                 LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
                 lv.doRebalance();
             }
-        }); 
-        
+        });
+
         importDone.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
@@ -390,9 +401,9 @@ public class Bank extends Application {
                 }
             }
         });
-                
+
     }
-    
+
     /**
      * @param ledgers the ledgers to set
      */
@@ -417,6 +428,22 @@ public class Bank extends Application {
             });
 
         }
+    }
+    
+    private class LedgerTask extends Task<LedgerView> {
+        int acct;
+        private final LedgerView view;
+        
+        public LedgerTask(int n) {
+            this.acct = n;
+            view = null;
+        }
+        
+        @Override
+        protected LedgerView call() throws Exception {
+            return LedgerView.newInstance(acct);
+        }
+        
     }
 
 }

@@ -64,6 +64,7 @@ public class LedgerView extends AnchorPane {
 
     public SimpleBooleanProperty isRebalance;
     public Ledger selectedItem;
+    public SimpleBooleanProperty isLoading = new SimpleBooleanProperty(true);
 
     /**
      *
@@ -188,6 +189,7 @@ public class LedgerView extends AnchorPane {
             @Override
             public void onChanged(ListChangeListener.Change c) {
                 table.getItems().addAll(list);
+                isLoading.set(false);
             }
         });
         
