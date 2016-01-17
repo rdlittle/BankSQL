@@ -5,7 +5,7 @@
  */
 package com.webfront.model;
 
-import com.webfront.app.Bank;
+import com.webfront.app.BankOld;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,7 +63,7 @@ public class Config {
             }
 
         } catch (MissingResourceException e) {
-            Logger.getLogger(Bank.class.getName()).log(Level.WARNING, "Can't find resource bank.properties");
+            Logger.getLogger(BankOld.class.getName()).log(Level.WARNING, "Can't find resource bank.properties");
         }
         // Set up some system-dependant defaults
         Properties properties;
@@ -125,14 +125,14 @@ public class Config {
                 windowNode.addContent(new Element("y").addContent(getY()));
 
                 String tmp = tmpDir;
-                tmp.replaceAll("/", "\\/");
+                tmp = tmp.replaceAll("/", "\\/");
                 systemNode.addContent(new Element("tmpDir").addContent(tmp));
                 rootElement.addContent(systemNode);
                 rootElement.addContent(windowNode);
                 xmlDoc.setRootElement(rootElement);
             } else {
-                Element root = xmlDoc.getRootElement();
-                Element dims = root.getChild("window");
+                Element xmlRoot = xmlDoc.getRootElement();
+                Element dims = xmlRoot.getChild("window");
                 dims.getChild("width").setText(getWidth());
                 dims.getChild("height").setText(getHeight());
                 dims.getChild("x").setText(getX());
@@ -193,7 +193,6 @@ public class Config {
             if (windowNode.getChild("y") == null) {
                 windowNode.addContent(new Element("y").setText("0"));
             }
-//            docRoot.getChild("window").setContent(windowNode);
             setWidth(windowNode.getChild("width").getText());
             setHeight(windowNode.getChild("height").getText());
             setX(windowNode.getChild("x").getText());

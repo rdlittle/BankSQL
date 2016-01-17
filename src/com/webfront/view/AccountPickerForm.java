@@ -5,7 +5,7 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
+import com.webfront.app.BankOld;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -71,7 +71,7 @@ public class AccountPickerForm extends AnchorPane {
 
         stage.setScene(scene);
         
-        Bank.accountList.stream().forEach((acct) -> {
+        BankOld.accountList.stream().forEach((acct) -> {
             accountList.put(acct.getAccountName(), acct.getId());
             cbAccountList.getItems().add(acct.getAccountName());
         });

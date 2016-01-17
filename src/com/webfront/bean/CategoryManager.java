@@ -6,7 +6,6 @@
 package com.webfront.bean;
 
 import com.webfront.model.Category;
-import com.webfront.model.Ledger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -38,6 +37,12 @@ public class CategoryManager extends DBManager<Category> {
             instance = new CategoryManager();
         }
         return instance;
+    }
+    
+    public List<Category> getTree() {
+        Query query = em.createNamedQuery("Category.tree");
+        List<Category> l = query.getResultList();
+        return l;
     }
 
     public ObservableList<Category> getCategories() {

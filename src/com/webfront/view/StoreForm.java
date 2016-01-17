@@ -49,6 +49,11 @@ public class StoreForm extends AnchorPane {
         scene = new Scene(this);
     }
 
+    public StoreForm(Stores store) {
+        this();
+        this.store=store;
+    }
+    
     public StoreForm(StoresView view, Stores store) {
         this();
         this.view = view;

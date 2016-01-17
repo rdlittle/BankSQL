@@ -18,10 +18,23 @@ import javax.persistence.Query;
  */
 public class StoresManager extends DBManager {
     
-    public ObservableList<Stores> getList(String q) {
+    private final ObservableList<Stores> list;
+    
+    public StoresManager() {
+        list = FXCollections.<Stores>observableArrayList();
+    }
+    
+    /**
+     *
+     * @param q The NamedQuery to execute
+     * @return ObservableList of Store objects
+     */
+    @Override
+    public synchronized ObservableList<Stores> getList(String q) {
         Query query=em.createNativeQuery(q,Stores.class);
-        List<Stores> list=query.getResultList();
-        ObservableList olist=FXCollections.observableList(list);
+        List<Stores> storeList=query.getResultList();
+        list.setAll(storeList);
+        ObservableList olist=FXCollections.observableList(storeList);
         return olist;
     }
     

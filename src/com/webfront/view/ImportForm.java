@@ -5,8 +5,8 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
-import static com.webfront.app.Bank.viewList;
+import com.webfront.app.BankOld;
+import static com.webfront.app.BankOld.viewList;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
@@ -171,7 +171,7 @@ public class ImportForm extends AnchorPane {
             try {
                 t.join(1000);
             } catch (InterruptedException ex) {
-                Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(BankOld.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         Task<Void> importTask = new Task<Void>() {

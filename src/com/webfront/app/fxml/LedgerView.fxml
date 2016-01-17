@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
+   <children>
+      <TableView fx:id="table" layoutX="14.0" layoutY="14.0" prefHeight="371.0" prefWidth="574.0">
+        <columns>
+          <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
+          <TableColumn fx:id="descriptionColumn" prefWidth="294.0" text="Description" />
+            <TableColumn fx:id="amountColumn" minWidth="0.0" prefWidth="92.0" text="Amount" />
+            <TableColumn fx:id="detailColumn" minWidth="0.0" prefWidth="112.0" text="Detail" />
+        </columns>
+      </TableView>
+   </children>
+</AnchorPane>

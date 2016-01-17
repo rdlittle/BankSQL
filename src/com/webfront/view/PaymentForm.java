@@ -5,7 +5,7 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
+import com.webfront.app.BankOld;
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
@@ -132,7 +132,7 @@ public final class PaymentForm extends AnchorPane {
                 cbStores.getItems().add(s.getStoreName());
             }
 
-            for (Account acct : Bank.accountList) {
+            for (Account acct : BankOld.accountList) {
                 SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
                 cbAccount.getItems().add(se);
             }

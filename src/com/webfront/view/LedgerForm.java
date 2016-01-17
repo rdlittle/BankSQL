@@ -5,7 +5,7 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
+import com.webfront.bean.BankManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Distribution;
@@ -138,7 +138,7 @@ public final class LedgerForm extends AnchorPane {
 
             ObservableList<Category> cList = view.getCategoryManager().getCategories();
 
-            ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(Bank.accountList);
+            ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(BankManager.getInstance().getList(""));
             accountList.stream().forEach((acct) -> {
                 accountNum.getItems().add(acct.getId());
             });

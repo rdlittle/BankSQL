@@ -3,10 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.webfront.view;
+package com.webfront.controller;
 
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Stores;
+import com.webfront.view.StoreForm;
 import java.util.Comparator;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -14,6 +15,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -22,7 +24,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -38,38 +39,48 @@ import javafx.stage.Stage;
  *
  * @author rlittle
  */
-public class StoresView extends Pane {
+public class StoreController {
 
-    private TableView<Stores> table;
     private final ObservableList<Stores> list;
-    TableColumn<Stores, Integer> storeIdCol;
-    TableColumn<Stores, String> storeNameCol;
     final StoresManager storesManager;
-    private static StoresView view;
+    EventHandler<MouseEvent> doubleClick;
+
     MenuItem delMenu;
     MenuItem editMenu;
-    
 
-    protected StoresView() {
-        super();
-        
-        list = FXCollections.<Stores>observableArrayList();
+    @FXML
+    TableView<Stores> storesTable;
+
+    @FXML
+    TableColumn<Stores, Integer> storeIdCol;
+
+    @FXML
+    TableColumn<Stores, String> storeNameCol;
+    
+    @FXML
+    Button btnStoreAdd;
+    
+    @FXML
+    Button btnStoreDelete;
+
+    public StoreController() {
         storesManager = new StoresManager();
-        VBox vbox = new VBox();
-        Button btnAdd;
-        btnAdd = new Button("Add store");
+        list = FXCollections.<Stores>observableArrayList();
         delMenu = new MenuItem("Delete");
         editMenu = new MenuItem("Edit");
+    }
 
-        EventHandler<MouseEvent> doubleClick = new EventHandler<MouseEvent>() {
+    @FXML
+    public void initialize() {
+        doubleClick = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    int row = table.getSelectionModel().getSelectedIndex();
+                    int row = storesTable.getSelectionModel().getSelectedIndex();
                     if (row > -1) {
-                        Stores s = (Stores) table.getSelectionModel().getSelectedItem();
+                        Stores s = (Stores) storesTable.getSelectionModel().getSelectedItem();
                         if (s.getStoreName() != null && !s.getStoreName().isEmpty()) {
-                            new StoreForm(view, s).showForm();
+//                            new StoreForm(view, s).showForm();
                         }
                     }
                 }
@@ -79,12 +90,12 @@ public class StoresView extends Pane {
         delMenu.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                int row = table.getSelectionModel().getSelectedIndex();
-                Stores s = table.getItems().get(row);
-                ConfirmDialog cd = new ConfirmDialog("Preparing to delete " + s.getStoreName());
+                int row = storesTable.getSelectionModel().getSelectedIndex();
+                Stores s = storesTable.getItems().get(row);
+                StoreController.ConfirmDialog cd = new StoreController.ConfirmDialog("Preparing to delete " + s.getStoreName());
                 int r = cd.getResult();
                 System.out.println(r);
-                if (r == ConfirmDialog.CONFIRM_YES) {
+                if (r == StoreController.ConfirmDialog.CONFIRM_YES) {
                     storesManager.delete(s);
                     list.remove(s);
                 }
@@ -94,37 +105,37 @@ public class StoresView extends Pane {
         editMenu.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                int row = table.getSelectionModel().getSelectedIndex();
-                StoreForm form = new StoreForm(view, table.getItems().get(row));
-                form.showForm();
+                int row = storesTable.getSelectionModel().getSelectedIndex();
+                StoreForm form = new StoreForm(storesTable.getItems().get(row));
+//                form.showForm();
             }
         });
 
-        Platform.runLater(() -> loadData());
+        storesTable.addEventHandler(MouseEvent.MOUSE_CLICKED, doubleClick);
 
-        table = new TableView<>();
-        table.setPrefHeight(700);
-        table.setPrefWidth(600);
-        table.addEventHandler(MouseEvent.MOUSE_CLICKED, doubleClick);
         list.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-                table.getItems().setAll(list);
+                storesTable.getItems().setAll(list);
             }
         });
-        table.setEditable(true);
-        table.setContextMenu(new ContextMenu(editMenu, delMenu));
 
-        storeIdCol = new TableColumn<>("ID");
+        if (Platform.isFxApplicationThread()) {
+            loadData();
+        } else {
+            Platform.runLater(() -> loadData());
+        }
+        
+        storesTable.setEditable(true);
+        storesTable.setContextMenu(new ContextMenu(editMenu, delMenu));
+
         storeIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        storeNameCol = new TableColumn<>("Name");
-        storeNameCol.setMinWidth(500.0);
         storeNameCol.setCellValueFactory(new PropertyValueFactory<>("storeName"));
         storeNameCol.setCellFactory(TextFieldTableCell.<Stores>forTableColumn());
 
         storeNameCol.setOnEditCommit(
-                (CellEditEvent<Stores, String> t) -> {
+                (TableColumn.CellEditEvent<Stores, String> t) -> {
                     ((Stores) t.getTableView().getItems().get(
                             t.getTablePosition().getRow())).setStoreName(t.getNewValue());
                     Stores s = (Stores) t.getRowValue();
@@ -134,71 +145,22 @@ public class StoresView extends Pane {
 
                 });
 
-        table.getColumns().addAll(storeIdCol, storeNameCol);
-        
-        btnAdd.setOnAction(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                Stores store = new Stores();
-                table.getItems().add(store);
-                table.scrollTo(store);
-                table.getSelectionModel().select(store);
-                int row = table.getSelectionModel().getSelectedIndex();
-                table.getFocusModel().focus(row, storeIdCol);
-                table.edit(row, storeNameCol);
-            }
-        });        
-
-//        System.out.println(StoresView.this.getHeight());
-        vbox.prefHeightProperty().bind(this.heightProperty());
-        HBox buttons = new HBox();
-        buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10, 10, 0, 10));
-        buttons.setSpacing(10.0);
-        buttons.getChildren().add(btnAdd);
-        vbox.getChildren().addAll(table, buttons);
-        getChildren().addAll(vbox);
-    }
-
-    public static synchronized StoresView getInstance() {
-        if (view == null) {
-            view = new StoresView();
-        }
-        return view;
     }
 
     private void loadData() {
         list.setAll(storesManager.getList("SELECT * FROM stores ORDER BY storeName"));
     }
-
-    /**
-     * @return the table
-     */
-    public TableView<Stores> getTable() {
-        return table;
+    
+    @FXML
+    public void onBtnStoreAddClick() {
+        
     }
-
-    /**
-     * @param table the table to set
-     */
-    public void setTable(TableView<Stores> table) {
-        this.table = table;
+    
+    @FXML
+    public void onBtnStoreDeleteClick() {
+        
     }
-
-    /**
-     * @return the list
-     */
-    public ObservableList<Stores> getList() {
-        return list;
-    }
-
-    /**
-     * @param list the list to set
-     */
-    public void setList(ObservableList<Stores> list) {
-        this.list.setAll(list);
-    }
-
+    
     public static Comparator<Stores> StoreComparator = new Comparator<Stores>() {
         @Override
         public int compare(Stores o1, Stores o2) {
@@ -231,7 +193,7 @@ public class StoresView extends Pane {
             init();
             showDialog();
         }
-
+        
         private void init() {
 
             stage = new Stage();
@@ -326,6 +288,6 @@ public class StoresView extends Pane {
         public void setMessage(String message) {
             this.message = message;
         }
-    }
+    }        
 
 }
