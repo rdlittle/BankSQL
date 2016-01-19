@@ -24,13 +24,13 @@
        <VBox prefHeight="521.0" prefWidth="492.0" spacing="10.0">
            <children>
                <Label text="Category name" />
-               <TextField prefHeight="25.0" prefWidth="303.0" />
+               <TextField fx:id="txtCategoryName" prefHeight="25.0" prefWidth="303.0" />
                <Label text="Parent category" />
-               <ComboBox prefHeight="25.0" prefWidth="329.0" />
+               <ComboBox fx:id="cbParentCategory" prefHeight="25.0" prefWidth="329.0" />
                <HBox alignment="TOP_RIGHT" fillHeight="false" prefHeight="56.0" prefWidth="600.0" spacing="10.0">
                    <children>
-                       <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="65.0" text="OK" />
-                       <Button mnemonicParsing="false" text="Cancel" />
+                       <Button fx:id="btnCatOk" mnemonicParsing="false" onAction="#onBtnCatOkClicked" prefHeight="25.0" prefWidth="65.0" text="OK" />
+                       <Button fx:id="btnCatCancel" mnemonicParsing="false" onAction="#onBtnCatCancelClicked" text="Cancel" />
                    </children>
                <VBox.margin>
                   <Insets top="15.0" />
