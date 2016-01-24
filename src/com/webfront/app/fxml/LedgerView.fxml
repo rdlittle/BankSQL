@@ -6,15 +6,30 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
+<AnchorPane id="AnchorPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="582.0" prefWidth="1299.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
    <children>
-      <TableView fx:id="table" layoutX="14.0" layoutY="14.0" prefHeight="371.0" prefWidth="574.0">
+      <TreeTableView fx:id="table" minWidth="-Infinity" prefHeight="582.0" prefWidth="1299.0">
         <columns>
-          <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
-          <TableColumn fx:id="descriptionColumn" prefWidth="294.0" text="Description" />
-            <TableColumn fx:id="amountColumn" minWidth="0.0" prefWidth="92.0" text="Amount" />
-            <TableColumn fx:id="detailColumn" minWidth="0.0" prefWidth="112.0" text="Detail" />
+          <TreeTableColumn fx:id="idColumn" prefWidth="75.0" text="Id" />
+          <TreeTableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
+            <TreeTableColumn fx:id="checkNumColumn" minWidth="0.0" prefWidth="73.0" text="Check#" />
+            <TreeTableColumn fx:id="descriptionColumn" minWidth="0.0" prefWidth="300.0" text="Description">
+               <columns>
+                  <TreeTableColumn fx:id="detailItemColumn" prefWidth="500.0" text="Item" />
+               </columns>
+            </TreeTableColumn>
+            <TreeTableColumn fx:id="amountColumn" minWidth="0.0" prefWidth="73.0" text="Amount">
+               <columns>
+                  <TreeTableColumn fx:id="detailAmountColumn" prefWidth="75.0" text="Each" />
+               </columns>
+            </TreeTableColumn>
+            <TreeTableColumn fx:id="categoriesColumn" minWidth="41.0" prefWidth="455.0" text="Categories">
+               <columns>
+                  <TreeTableColumn fx:id="detailCat1Column" prefWidth="230.0" text="Cat 1" />
+                  <TreeTableColumn fx:id="detailCat2Column" minWidth="0.0" prefWidth="260.0" text="Cat 2" />
+               </columns>
+            </TreeTableColumn>
         </columns>
-      </TableView>
+      </TreeTableView>
    </children>
 </AnchorPane>

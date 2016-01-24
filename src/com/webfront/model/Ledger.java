@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -92,6 +94,7 @@ public class Ledger implements Serializable {
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
     private List<Payment> receipts;
+    
     
     public Ledger() {
         this.id=null;
@@ -239,5 +242,4 @@ public class Ledger implements Serializable {
     public void setPayment(List<Payment> receipt) {
         this.receipts = receipt;
     }
-
 }

@@ -10,6 +10,8 @@ import com.webfront.model.Stores;
 import com.webfront.view.StoreForm;
 import java.util.Comparator;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -44,6 +46,7 @@ public class StoreController {
     private final ObservableList<Stores> list;
     final StoresManager storesManager;
     EventHandler<MouseEvent> doubleClick;
+    Stores selectedStore;
 
     MenuItem delMenu;
     MenuItem editMenu;
@@ -56,10 +59,10 @@ public class StoreController {
 
     @FXML
     TableColumn<Stores, String> storeNameCol;
-    
+
     @FXML
     Button btnStoreAdd;
-    
+
     @FXML
     Button btnStoreDelete;
 
@@ -125,7 +128,9 @@ public class StoreController {
         } else {
             Platform.runLater(() -> loadData());
         }
-        
+
+        storesTable.getSelectionModel().selectedIndexProperty().addListener(new RowSelectListener());
+                
         storesTable.setEditable(true);
         storesTable.setContextMenu(new ContextMenu(editMenu, delMenu));
 
@@ -142,7 +147,7 @@ public class StoreController {
                     storesManager.create(s);
                     int idx = t.getTableView().getSelectionModel().getSelectedIndex();
                     t.getTableView().getItems().set(idx, s);
-
+                    storesTable.getSelectionModel().clearSelection();
                 });
 
     }
@@ -150,17 +155,26 @@ public class StoreController {
     private void loadData() {
         list.setAll(storesManager.getList("SELECT * FROM stores ORDER BY storeName"));
     }
-    
+
     @FXML
     public void onBtnStoreAddClick() {
-        
+        selectedStore = new Stores();
+        list.add(selectedStore);
+        int row = list.size() - 1;
+        storesTable.requestFocus();
+        storesTable.scrollTo(selectedStore);
+        storesTable.getSelectionModel().select(row);
+        storesTable.getFocusModel().focus(row);
     }
-    
+
     @FXML
     public void onBtnStoreDeleteClick() {
-        
+        selectedStore = storesTable.getSelectionModel().getSelectedItem();
+        list.remove(selectedStore);
+        storesManager.delete(selectedStore);
+        btnStoreDelete.disableProperty().set(true);
     }
-    
+
     public static Comparator<Stores> StoreComparator = new Comparator<Stores>() {
         @Override
         public int compare(Stores o1, Stores o2) {
@@ -170,6 +184,22 @@ public class StoreController {
         }
     };
 
+    private class RowSelectListener implements ChangeListener {
+
+        @Override
+        public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+            int idx = ((Number) newValue).intValue();
+            if(idx == list.size() || idx < 0) {
+                return;
+            }
+            Stores store = list.get(idx);
+            selectedStore = store;
+            btnStoreDelete.disableProperty().set(false);
+        }
+        
+    }
+
+   
     static class ConfirmDialog extends Popup {
 
         Stage stage;
@@ -193,7 +223,7 @@ public class StoreController {
             init();
             showDialog();
         }
-        
+
         private void init() {
 
             stage = new Stage();
@@ -288,6 +318,6 @@ public class StoreController {
         public void setMessage(String message) {
             this.message = message;
         }
-    }        
+    }
 
 }

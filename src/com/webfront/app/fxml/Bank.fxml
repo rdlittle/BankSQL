@@ -56,12 +56,14 @@
                         <PieChart />
                     </content>
                 </Tab>
-                <Tab fx:id="detailTab" closable="false" text="Detail" />
+                <Tab fx:id="detailTab" closable="false" text="Detail">
+                    <fx:include source="LedgerView.fxml"/>
+                </Tab>
                 <Tab fx:id="storesTab" text="Stores &amp; Categories">
                     <content>
                         <AnchorPane>
                             <children>
-                                <HBox prefHeight="649.0" prefWidth="1297.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="2.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                <HBox prefHeight="697.0" prefWidth="1299.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                     <children>
                                         <fx:include source="Stores.fxml" />
                                         <fx:include source="Category.fxml" />

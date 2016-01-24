@@ -208,7 +208,7 @@ public class PaymentView extends Pane {
         grid.add(table, 0, 0);
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10, 10, 0, 10));
+        buttons.setPadding(new Insets(10, 10, 10, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
         grid.add(buttons, 0, 1);

@@ -25,7 +25,7 @@ public class LedgerItem {
     private String checkNumber;
     private String amount;
     private float balance;
-    private String dateFormat;
+    private final String dateFormat = "MM/dd/yyyy";
 
     public LedgerItem() {
         date = "";
@@ -34,14 +34,12 @@ public class LedgerItem {
         amount = "";
         balance = 0;
         checkNumber = "";
-        dateFormat = "MM/dd/yyyy";
     }
 
     public LedgerItem(String d, String desc, String amt) {
         date = d;
         description = desc;
         amount = amt;
-        dateFormat = "MM/dd/yyyy";
         balance = 0;
     }
 
@@ -160,9 +158,5 @@ public class LedgerItem {
      */
     public void setCheckNumber(String checkNumber) {
         this.checkNumber = checkNumber;
-    }
-
-    public void setDateFormat(String dFmt) {
-        this.dateFormat = dFmt;
     }
 }

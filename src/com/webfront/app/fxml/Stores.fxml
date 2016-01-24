@@ -6,34 +6,41 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="521.0" prefWidth="600.0" spacing="5.0" style="-fx-background-color: silver;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.StoreController">
-   <children>
-       <VBox prefHeight="506.0" style="-fx-background-color: antiquewhite;">
-           <children>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="600.0" style="-fx-background-color: antiquewhite;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.StoreController">
+   <bottom>
+      <HBox alignment="BASELINE_LEFT" minHeight="-Infinity" prefHeight="44.0" spacing="10.0" BorderPane.alignment="BOTTOM_RIGHT">
+         <children>
+            <Button fx:id="btnStoreAdd" mnemonicParsing="false" onAction="#onBtnStoreAddClick" prefHeight="25.0" prefWidth="65.0" text="Add" />
+            <Button fx:id="btnStoreDelete" mnemonicParsing="false" onAction="#onBtnStoreDeleteClick" prefHeight="25.0" prefWidth="65.0" text="Delete" />
+         </children>
+         <BorderPane.margin>
+            <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+         </BorderPane.margin>
+         <padding>
+            <Insets bottom="10.0" top="10.0" />
+         </padding>
+      </HBox>
+   </bottom>
+   <center>
+      <TableView fx:id="storesTable" maxHeight="-Infinity" prefHeight="623.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="storeIdCol" prefWidth="75.0" text="Id" />
+          <TableColumn fx:id="storeNameCol" prefWidth="524.0" text="Store name" />
+        </columns>
+      </TableView>
+   </center>
+   <top>
+      <HBox prefHeight="37.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+         <children>
             <Label text="Stores">
                <font>
                   <Font size="21.0" />
                </font>
-               <VBox.margin>
-                  <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
-               </VBox.margin>
+               <HBox.margin>
+                  <Insets left="3.0" right="3.0" top="3.0" />
+               </HBox.margin>
             </Label>
-               <TableView fx:id="storesTable" layoutX="1.0" layoutY="1.0" prefHeight="445.0" prefWidth="600.0">
-                   <columns>
-                       <TableColumn fx:id="storeIdCol" prefWidth="75.0" text="ID" />
-                       <TableColumn fx:id="storeNameCol" prefWidth="524.0" text="Store name" />
-                   </columns>
-                   <VBox.margin>
-                       <Insets />
-                   </VBox.margin>
-               </TableView>
-               <HBox alignment="CENTER_RIGHT" minHeight="-Infinity" prefHeight="39.0" prefWidth="600.0" spacing="10.0">
-                   <children>
-                       <Button fx:id="btnStoreAdd" mnemonicParsing="false" onAction="#onBtnStoreAddClick" prefHeight="25.0" prefWidth="87.0" text="Add" />
-                       <Button fx:id="btnStoreDelete" mnemonicParsing="false" onAction="#onBtnStoreDeleteClick" prefHeight="25.0" prefWidth="87.0" text="Delete" />
-                   </children>
-               </HBox>
-           </children>
-       </VBox>
-   </children>
-</HBox>
+         </children>
+      </HBox>
+   </top>
+</BorderPane>

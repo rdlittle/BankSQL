@@ -9,7 +9,6 @@ import com.webfront.bean.BankManager;
 import com.webfront.model.Account;
 import com.webfront.view.CategoryView;
 import com.webfront.view.LedgerView;
-import com.webfront.view.PaymentView;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -116,7 +115,6 @@ public class BankController {
     private final ObservableMap<Integer, LedgerView> viewMap;
     private final SimpleBooleanProperty isLedgerTab;
     private final StoresView stores;
-    private final PaymentView detail;
     private final CategoryView categories;
     
     public BankController() {
@@ -127,7 +125,6 @@ public class BankController {
         this.isLedgerTab = new SimpleBooleanProperty(false);
         this.viewMap = FXCollections.<Integer, LedgerView>observableHashMap();
         this.stores = StoresView.getInstance();
-        this.detail = PaymentView.getInstance();
         this.categories = CategoryView.getInstance();
         
     }
@@ -144,10 +141,7 @@ public class BankController {
                 addLedger(acct);
             }
         }
-//        hbox.getChildren().addAll(stores, categories.getTreeView());
-//        hbox.getChildren().add(stores);
         summaryTab.setContent(SummaryView.getInstance());
-        detailTab.setContent(detail);
         tabPane.getTabs().addAll(ledgerTabs);
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
