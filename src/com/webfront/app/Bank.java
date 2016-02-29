@@ -223,7 +223,7 @@ public class Bank extends Application {
                 config.setConfig();
             }
         });
-
+        setHandlers();
         primaryStage.show();
     }
 
