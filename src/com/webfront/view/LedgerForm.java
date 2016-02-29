@@ -8,7 +8,6 @@ package com.webfront.view;
 import com.webfront.app.Bank;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
-import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import java.io.IOException;
@@ -90,7 +89,7 @@ public final class LedgerForm extends AnchorPane {
     HashMap<String, Category> categoryMap, subCatMap;
 
     @FXML
-    DistributionView distTable;
+    LedgerItemDetail paymentDetail;
 
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
@@ -113,7 +112,7 @@ public final class LedgerForm extends AnchorPane {
         distView = new Pane();
         lblDescription = new Label();
         lblDescription.setLabelFor(transDescription);
-        distTable = new DistributionView(FXCollections.observableArrayList());
+        paymentDetail = new LedgerItemDetail(FXCollections.observableArrayList());
         buildForm();
         setFormData();
     }
@@ -149,31 +148,24 @@ public final class LedgerForm extends AnchorPane {
                 categoryMap.put(c.getDescription(), c);
                 if (parent == 0) {
                     primaryCat.getItems().add(c.getDescription());
-                } else {
-                    if (oldItem != null) {
-                        if (oldItem.getPrimaryCat() != null) {
-                            if (parent == oldItem.getPrimaryCat().getId()) {
-                                subCat.getItems().add(c.getDescription());
-                            }
+                } else if (oldItem != null) {
+                    if (oldItem.getPrimaryCat() != null) {
+                        if (parent == oldItem.getPrimaryCat().getId()) {
+                            subCat.getItems().add(c.getDescription());
                         }
                     }
                 }
             }
 
             if (oldItem != null) {
-                if (oldItem.getDistribution() != null) {
-                    if (oldItem.getDistribution().size() > 0) {
-
-                        for (Distribution d : oldItem.getDistribution()) {
-                            Category c = d.getCategory();
-                            if (c != null) {
-                                String desc = d.getCategory().getDescription();
-                                if (!subCat.getItems().contains(desc)) {
-                                    subCat.getItems().add(desc);
-                                }
-                                subCat.setValue(oldItem.getDistribution().get(0).getCategory().getDescription());
-                            }
+                if (oldItem.getSubCat() != null) {
+                    Category c = oldItem.getSubCat();
+                    if (c != null) {
+                        String desc = c.getDescription();
+                        if (!subCat.getItems().contains(desc)) {
+                            subCat.getItems().add(desc);
                         }
+                        subCat.setValue(c.getDescription());
                     }
                 }
             }
@@ -214,19 +206,7 @@ public final class LedgerForm extends AnchorPane {
                         String newCat = newValue.toString();
                         if (subCatMap.containsKey(newCat)) {
                             if (oldItem != null) {
-                                Distribution dist = new Distribution();
-                                dist.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
-                                dist.setCategory(subCatMap.get(newCat));
-                                dist.setLedger(oldItem);
-                                if (oldItem.getDistribution() == null || oldItem.getDistribution().isEmpty()) {
-                                    oldItem.getDistribution().add(dist);
-                                } else {
-                                    if (oldItem.getDistribution().get(0).getId() != null) {
-                                        oldItem.getDistribution().get(0).setCategory(subCatMap.get(newCat));
-                                    } else {
-                                        oldItem.getDistribution().set(0, dist);
-                                    }
-                                }
+                                oldItem.setSubCat(subCatMap.get(newCat));
                                 btnOk.setDisable(false);
                             }
                         }
@@ -272,11 +252,11 @@ public final class LedgerForm extends AnchorPane {
                         btnOk.setDisable(false);
                     }
                 }
-            });            
-            
+            });
+
             distView.setPrefSize(857.0, 175.0);
-            distTable.setPrefSize(857.0, 175.0);
-            distView.getChildren().add(distTable);
+            paymentDetail.setPrefSize(857.0, 175.0);
+            distView.getChildren().add(paymentDetail);
             stage.show();
 
         } catch (IOException ex) {
@@ -300,14 +280,12 @@ public final class LedgerForm extends AnchorPane {
                 String str = oldItem.getPrimaryCat().getDescription();
                 primaryCat.setValue(str);
             }
-            if (oldItem.getDistribution() != null && oldItem.getDistribution().size() > 0) {
-                if (oldItem.getDistribution().get(0) != null) {
-                    distTable.setList(FXCollections.observableList(oldItem.getPayment()));
-                    distTable.setItems(distTable.getList());
-                    Category c = oldItem.getDistribution().get(0).getCategory();
-                    if (c != null) {
-                        subCat.setValue(c.getDescription());
-                    }
+            if (oldItem.getSubCat() != null) {
+                paymentDetail.setList(FXCollections.observableList(oldItem.getPayment()));
+                paymentDetail.setItems(paymentDetail.getList());
+                Category c = oldItem.getSubCat();
+                if (c != null) {
+                    subCat.setValue(c.getDescription());
                 }
             }
             if (oldItem.getCheckNum() != null) {
@@ -343,7 +321,7 @@ public final class LedgerForm extends AnchorPane {
         transAmt.setDisable(false);
         transAmt.requestFocus();
     }
-    
+
     @FXML
     public void closeForm() {
         stage.close();
@@ -354,10 +332,9 @@ public final class LedgerForm extends AnchorPane {
         if (oldItem != null) {
             updateModel(oldItem);
             view.getLedgerManager().update(oldItem);
-            TableView tv =(TableView)view.getTable();
+            TableView tv = (TableView) view.getTable();
             TableViewSelectionModel sm = tv.getSelectionModel();
-            int idx = view.getTable().getSelectionModel().getSelectedIndex();
-            idx = sm.getSelectedIndex();
+            int idx = sm.getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {
             Ledger ledger = new Ledger();

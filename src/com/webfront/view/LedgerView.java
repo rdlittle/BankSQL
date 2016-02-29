@@ -113,13 +113,11 @@ public class LedgerView extends AnchorPane {
         subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
-                if (param.getValue().getDistribution() != null) {
-                    if (!param.getValue().getDistribution().isEmpty()) {
-                        Category c = param.getValue().getDistribution().get(0).getCategory();
-                        if (c != null) {
-                            String desc = c.getDescription();
-                            return new SimpleStringProperty(desc);
-                        }
+                if (param.getValue() != null) {
+                    Category c = param.getValue().getSubCat();
+                    if (c != null) {
+                        String desc = c.getDescription();
+                        return new SimpleStringProperty(desc);
                     }
                 }
                 return null;
@@ -182,7 +180,7 @@ public class LedgerView extends AnchorPane {
         };
 
         Platform.runLater(() -> loadData());
-        
+
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
         list.addListener(new ListChangeListener() {
@@ -192,8 +190,7 @@ public class LedgerView extends AnchorPane {
                 isLoading.set(false);
             }
         });
-        
-        
+
         table.getItems().addAll(list);
 
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);

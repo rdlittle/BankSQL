@@ -22,7 +22,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class DistributionView extends TableView {
+public class LedgerItemDetail extends TableView {
 
     TableColumn transDescColumn;
     TableColumn storeColumn;
@@ -32,7 +32,7 @@ public class DistributionView extends TableView {
     
     private ObservableList<Payment> list;
     
-    public DistributionView(ObservableList<Payment> receiptsList) {
+    public LedgerItemDetail(ObservableList<Payment> receiptsList) {
         list=receiptsList;
 
         transDescColumn = new TableColumn("Description");

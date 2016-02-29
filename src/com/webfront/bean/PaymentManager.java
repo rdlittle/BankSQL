@@ -18,7 +18,16 @@ import javax.persistence.Query;
  */
 public class PaymentManager extends DBManager<Payment> implements Serializable {
 
-    public PaymentManager() {
+    private static PaymentManager instance;
+    
+    protected PaymentManager() {
+    }
+    
+    public static PaymentManager getInstance() {
+        if(instance==null) {
+            instance = new PaymentManager();
+        }
+        return instance;
     }
     
     @Override

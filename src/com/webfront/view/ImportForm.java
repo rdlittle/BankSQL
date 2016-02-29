@@ -10,10 +10,8 @@ import static com.webfront.app.Bank.viewList;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
-import com.webfront.bean.DistributionManager;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
-import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import java.io.File;
 import java.io.IOException;
@@ -178,16 +176,12 @@ public class ImportForm extends AnchorPane {
             @Override
             protected Void call() throws Exception {
                 newItems = importer.getItemList();
-                DistributionManager distMgr = new DistributionManager();
                 Double itemCount = (double) newItems.size();
                 Double progress = (double) 0;
                 Double itemsCreated = (double) 0;
                 LedgerView view = viewList.get(Integer.valueOf(selectedAccount));
                 for (Ledger item : newItems) {
                     view.getLedgerManager().create(item);
-                    Distribution dist = new Distribution(item);
-                    dist.setCategory(item.getPrimaryCat());
-                    distMgr.create(dist);
                     itemsCreated += 1;
                     progress = itemsCreated / itemCount;
                     updateProgress(progress, 1);
