@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -78,6 +76,10 @@ public class Ledger implements Serializable {
     @OneToOne
     @JoinColumn(name = "primaryCat")
     private Category primaryCat;
+    
+    @OneToOne
+    @JoinColumn(name = "subCat")
+    private Category subCat;    
 
     @Column(name = "checkNum")
     private String checkNum;
@@ -89,16 +91,12 @@ public class Ledger implements Serializable {
     @Column(name = "qifUpdate")
     private Boolean qifUpdate;
     
-    @OneToMany(cascade = CascadeType.REFRESH, mappedBy="ledger")
-    private List<Distribution> distribution;
-    
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
-    private List<Payment> receipts;
+    private List<Payment> payments;
     
     
     public Ledger() {
         this.id=null;
-        this.distribution=new ArrayList<>();
         this.transDate=Calendar.getInstance().getTime();
         this.transAmt=0;
         this.accountNum=1;
@@ -106,7 +104,7 @@ public class Ledger implements Serializable {
         this.transDesc="";
         this.checkNum="";
         this.qifUpdate=false;
-        this.receipts=new ArrayList<>();
+        this.payments=new ArrayList<>();
     }
 
     public Ledger(Integer id) {
@@ -169,6 +167,14 @@ public class Ledger implements Serializable {
         primaryCat = cat;
     }
 
+    public Category getSubCat() {
+        return subCat;
+    }
+    
+    public void setSubCat(Category cat) {
+        subCat = cat;
+    }
+    
     public String getCheckNum() {
         return checkNum;
     }
@@ -216,30 +222,16 @@ public class Ledger implements Serializable {
     }
 
     /**
-     * @return the distributionList
-     */
-    public List<Distribution> getDistribution() {
-        return distribution;
-    }
-
-    /**
-     * @param distributionList the distributionList to set
-     */
-    public void setDistribution(List<Distribution> distributionList) {
-        this.distribution = distributionList;
-    }
-
-    /**
      * @return the receipt
      */
     public List<Payment> getPayment() {
-        return receipts;
+        return payments;
     }
 
     /**
      * @param receipt the receipt to set
      */
     public void setPayment(List<Payment> receipt) {
-        this.receipts = receipt;
+        this.payments = receipt;
     }
 }

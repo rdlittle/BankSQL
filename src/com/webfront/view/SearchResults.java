@@ -119,11 +119,11 @@ public final class SearchResults extends Pane {
         tileButtons.setVgap(8.0);
         tileButtons.setAlignment(Pos.CENTER_RIGHT);
         tileButtons.setStyle("fx-background: blue;");
-        
-        Label label = new Label("Target date: "+searchCriteria.getDate()+" Amount: "+searchCriteria.getAmount());
+
+        Label label = new Label("Target date: " + searchCriteria.getDate() + " Amount: " + searchCriteria.getAmount());
         label.setAlignment(Pos.CENTER_LEFT);
         label.setStyle("fx-background: white;");
-        label.setPadding(new Insets(0,0,0,10));
+        label.setPadding(new Insets(0, 0, 0, 10));
 
         btnOK.setMaxWidth(Double.MAX_VALUE);
         btnCancel.setMaxWidth(Double.MAX_VALUE);
@@ -160,21 +160,21 @@ public final class SearchResults extends Pane {
             @Override
             public void handle(Event event) {
                 SearchForm searchForm = new SearchForm();
-                searchForm.criteria=searchCriteria;
+                searchForm.criteria = searchCriteria;
                 searchCriteria.getSqlProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                         resultsList.clear();
                         LedgerManager ledgerManager = LedgerManager.getInstance();
-                        resultsList=ledgerManager.doSqlQuery(searchCriteria.getSqlStmt());
+                        resultsList = ledgerManager.doSqlQuery(searchCriteria.getSqlStmt());
                         getTable().getItems().clear();
-                        getTable().setItems(resultsList);                        
+                        getTable().setItems(resultsList);
                     }
                 });
-                
+
                 searchForm.setForm();
                 searchForm.showForm();
-                
+
             }
         });
 
@@ -212,13 +212,11 @@ public final class SearchResults extends Pane {
             secondaryCat.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
                 @Override
                 public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
-                    if (param.getValue().getDistribution() != null) {
-                        if (!param.getValue().getDistribution().isEmpty()) {
-                            Category c = param.getValue().getDistribution().get(0).getCategory();
-                            if (c != null) {
-                                String desc = c.getDescription();
-                                return new SimpleStringProperty(desc);
-                            }
+                    if (param.getValue().getSubCat() != null) {
+                        Category c = param.getValue().getSubCat();
+                        if (c != null) {
+                            String desc = c.getDescription();
+                            return new SimpleStringProperty(desc);
                         }
                     }
                     return null;
@@ -235,30 +233,28 @@ public final class SearchResults extends Pane {
 
             Scene scene = new Scene(this);
             GridPane bottomPane = new GridPane();
-            
+
             ColumnConstraints col0 = new ColumnConstraints();
             ColumnConstraints col1 = new ColumnConstraints();
-            
+
             col0.setHalignment(HPos.LEFT);
             col0.setHgrow(Priority.ALWAYS);
             col1.setHalignment(HPos.RIGHT);
             col1.setHgrow(Priority.NEVER);
-            
-            bottomPane.getColumnConstraints().addAll(col0,col1);
+
+            bottomPane.getColumnConstraints().addAll(col0, col1);
             bottomPane.add(label, 0, 0);
-            bottomPane.add(tileButtons, 1,0);
-            
+            bottomPane.add(tileButtons, 1, 0);
+
             vbox.getChildren().addAll(table, bottomPane);
             this.getChildren().add(vbox);
-            
+
             stage = new Stage();
             stage.setTitle("Search Results");
             stage.setScene(scene);
             stage.show();
-        } else {
-            if (clzz.getSimpleName().equals("Payment")) {
-                // Build results for a receipts list;
-            }
+        } else if (clzz.getSimpleName().equals("Payment")) {
+            // Build results for a receipts list;
         }
     }
 

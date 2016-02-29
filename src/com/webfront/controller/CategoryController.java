@@ -7,11 +7,10 @@ package com.webfront.controller;
 
 import com.webfront.bean.CategoryManager;
 import com.webfront.model.Category;
-import com.webfront.model.Ledger;
-import com.webfront.view.LedgerForm;
-import com.webfront.view.LedgerView;
 import java.util.List;
 import java.util.Objects;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -61,12 +60,15 @@ public class CategoryController {
     TreeView<Category> categoryTree;
 
     private Category selectedCategory;
+    Category parentCategory;
     Category rollBackCategory;
 
     private MenuItem addMenu;
     private MenuItem editMenu;
     private MenuItem deleteMenu;
     private ContextMenu contextMenu;
+    boolean isNew = false;
+    boolean isRoot = false;
 
     @FXML
     public void initialize() {
@@ -78,21 +80,21 @@ public class CategoryController {
         addMenu.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-
+                isNew = true;
             }
         });
 
         deleteMenu.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-
+                isNew = false;
             }
         });
 
         editMenu.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-
+                isNew = false;
             }
         });
 
@@ -101,15 +103,36 @@ public class CategoryController {
         EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(null == categoryTree.getSelectionModel().getSelectedItem().getValue()) {
+                TreeItem<Category> ti = categoryTree.getSelectionModel().getSelectedItem();
+                if (ti == null) {
                     return;
                 }
-                selectedCategory = (Category) categoryTree.getSelectionModel().getSelectedItem().getValue();
+                if (ti.getParent() == null) {
+                    isRoot = true;
+                    return;
+                }
+
+                isRoot = false;
+                selectedCategory = (Category) ti.getValue();
+                if (selectedCategory.getParent() == 0) {
+                } else {
+                    cbParentCategory.getSelectionModel().selectFirst();
+                    for (TreeItem<Category> ti2 : categoryTree.getRoot().getChildren()) {
+                        if (!ti2.isLeaf()) {
+                            parentCategory = ti2.getValue();
+                            if (Objects.equals(parentCategory.getId(), selectedCategory.getParent())) {
+                                cbParentCategory.getSelectionModel().select(parentCategory);
+                                break;
+                            }
+                        }
+                    }
+
+                }
                 if (event.getButton() == MouseButton.PRIMARY) {
                     contextMenu.hide();
                 }
                 if (event.getButton() == MouseButton.SECONDARY) {
-                    switch(selectedCategory.getParent()) {
+                    switch (selectedCategory.getParent()) {
                         case 0:
                             // Allow adding to a parent category
                             addMenu.disableProperty().set(false);
@@ -133,17 +156,21 @@ public class CategoryController {
                 }
             }
         };
-        
+
         categoryTree.addEventHandler(MouseEvent.MOUSE_CLICKED, clickHandler);
 
         List<Category> olist = CategoryManager.getInstance().getTree();
         selectedCategory = new Category();
         TreeItem<Category> root = new TreeItem<>(new Category(-1, "Primary Categories"));
         cbParentCategory.getItems().add(new Category(-1, ""));
+
         root.setExpanded(true);
         categoryTree.setShowRoot(true);
 
+        btnCatAdd.disableProperty().set(true);
         btnCatDelete.disableProperty().set(true);
+
+        // Load the resultSet into the TreeView
         for (Category c : olist) {
             if (c.getParent() == 0) {
                 root.getChildren().add(new TreeItem<>(c));
@@ -159,37 +186,41 @@ public class CategoryController {
         categoryTree.setRoot(root);
 
         categoryTree.getSelectionModel().selectedItemProperty()
-                .addListener((observable, oldValue, newValue) -> {
-                    if (newValue != null) {
-                        if (newValue.isLeaf()) {
-                            btnCatDelete.disableProperty().set(false);
-                        } else {
-                            btnCatDelete.disableProperty().set(true);
-                        }
-                        selectedCategory = newValue.getValue();
-                        rollBackCategory = selectedCategory;
-                        Integer parentId = selectedCategory.getParent();
-                        if (parentId == null) {
-                            txtCategoryName.disableProperty().set(true);
-                            btnCatOk.setDisable(true);
-                            btnCatCancel.setDisable(true);
-                            return;
-                        }
-                        cbParentCategory.disableProperty().setValue(parentId == 0);
-                        txtCategoryName.disableProperty().set(false);
-                        if (selectedCategory.getId() > 0) {
+                .addListener(new ChangeListener<TreeItem<Category>>() {
+                    @Override
+                    public void changed(ObservableValue<? extends TreeItem<Category>> observable, TreeItem<Category> oldTreeItem, TreeItem<Category> selectedTreeItem) {
+                        if (selectedTreeItem != null) {
+                            if (selectedTreeItem.isLeaf()) {
+                                btnCatDelete.disableProperty().set(false);
+                                btnCatAdd.disableProperty().set(true);
+                            } else {
+                                btnCatDelete.disableProperty().set(true);
+                                btnCatAdd.disableProperty().set(false);
+                            }
+                            selectedCategory = selectedTreeItem.getValue();
+                            rollBackCategory = selectedCategory;
+                            if (selectedTreeItem.getParent() == null) {
+                                isRoot = true;
+                                txtCategoryName.setText("");
+                                return;
+                            }
+                            Integer parentId = selectedCategory.getParent();
+                            cbParentCategory.disableProperty().setValue(parentId == 0);
+                            txtCategoryName.disableProperty().set(false);
                             txtCategoryName.setText(selectedCategory.getDescription());
-                            btnCatOk.setDisable(false);
-                            btnCatCancel.setDisable(false);
-                            for (TreeItem ti : root.getChildren()) {
-                                Category p = (Category) ti.getValue();
-                                if (Objects.equals(p.getId(), parentId)) {
-                                    cbParentCategory.getSelectionModel().select(p);
-                                    break;
+                            if (selectedCategory.getParent() > 0) {
+                                btnCatOk.setDisable(false);
+                                btnCatCancel.setDisable(false);
+                                for (TreeItem ti : root.getChildren()) {
+                                    Category p = (Category) ti.getValue();
+                                    if (Objects.equals(p.getId(), parentId)) {
+                                        cbParentCategory.getSelectionModel().select(p);
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
+                        }
                     }
                 });
 
@@ -202,22 +233,71 @@ public class CategoryController {
 
     @FXML
     public void onBtnCatAdd() {
-          
-//        txtCategoryName.requestFocus();
-//        btnCatOk.disableProperty().set(false);
+        isNew = true;
+        if (selectedCategory.getId() != -1) {
+            cbParentCategory.getSelectionModel().select(selectedCategory);
+        }
+        txtCategoryName.setText("");
+        txtCategoryName.requestFocus();
+        btnCatOk.disableProperty().set(false);
     }
 
     @FXML
     public void onBtnCatDelete() {
-
+        isNew = false;
+        TreeItem ti = categoryTree.getSelectionModel().getSelectedItem();
+        if (ti.isLeaf()) {
+            Category cat = (Category) ti.getValue();
+            CategoryManager.getInstance().delete(cat);
+            updateUi();
+        }
     }
 
     @FXML
     public void onBtnCatOkClicked() {
-        CategoryManager.getInstance().update(selectedCategory);
+        if (isNew) {
+            Category child = new Category();
+            child.setDescription(txtCategoryName.getText());
+            TreeItem<Category> root = categoryTree.getRoot();
+            if (isRoot) {
+                child.setParent(0);
+            } else {
+                Category parent = cbParentCategory.getSelectionModel().getSelectedItem();
+                child.setParent(parent.getId());
+            }
+            
+            // Look for duplicate item
+            for (TreeItem<Category> t1 : root.getChildren()) {
+                Category cat = t1.getValue();
+                if (Objects.equals(cat.getParent(), child.getParent())) {
+                    if (cat.getDescription().equalsIgnoreCase(child.getDescription())) {
+                        return;
+                    }
+                }
+            }
+            
+            // Add the new item to the tree
+            if (isRoot) {
+                root.getChildren().add(new TreeItem<>(child));
+            } else {
+                for (TreeItem<Category> ti : root.getChildren()) {
+                    Category c = ti.getValue();
+                    if (Objects.equals(c.getId(), child.getParent())) {
+                        ti.getChildren().add(new TreeItem<>(child));
+                        break;
+                    }
+                }
+            }
+            
+            // Add the new item to the database
+            CategoryManager.getInstance().create(child);
+        } else {
+            CategoryManager.getInstance().update(selectedCategory);
+        }
         btnCatOk.disableProperty().setValue(Boolean.TRUE);
         btnCatCancel.disableProperty().setValue(Boolean.TRUE);
         updateUi();
+        isNew = false;
     }
 
     @FXML
@@ -228,9 +308,11 @@ public class CategoryController {
 
     private void updateUi() {
         TreeItem ti = categoryTree.getSelectionModel().getSelectedItem();
-        ti.setValue(selectedCategory);
+        if (ti.getParent() != null) {
+            ti.setValue(selectedCategory);
+            txtCategoryName.setText(selectedCategory.getDescription());
+        }
         categoryTree.refresh();
-        txtCategoryName.setText(selectedCategory.getDescription());
         cbParentCategory.getSelectionModel().select(0);
         btnCatOk.disableProperty().setValue(Boolean.TRUE);
         btnCatCancel.disableProperty().setValue(Boolean.TRUE);

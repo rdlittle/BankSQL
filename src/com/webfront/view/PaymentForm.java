@@ -7,6 +7,7 @@ package com.webfront.view;
 
 import com.webfront.app.BankOld;
 import com.webfront.bean.AccountManager;
+import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
@@ -86,7 +87,7 @@ public final class PaymentForm extends AnchorPane {
     Stage stage;
 
     static PaymentView view;
-    private HashMap<String, Stores> storeMap;
+    private final HashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
     Payment oldPayment;
     Payment newPayment;
@@ -347,7 +348,7 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setPrimaryCat(cat1);
             oldPayment.setSubCat(cat2);
             oldPayment.setStore(store);
-            view.getPaymentManager().update(oldPayment);
+            PaymentManager.getInstance().update(oldPayment);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
             view.getTable().getItems().set(idx, oldPayment);
             view.getPaymentManager().refresh(oldPayment);

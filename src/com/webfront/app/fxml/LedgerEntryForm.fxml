@@ -40,7 +40,7 @@
         <Label fx:id="lblDescription" layoutX="10.0" layoutY="136.0" mnemonicParsing="true" text="_Desc" />
         <TextField fx:id="transDescription" layoutX="75.0" layoutY="130.0" prefHeight="26.0" prefWidth="857.0" />
         
-        <Pane fx:id="distView" layoutX="75.0" layoutY="188.0" prefHeight="218.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">
+        <Pane fx:id="paymentView" layoutX="75.0" layoutY="188.0" prefHeight="218.0" prefWidth="857.0" xmlns:fx="http://javafx.com/fxml">
         </Pane>
         
         <Button fx:id="btnCancel" layoutX="111.0" layoutY="422.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />

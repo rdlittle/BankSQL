@@ -6,30 +6,40 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="582.0" prefWidth="1299.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
-   <children>
-      <TreeTableView fx:id="table" minWidth="-Infinity" prefHeight="582.0" prefWidth="1299.0">
-        <columns>
-          <TreeTableColumn fx:id="idColumn" prefWidth="75.0" text="Id" />
-          <TreeTableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
-            <TreeTableColumn fx:id="checkNumColumn" minWidth="0.0" prefWidth="73.0" text="Check#" />
-            <TreeTableColumn fx:id="descriptionColumn" minWidth="0.0" prefWidth="300.0" text="Description">
-               <columns>
-                  <TreeTableColumn fx:id="detailItemColumn" prefWidth="500.0" text="Item" />
-               </columns>
-            </TreeTableColumn>
-            <TreeTableColumn fx:id="amountColumn" minWidth="0.0" prefWidth="73.0" text="Amount">
-               <columns>
-                  <TreeTableColumn fx:id="detailAmountColumn" prefWidth="75.0" text="Each" />
-               </columns>
-            </TreeTableColumn>
-            <TreeTableColumn fx:id="categoriesColumn" minWidth="41.0" prefWidth="455.0" text="Categories">
-               <columns>
-                  <TreeTableColumn fx:id="detailCat1Column" prefWidth="230.0" text="Cat 1" />
-                  <TreeTableColumn fx:id="detailCat2Column" minWidth="0.0" prefWidth="260.0" text="Cat 2" />
-               </columns>
-            </TreeTableColumn>
-        </columns>
-      </TreeTableView>
-   </children>
-</AnchorPane>
+<Pane id="LedgerViewPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="718.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
+    <children>
+        <TreeTableView fx:id="table" editable="true" minWidth="-Infinity" prefHeight="656.0" prefWidth="1325.0">
+            <columns>
+                <TreeTableColumn fx:id="idColumn" prefWidth="75.0" text="Id" />
+                <TreeTableColumn fx:id="dateColumn" prefWidth="86.0" text="Date" />
+                <TreeTableColumn fx:id="checkNumColumn" minWidth="0.0" prefWidth="75.0" text="Check#" />
+                <TreeTableColumn fx:id="descriptionColumn" minWidth="0.0" prefWidth="475.0" text="Description">
+                    <columns>
+                        <TreeTableColumn fx:id="detailItemColumn" prefWidth="500.0" text="Item" />
+                    </columns>
+                </TreeTableColumn>
+                <TreeTableColumn fx:id="amountColumn" minWidth="0.0" prefWidth="135.0" text="Amount">
+                    <columns>
+                        <TreeTableColumn fx:id="detailAmountColumn" prefWidth="75.0" text="Each" />
+                    </columns>
+                </TreeTableColumn>
+                <TreeTableColumn fx:id="categoryColumn" minWidth="41.0" prefWidth="435.0" text="Categories">
+                    <columns>
+                        <TreeTableColumn fx:id="detailCat1Column" onEditCancel="#onDetailCat1EditCancel" onEditCommit="#onDetailCat1EditCommit" onEditStart="#onDetailCat1EditStart" prefWidth="216.0" text="Cat 1" />
+                        <TreeTableColumn fx:id="detailCat2Column" minWidth="0.0" onEditCancel="#onDetailCat2EditCancel" onEditCommit="#onDetailCat2EditCommit" onEditStart="#onDetailCat2EditStart" prefWidth="310.0" text="Cat 2" />
+                    </columns>
+                </TreeTableColumn>
+            </columns>
+        </TreeTableView>
+      <AnchorPane layoutY="656.0" prefHeight="33.0" prefWidth="1325.0" styleClass="panel" stylesheets="@../bank/css/styles.css">
+         <children>
+                <HBox fx:id="buttonPanel" prefHeight="29.0" prefWidth="140.0" spacing="10.0" AnchorPane.rightAnchor="10.0">
+                    <children>
+                        <Button fx:id="btnOK" mnemonicParsing="false" prefHeight="18.0" prefWidth="57.0" text="Add" />
+                        <Button fx:id="btnCancel" mnemonicParsing="false" text="Delete" />
+                    </children>
+                </HBox>
+         </children>
+      </AnchorPane>      
+    </children>
+</Pane>

@@ -21,8 +21,8 @@
             <TreeView fx:id="categoryTree" prefHeight="623.0" prefWidth="283.0" />
             <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                <children>
-                  <Button fx:id="btnCatAdd" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Add" />
-                  <Button fx:id="btnCatDelete" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Delete" />
+                  <Button fx:id="btnCatAdd" disable="true" mnemonicParsing="false" onAction="#onBtnCatAdd" prefHeight="25.0" prefWidth="70.0" text="Add" />
+                  <Button fx:id="btnCatDelete" disable="true" mnemonicParsing="false" onAction="#onBtnCatDelete" prefHeight="25.0" prefWidth="70.0" text="Delete" />
                </children>
                <VBox.margin>
                   <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
@@ -41,8 +41,8 @@
                <ComboBox fx:id="cbParentCategory" prefHeight="25.0" prefWidth="329.0" />
                <HBox alignment="TOP_RIGHT" fillHeight="false" prefHeight="56.0" prefWidth="600.0" spacing="10.0">
                    <children>
-                       <Button fx:id="btnCatOk" mnemonicParsing="false" onAction="#onBtnCatOkClicked" prefHeight="25.0" prefWidth="65.0" text="OK" />
-                       <Button fx:id="btnCatCancel" mnemonicParsing="false" onAction="#onBtnCatCancelClicked" text="Cancel" />
+                       <Button fx:id="btnCatOk" disable="true" mnemonicParsing="false" onAction="#onBtnCatOkClicked" prefHeight="25.0" prefWidth="65.0" text="OK" />
+                       <Button fx:id="btnCatCancel" disable="true" mnemonicParsing="false" onAction="#onBtnCatCancelClicked" text="Cancel" />
                    </children>
                <VBox.margin>
                   <Insets top="15.0" />

@@ -109,14 +109,12 @@ public class LedgerView extends AnchorPane {
         subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
-                if (param.getValue().getDistribution() != null) {
-                    if (!param.getValue().getDistribution().isEmpty()) {
-                        Category c = param.getValue().getDistribution().get(0).getCategory();
+                if (param.getValue().getSubCat() != null) {
+                        Category c = param.getValue().getSubCat();
                         if (c != null) {
                             String desc = c.getDescription();
                             return new SimpleStringProperty(desc);
                         }
-                    }
                 }
                 return null;
             }

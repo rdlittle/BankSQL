@@ -74,7 +74,7 @@ public class PaymentView extends Pane {
         storeAdded.set(false);
         GridPane grid = new GridPane();
 
-        paymentManager = new PaymentManager();
+        paymentManager = PaymentManager.getInstance();
         storesManager = new StoresManager();
         categoryManager = CategoryManager.getInstance();
         ledgerManager = LedgerManager.getInstance();

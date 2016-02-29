@@ -89,8 +89,8 @@ public class BankController {
     @FXML
     Tab categoriesTab;
     
-    @FXML
-    HBox buttonPanel;
+//    @FXML
+//    HBox buttonPanel;
     @FXML
     Button btnOK;
     @FXML
@@ -150,15 +150,25 @@ public class BankController {
                 if (n == null) {
                     isLedgerTab.set(false);
                 } else {
+                    String title = newTab.getText();
                     Class c = newTab.getContent().getClass();
                     String s = c.getSimpleName();
-                    isLedgerTab.set(s.equalsIgnoreCase("LedgerView"));
+                    isLedgerTab.set(title.equalsIgnoreCase("Detail"));
                 }
             }
         });
         
         editAccountsRebalance.disableProperty().bind(isLedgerTab.not());
-        buttonPanel.visibleProperty().bind(isLedgerTab);
+    }
+    
+    @FXML
+    public void onAdd() {
+        
+    }
+    
+    @FXML
+    public void onDelete() {
+        
     }
     
     @FXML

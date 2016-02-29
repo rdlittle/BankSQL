@@ -11,7 +11,7 @@
 
 <AnchorPane id="AnchorPane" prefHeight="760.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.BankController">
     <children>
-        <MenuBar layoutX="14.0" layoutY="14.0">
+        <MenuBar layoutX="14.0" layoutY="14.0" AnchorPane.leftAnchor="0.0">
             <menus>
                 <Menu text="_File">
                     <items>
@@ -49,7 +49,7 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <TabPane fx:id="tabPane" layoutX="14.0" layoutY="41.0" prefHeight="683.0" prefWidth="1299.0" style="-fx-background-color: tan;" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="36.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="41.0">
+        <TabPane fx:id="tabPane" layoutY="41.0" prefHeight="718.0" prefWidth="1325.0" style="-fx-background-color: tan;" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0">
             <tabs>
                 <Tab fx:id="summaryTab" closable="false" text="Summary">
                     <content>
@@ -57,7 +57,9 @@
                     </content>
                 </Tab>
                 <Tab fx:id="detailTab" closable="false" text="Detail">
-                    <fx:include source="LedgerView.fxml"/>
+                   <content>
+                       <fx:include source="LedgerView.fxml" />
+                   </content>
                 </Tab>
                 <Tab fx:id="storesTab" text="Stores &amp; Categories">
                     <content>
@@ -75,15 +77,5 @@
                 </Tab>
             </tabs>
         </TabPane>
-        <Pane fx:id="statusPanel" layoutX="8.0" layoutY="731.0" prefHeight="29.0" prefWidth="1317.0" styleClass="panel" stylesheets="@../bank/css/styles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="731.0">
-            <children>
-                <HBox fx:id="buttonPanel" layoutX="1185.0" prefHeight="29.0" prefWidth="140.0" spacing="10.0">
-                    <children>
-                        <Button fx:id="btnOK" mnemonicParsing="false" text="Button" />
-                        <Button fx:id="btnCancel" mnemonicParsing="false" text="Button" />
-                    </children>
-                </HBox>
-            </children>
-        </Pane>
     </children>
 </AnchorPane>
