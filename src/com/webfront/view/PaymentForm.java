@@ -349,8 +349,10 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setStore(store);
             view.getPaymentManager().update(oldPayment);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
-            view.getTable().getItems().set(idx, oldPayment);
-            view.getPaymentManager().refresh(oldPayment);
+            if (idx > 0) {
+                view.getTable().getItems().set(idx, oldPayment);
+                view.getPaymentManager().refresh(oldPayment);
+            }
             closeForm();
         } else {
             LocalDate localDate = transDate.getValue();
@@ -419,7 +421,7 @@ public final class PaymentForm extends AnchorPane {
         sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
         sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
-        sql += "AND accountNum = "+oldPayment.getAccountNum()+" ";
+        sql += "AND accountNum = " + oldPayment.getAccountNum() + " ";
         sql += "ORDER BY transDate";
         ObservableList<Ledger> results;
         results = view.getLedgerManager().doSqlQuery(sql);

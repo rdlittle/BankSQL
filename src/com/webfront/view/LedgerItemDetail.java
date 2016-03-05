@@ -6,7 +6,6 @@
 package com.webfront.view;
 
 import com.webfront.model.Payment;
-import com.webfront.view.PaymentView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;

@@ -280,7 +280,7 @@ public final class LedgerForm extends AnchorPane {
                 String str = oldItem.getPrimaryCat().getDescription();
                 primaryCat.setValue(str);
             }
-            if (oldItem.getSubCat() != null) {
+            if (oldItem.getPayment() != null) {
                 paymentDetail.setList(FXCollections.observableList(oldItem.getPayment()));
                 paymentDetail.setItems(paymentDetail.getList());
                 Category c = oldItem.getSubCat();

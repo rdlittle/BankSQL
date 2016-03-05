@@ -92,14 +92,14 @@ public class CSVImporter extends Importer {
 //                    for (int g = 1; g <= groups; g++) {
 //                        System.out.println(g + ") " + lineMatcher.group(g));
 //                    }
-                    item.setDate(lineMatcher.group(1).replaceAll("\"", ""));
-                    item.setDescription(lineMatcher.group(3).replaceAll("\"", ""));
-                    if (lineMatcher.group(4) != null) {
-                        String charge = lineMatcher.group(4).replaceAll("\"", "");
+                    item.setDate(lineMatcher.group(2).replaceAll("\"", ""));
+                    item.setDescription(lineMatcher.group(5).replaceAll("\"", ""));
+                    if (lineMatcher.group(7) != null) {
+                        String charge = lineMatcher.group(7).replaceAll("\"", "");
                         item.setAmount(charge.replaceAll(",", ""));
                     }
-                    if (lineMatcher.group(8) != null) {
-                        String payment = lineMatcher.group(8).replaceAll("\"", "");
+                    if (lineMatcher.group(9) != null) {
+                        String payment = lineMatcher.group(9).replaceAll("\"", "");
                         amount = Float.parseFloat(payment.replaceAll(",", ""));
                         amount = amount * -1;
                         item.setAmount(amount.toString());
