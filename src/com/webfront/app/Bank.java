@@ -76,6 +76,7 @@ public class Bank extends Application {
     private final MenuItem fileRefresh = new MenuItem("_Refresh");
     private final MenuItem fileNewCategory = new MenuItem("_Category");
     private final MenuItem fileNewStore = new MenuItem("Sto_re");
+    private final MenuItem fileNewStatement = new MenuItem("St_atement type");
     private final MenuItem fileExit = new MenuItem("E_xit");
 
     private final MenuItem editAccounts = new MenuItem("Accounts");
@@ -133,8 +134,9 @@ public class Bank extends Application {
         fileOpen.setMnemonicParsing(true);
         fileImport.setMnemonicParsing(true);
         fileNewMenu.setMnemonicParsing(true);
+        fileNewStatement.setMnemonicParsing(true);
         fileExit.setMnemonicParsing(true);
-        fileNewMenu.getItems().addAll(fileNewCategory, fileNewStore);
+        fileNewMenu.getItems().addAll(fileNewCategory, fileNewStore, fileNewStatement);
 
         fileMenu.getItems().addAll(fileOpen, fileRefresh, fileNewMenu, fileImport, new SeparatorMenuItem(), fileExit);
 
@@ -332,6 +334,14 @@ public class Bank extends Application {
                 CategoryForm.getInstance().showForm();
             }
         });
+        
+        fileNewStatement.setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        
 
         fileExit.setOnAction((ActionEvent event) -> {
             primaryStage.fireEvent(new Event(WindowEvent.WINDOW_CLOSE_REQUEST));
