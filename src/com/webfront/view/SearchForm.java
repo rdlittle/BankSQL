@@ -181,7 +181,7 @@ public final class SearchForm extends AnchorPane {
         cbSecondary.getItems().add("--Select--");
         cbSecondary.getSelectionModel().selectFirst();
 
-        StoresManager storeManager = new StoresManager();
+        StoresManager storeManager = StoresManager.getInstance();
         stores = storeManager.getList("SELECT * FROM stores ORDER BY storeName");
         for (Stores store : stores) {
             cbStores.getItems().add(store.getStoreName());

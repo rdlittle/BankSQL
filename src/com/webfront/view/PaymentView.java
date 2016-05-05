@@ -15,6 +15,8 @@ import com.webfront.model.Payment;
 import com.webfront.model.Stores;
 import java.util.List;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -23,6 +25,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -35,6 +38,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 /**
@@ -68,14 +72,14 @@ public class PaymentView extends Pane {
 
     Button btnAdd;
 
-    public PaymentView() {
+    protected PaymentView() {
         super();
         storeAdded = new SimpleBooleanProperty();
         storeAdded.set(false);
         GridPane grid = new GridPane();
 
         paymentManager = PaymentManager.getInstance();
-        storesManager = new StoresManager();
+        storesManager = StoresManager.getInstance();
         categoryManager = CategoryManager.getInstance();
         ledgerManager = LedgerManager.getInstance();
 
@@ -85,13 +89,14 @@ public class PaymentView extends Pane {
         Platform.runLater(() -> loadData());
 
         table = new TableView<>();
-        table.setMinWidth(1300.0);
-        table.setMinHeight(600.0);
+        table.setMinWidth(1325.0);
+        table.setMinHeight(640.0);
         table.setEditable(true);
 
         idColumn = new TableColumn("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory("id"));
-        idColumn.setMinWidth(50.0);
+        idColumn.setMinWidth(10.0);
+        idColumn.setMaxWidth(55.0);
 
         transDateColumn = new TableColumn("Date");
         transDateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
@@ -170,10 +175,13 @@ public class PaymentView extends Pane {
         transAmtColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transAmtColumn.setMinWidth(100.0);
         
-        list.addListener(new ListChangeListener() {
+        paymentManager.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-                table.getItems().addAll(list);
+//                System.out.println("PaymentView.paymentManager: onChanged event");
+                list.setAll(paymentManager.getList(""));
+                table.getItems().setAll(list);
+                paymentManager.removeListener(this);
             }
         });        
 
@@ -188,16 +196,58 @@ public class PaymentView extends Pane {
         table.getColumns().add(transAmtColumn);
 
         btnAdd = new Button("Add Receipt");
+        
+        /*
+            Open a new PayementForm, add ListChangeListener
+        */
         btnAdd.setOnAction((ActionEvent event) -> {
             PaymentForm paymentForm = new PaymentForm(getInstance(), new Payment());
+            ListChangeListener<Payment> listListener = new ListChangeListener<Payment>() {
+                @Override
+                public void onChanged(ListChangeListener.Change<? extends Payment> c) {
+//                    System.out.println("PaymentView.paymentForm.btnAdd.onAction: listChangeListener invoked");
+                    while(c.next()) {
+                        if(c.wasAdded()) {
+                            for(Payment p : c.getAddedSubList()) {
+                                table.getItems().add(p);
+                            }
+                        } else {
+                            if(c.wasRemoved()) {
+                                for(Payment p : c.getRemoved()) {
+                                    table.getItems().remove(p);
+                                }
+                            } else {
+                                if (c.wasUpdated()) {
+                                }
+                            }
+                        }
+                    }
+                    getTable().getItems().sort(Payment.PaymentComparator);
+                }
+                
+            };
+            
+            list.addListener(listListener);
+            
+            paymentForm.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
+                @Override
+                public void handle(Event event) {
+                    list.removeListener(listListener);
+                }
+            });
+            
         });
-
+        
         EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
                     PaymentForm paymentForm = new PaymentForm(paymentView, payment);
+                } else {
+                    if(event.isSecondaryButtonDown()) {
+                        
+                    }
                 }
             }
         };
@@ -223,7 +273,7 @@ public class PaymentView extends Pane {
     }
 
     private void loadData() {
-        list.setAll(paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC"));
+        list.setAll(paymentManager.getList(""));
     }
     /**
      * @return the table

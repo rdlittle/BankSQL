@@ -7,16 +7,26 @@ package com.webfront.controller;
 
 import com.webfront.bean.BankManager;
 import com.webfront.model.Account;
+import com.webfront.model.Config;
+import com.webfront.view.AccountPickerForm;
 import com.webfront.view.CategoryView;
+import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
+import com.webfront.view.PaymentView;
+import com.webfront.view.PreferencesForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -39,17 +49,17 @@ import javafx.stage.WindowEvent;
  * @author rlittle
  */
 public class BankController {
-    
+
     @FXML
     MenuBar menuBar;
-    
+
     @FXML
     Menu fileMenu;
     @FXML
     Menu fileNewMenu;
     @FXML
     Menu editMenu;
-    
+
     @FXML
     MenuItem fileNewAccount;
     @FXML
@@ -64,7 +74,7 @@ public class BankController {
     MenuItem fileClose;
     @FXML
     MenuItem fileExit;
-    
+
     @FXML
     Menu editAccounts;
     @FXML
@@ -75,7 +85,7 @@ public class BankController {
     MenuItem editStores;
     @FXML
     MenuItem editPreferences;
-    
+
     @FXML
     Pane statusPanel;
     @FXML
@@ -88,26 +98,27 @@ public class BankController {
     Tab storesTab;
     @FXML
     Tab categoriesTab;
-    
+
 //    @FXML
 //    HBox buttonPanel;
     @FXML
     Button btnOK;
     @FXML
     Button btnCancel;
-    
+
     @FXML
     HBox hbox;
     @FXML
     Pane storesPane;
-    
+
     @FXML
     TreeView treeView1;
 
     @FXML
     CategoryController categoryController;
-    
+
     private static Stage stage;
+    private final Config config;
     private final BankManager bankManager;
     private final ObservableList<Account> accountList;
     private final ObservableList<Tab> ledgerTabs;
@@ -116,7 +127,13 @@ public class BankController {
     private final SimpleBooleanProperty isLedgerTab;
     private final StoresView stores;
     private final CategoryView categories;
-    
+
+    public final SimpleBooleanProperty importDone;
+    public final SimpleIntegerProperty accountNum;
+    private final SimpleObjectProperty<LedgerView> selectedAccount;
+
+    private ImportForm importForm;
+
     public BankController() {
         this.accountList = FXCollections.<Account>observableArrayList();
         this.bankManager = BankManager.getInstance();
@@ -126,7 +143,11 @@ public class BankController {
         this.viewMap = FXCollections.<Integer, LedgerView>observableHashMap();
         this.stores = StoresView.getInstance();
         this.categories = CategoryView.getInstance();
-        
+        this.importDone = new SimpleBooleanProperty();
+        this.accountNum = new SimpleIntegerProperty();
+        this.selectedAccount = new SimpleObjectProperty<>();
+        this.config = Config.getInstance();
+        config.getConfig();
     }
 
     /**
@@ -141,8 +162,13 @@ public class BankController {
                 addLedger(acct);
             }
         }
+
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
+        Tab t = new Tab();
+        t.setContent(PaymentView.getInstance());
+        t.setText("Payments");
+        tabPane.getTabs().add(t);
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
             public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
@@ -157,75 +183,146 @@ public class BankController {
                 }
             }
         });
-        
+
+        importDone.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                if (importDone.getValue() == true) {
+                    if (ImportForm.accountNum != null) {
+                        LedgerView view = viewMap.get(Integer.valueOf(accountNum.get()));
+                        view.getList().addAll(ImportForm.newItems);
+                        view.getList().sort(LedgerView.LedgerComparator);
+                        view.getTable().setItems(view.getList());
+                        importDone.unbind();
+                        accountNum.unbind();
+                    }
+                }
+            }
+        });
+
         editAccountsRebalance.disableProperty().bind(isLedgerTab.not());
+        accountNum.addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                LedgerView l = viewMap.get(newValue);
+                selectedAccount.setValue(l);
+            }
+        });
+
     }
-    
+
+    @FXML
+    public void onFileImport() {
+        importForm = ImportForm.getInstance(accountList);
+        importDone.bind(ImportForm.importDone);
+        accountNum.bind(ImportForm.accountNum);
+        importForm.getLedgerViewProperty().bind(selectedAccount);
+    }
+
     @FXML
     public void onAdd() {
-        
+
     }
-    
+
     @FXML
     public void onDelete() {
-        
+
     }
-    
+
     @FXML
     public void onFileNewAccount() {
-        
+
     }
-    
+
     @FXML
     public void onFileNewCategory() {
-        
+
     }
-    
+
+    @FXML
+    void onFileNewStatement(ActionEvent event) {
+
+    }
+
     @FXML
     public void onFileNewStore() {
-        
+
     }
-    
+
+    @FXML
+    public void onFileOpen() {
+        AccountPickerForm picker = new AccountPickerForm();
+        picker.showForm();
+        int newId = picker.accountId;
+        if (!viewMap.containsKey(newId)) {
+            for (Account acct : accountList) {
+                if (acct.getId() == newId) {
+                    addLedger(acct);
+                    int pos = 1;
+                    for (Tab t : ledgerTabs) {
+                        if (tabPane.getTabs().indexOf(t) > -1) {
+                            pos += 1;
+                        }
+                        if (t.getId().equals(acct.getId().toString())) {
+                            tabPane.getTabs().add(pos, t);
+                            tabPane.getSelectionModel().select(t);
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     @FXML
     public void onFileClose() {
-        
+
     }
-    
+
     @FXML
     public void onFileExit() {
         stage.fireEvent(new Event(WindowEvent.WINDOW_CLOSE_REQUEST));
         System.exit(0);
     }
-    
-    @FXML
-    public void onFileImport() {
-        
-    }
-    
+
     @FXML
     public void onEditAccount() {
-        
+
     }
-    
+
     @FXML
     public void onEditCategories() {
-        
+
     }
-    
+
     @FXML
     public void onEditStores() {
-        
+
     }
     
     @FXML
-    public void onEditPreferences() {
-        
+    public void onImportSetup() {
+        PDFViewer view = PDFViewer.getInstance("");
     }
-    
+
+    @FXML
+    public void onEditPreferences() {
+        PreferencesForm prefs = PreferencesForm.getInstance(config);
+        prefs.hasChanged.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                config.setConfig();
+            }
+        });
+        int idx = prefs.getTabPane().getTabs().indexOf(prefs.getGeneralTab());
+        prefs.getTabPane().getSelectionModel().select(idx);
+        prefs.showForm();
+    }
+
     public void setStage(Stage s) {
         BankController.stage = s;
     }
-
 
     private void addLedger(Account acct) {
         LedgerView lv = LedgerView.newInstance(acct.getId());
@@ -236,11 +333,11 @@ public class BankController {
         t.setContent(lv);
         ledgerTabs.add(t);
     }
-    
+
     private class LedgerTab extends Tab {
-        
+
         private Integer accountId;
-        
+
         public LedgerTab(String name, Integer id) {
             super(name);
             this.setId(id.toString());
@@ -252,8 +349,8 @@ public class BankController {
                     ledgerTabs.remove(LedgerTab.this);
                 }
             });
-            
+
         }
     }
-    
+
 }

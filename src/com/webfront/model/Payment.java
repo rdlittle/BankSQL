@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "payment")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC"),
+    @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC, r.id DESC"),
     @NamedQuery(name = "Payment.findOrphans",query = "SELECT r FROM Payment r WHERE r.ledgerEntry IS NULL"),
     @NamedQuery(name = "Payment.findById", query = "SELECT r FROM Payment r WHERE r.id = :id"),
     @NamedQuery(name = "Payment.findByTransDate", query = "SELECT r FROM Payment r WHERE r.transDate = :transDate"),

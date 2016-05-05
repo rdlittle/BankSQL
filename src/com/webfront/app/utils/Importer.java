@@ -168,6 +168,7 @@ public abstract class Importer implements Runnable {
             in.close();
             doSort();
         } catch (MissingResourceException | NullPointerException e) {
+            e.printStackTrace();
             System.out.println(e.toString());
         } catch (IOException ex) {
             System.out.println(ex.toString());

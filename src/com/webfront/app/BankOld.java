@@ -240,14 +240,6 @@ public class BankOld extends Application {
 
     private void addLedger(Account acct) {
         LedgerTask task = new LedgerTask(acct.getId());
-//        LedgerView lv;
-//        task.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-//            @Override
-//            public void handle(WorkerStateEvent event) {
-//                lv = (LedgerView)event.getSource().getValue();
-//            }
-//        });
-        
         LedgerView lv = LedgerView.newInstance(acct.getId());
         isRebalance.bind(lv.isRebalance);
         viewList.put(acct.getId(), lv);
@@ -303,7 +295,7 @@ public class BankOld extends Application {
         fileImport.setOnAction(new EventHandler() {
             @Override
             public void handle(Event event) {
-                ImportForm importForm = ImportForm.getInstance(accountList);
+                ImportForm importForm = ImportForm.getInstance(FXCollections.observableArrayList(accountList));
                 importDone.bind(ImportForm.importDone);
                 accountNum.bind(ImportForm.accountNum);
             }

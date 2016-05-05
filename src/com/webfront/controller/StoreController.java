@@ -67,7 +67,7 @@ public class StoreController {
     Button btnStoreDelete;
 
     public StoreController() {
-        storesManager = new StoresManager();
+        storesManager = StoresManager.getInstance();
         list = FXCollections.<Stores>observableArrayList();
         delMenu = new MenuItem("Delete");
         editMenu = new MenuItem("Edit");

@@ -47,8 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.transDate desc,l.id desc"),
     @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findByQifUpdate", query = "SELECT l FROM Ledger l WHERE l.qifUpdate = :qifUpdate")})
+    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})
 public class Ledger implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -88,12 +87,8 @@ public class Ledger implements Serializable {
     @Column(name = "accountNum")
     private int accountNum;
     
-    @Column(name = "qifUpdate")
-    private Boolean qifUpdate;
-    
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
     private List<Payment> payments;
-    
     
     public Ledger() {
         this.id=null;
@@ -103,7 +98,6 @@ public class Ledger implements Serializable {
         this.transBal=0;
         this.transDesc="";
         this.checkNum="";
-        this.qifUpdate=false;
         this.payments=new ArrayList<>();
     }
 
@@ -189,14 +183,6 @@ public class Ledger implements Serializable {
 
     public void setAccountNum(int accountNum) {
         this.accountNum = accountNum;
-    }
-
-    public Boolean getQifUpdate() {
-        return qifUpdate;
-    }
-
-    public void setQifUpdate(Boolean qifUpdate) {
-        this.qifUpdate = qifUpdate;
     }
 
     @Override

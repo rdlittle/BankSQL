@@ -31,7 +31,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
@@ -83,8 +82,10 @@ public class PreferencesForm extends AnchorPane {
     TextField txtAccountNumber;
     @FXML
     TextField txtRoutingNumber;
+    
     @FXML
-    ComboBox cbStatementFormat;
+    ComboBox<StatementFormat> cbStatementFormat;
+    
     @FXML
     TextField txtConfigName;
     @FXML
@@ -311,7 +312,7 @@ public class PreferencesForm extends AnchorPane {
                 });
 
                 form.cbStates.getItems().addAll(new States().names.values());
-                form.cbStatementFormat.getItems().addAll((Object[])Account.StatementFormat.values());
+                form.cbStatementFormat.getItems().addAll(Account.StatementFormat.values());
                 form.cbStatementFormat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                     @Override
                     public void changed(ObservableValue observable, Object oldValue, Object newValue) {
@@ -448,7 +449,7 @@ public class PreferencesForm extends AnchorPane {
         }
         StatementFormat stmFmt = form.account.getStatementFormat();
         if (stmFmt != null) {
-            form.cbStatementFormat.selectionModelProperty().setValue(stmFmt.toString());
+            form.cbStatementFormat.getSelectionModel().select(stmFmt);
         }
         form.txtConfigName.setText(form.account.getConfigName());
         hasChanged.set(false);

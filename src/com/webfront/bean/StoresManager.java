@@ -21,14 +21,23 @@ import javax.persistence.Query;
  */
 public class StoresManager extends DBManager {
     
+    private static StoresManager instance;
+    
     private final ObservableList<Stores> list;
     private SimpleBooleanProperty changed;
     
-    public StoresManager() {
+    protected StoresManager() {
         list = FXCollections.<Stores>observableArrayList();
         changed = new SimpleBooleanProperty(false);
         changed.bind(super.isChanged);
         changed.addListener(new ListChange());
+    }
+    
+    public static StoresManager getInstance() {
+        if(instance==null) {
+            instance = new StoresManager();
+        }
+        return instance;
     }
     
     /**

@@ -45,7 +45,7 @@ public abstract class DBManager<T> {
      *
      * @param obj an Entity to create
      */
-    public void create(T obj) {
+    public synchronized void create(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.persist(obj);
@@ -53,7 +53,7 @@ public abstract class DBManager<T> {
         isChanged.set(true);
     }
 
-    public void update(T obj) {
+    public synchronized void update(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.merge(obj);
@@ -61,7 +61,7 @@ public abstract class DBManager<T> {
         isChanged.set(true);
     }
 
-    public void delete(T obj) {
+    public synchronized void delete(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.remove(obj);
@@ -69,7 +69,7 @@ public abstract class DBManager<T> {
         isChanged.set(true);
     }
 
-    public void refresh(T obj) {
+    public synchronized void refresh(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.refresh(obj);

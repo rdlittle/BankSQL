@@ -5,8 +5,8 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.BankOld;
 import com.webfront.bean.AccountManager;
+import com.webfront.bean.CategoryManager;
 import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
@@ -26,12 +26,14 @@ import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -46,6 +48,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  *
@@ -92,9 +95,30 @@ public final class PaymentForm extends AnchorPane {
     Payment oldPayment;
     Payment newPayment;
     private SearchCriteria searchCriteria;
+    private SimpleBooleanProperty changedProperty;
 
     public PaymentForm(PaymentView parent, Payment prevPayment) {
         view = parent;
+        oldPayment = prevPayment;
+        newPayment = new Payment();
+        transDate = new DatePicker();
+        cbAccount = new ComboBox<>();
+        primaryCat = new ComboBox<>();
+        subCat = new ComboBox<>();
+        storeMap = new HashMap<>();
+        categoryMap = new HashMap<>();
+        subCatMap = new HashMap<>();
+        btnOk = new Button();
+        btnDelete = new Button();
+        cbStores = new ComboBox<>();
+        statusMessage = new Label();
+        changedProperty = new SimpleBooleanProperty(false);
+        buildForm();
+        setFormData();
+    }
+
+    public PaymentForm(LedgerView parent, Payment prevPayment) {
+//        view = parent;
         oldPayment = prevPayment;
         newPayment = new Payment();
         transDate = new DatePicker();
@@ -128,12 +152,12 @@ public final class PaymentForm extends AnchorPane {
             stage.setTitle("Payment Form");
 
             // Populate store list
-            for (Stores s : view.getStoreList()) {
+            for (Stores s : StoresManager.getInstance().getList("SELECT * FROM stores ORDER BY storeName")) {
                 storeMap.put(s.getStoreName(), s);
                 cbStores.getItems().add(s.getStoreName());
             }
 
-            for (Account acct : BankOld.accountList) {
+            for (Account acct : AccountManager.getInstance().getList("Account.findAll")) {
                 SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
                 cbAccount.getItems().add(se);
             }
@@ -150,7 +174,7 @@ public final class PaymentForm extends AnchorPane {
             });
 
             // Populate category 1 and category 2 lists
-            ObservableList<Category> subList = (ObservableList<Category>) view.getCategoryList();
+            ObservableList<Category> subList = (ObservableList<Category>) CategoryManager.getInstance().getCategories();
             subList.stream().forEach((c) -> {
                 categoryMap.put(c.getDescription(), c);
                 if (c.getParent() == null || c.getParent() == 0) {
@@ -194,7 +218,7 @@ public final class PaymentForm extends AnchorPane {
                         Category c = categoryMap.get(newValue);
                         String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
                         sqlStmt += " order by description";
-                        ObservableList<Category> subCatList = view.categoryManager.getCategories(sqlStmt);
+                        ObservableList<Category> subCatList = CategoryManager.getInstance().getCategories(sqlStmt);
                         subCat.getItems().clear();
                         subCatMap.clear();
                         for (Category cat2 : subCatList) {
@@ -324,7 +348,7 @@ public final class PaymentForm extends AnchorPane {
         Stores store = new Stores();
 
         if (!storeMap.containsKey(newStoreName)) {
-            StoresManager storeManager = new StoresManager();
+            StoresManager storeManager = StoresManager.getInstance();
             store.setStoreName(newStoreName);
             storeManager.create(store);
             storeKey = store.getStoreName();
@@ -349,6 +373,7 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setSubCat(cat2);
             oldPayment.setStore(store);
             PaymentManager.getInstance().update(oldPayment);
+            getChangedProperty().set(true);
             int idx = view.getTable().getSelectionModel().getSelectedIndex();
             view.getTable().getItems().set(idx, oldPayment);
             view.getPaymentManager().refresh(oldPayment);
@@ -367,10 +392,10 @@ public final class PaymentForm extends AnchorPane {
             receipt.setPrimaryCat(cat1);
             receipt.setSubCat(cat2);
             receipt.setStore(store);
-            view.getPaymentManager().create(receipt);
-            view.getTable().getItems().add(receipt);
-            view.getTable().getItems().sort(Payment.PaymentComparator);
-            view.getTable().getSelectionModel().selectFirst();
+            PaymentManager mgr = PaymentManager.getInstance();
+            mgr.create(receipt);
+            view.getList().add(receipt);
+            getChangedProperty().set(true);
             newPayment = new Payment();
         }
         transDescription.clear();
@@ -391,9 +416,18 @@ public final class PaymentForm extends AnchorPane {
 
     @FXML
     void closeForm() {
+        stage.fireEvent(new WindowEvent(stage,WindowEvent.WINDOW_CLOSE_REQUEST));
         stage.close();
     }
-
+    
+    /**
+     *
+     * @param eventHandler
+     */
+    public void addEventHandler(EventHandler eventHandler) {
+        stage.setOnCloseRequest(eventHandler);
+    }
+    
     /**
      * @return the storeMap
      */
@@ -420,7 +454,7 @@ public final class PaymentForm extends AnchorPane {
         sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
         sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
-        sql += "AND accountNum = "+oldPayment.getAccountNum()+" ";
+        sql += "AND accountNum = " + oldPayment.getAccountNum() + " ";
         sql += "ORDER BY transDate";
         ObservableList<Ledger> results;
         results = view.getLedgerManager().doSqlQuery(sql);
@@ -480,5 +514,23 @@ public final class PaymentForm extends AnchorPane {
                 transId.setText("");
             }
         }
+    }
+    
+    public void removeEventHandler(EventHandler eventHandler) {
+        stage.removeEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, eventHandler);
+    }
+
+    /**
+     * @return the changedProperty
+     */
+    public SimpleBooleanProperty getChangedProperty() {
+        return changedProperty;
+    }
+
+    /**
+     * @param changedProperty the changedProperty to set
+     */
+    public void setChangedProperty(SimpleBooleanProperty changedProperty) {
+        this.changedProperty = changedProperty;
     }
 }

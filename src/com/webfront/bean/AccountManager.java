@@ -27,7 +27,7 @@ public class AccountManager extends DBManager<Account> implements Serializable {
         list = FXCollections.emptyObservableList();
     }
     @Override
-    public List getList(String s) {
+    public List<Account> getList(String s) {
         Query query = em.createNamedQuery(s);
         list = FXCollections.observableList(query.getResultList());
         return list;

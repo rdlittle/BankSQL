@@ -54,7 +54,7 @@ public class StoresView extends Pane {
         super();
         
         list = FXCollections.<Stores>observableArrayList();
-        storesManager = new StoresManager();
+        storesManager = StoresManager.getInstance();
         VBox vbox = new VBox();
         Button btnAdd;
         btnAdd = new Button("Add store");
