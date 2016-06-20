@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import javafx.collections.FXCollections;
@@ -73,6 +74,21 @@ public class LedgerManager extends DBManager {
         ObservableList olist = FXCollections.observableList(list);
         return olist;
     }
+    
+    /**
+     *
+     * @param qName
+     * @return
+     */
+    public synchronized ObservableList<Ledger> doNamedQuery(String qName, HashMap<String,Object> args) {
+        Query query = em.createNamedQuery(qName, Ledger.class);
+        for(String key : args.keySet()) {
+            query.setParameter(key, args.get(key));
+        }
+        List<Ledger> list = query.getResultList();
+        ObservableList olist = FXCollections.observableList(list);
+        return olist;
+    }    
 
     /**
      *
@@ -119,6 +135,7 @@ public class LedgerManager extends DBManager {
     public int getLastId() {
         return 1;
     }
+    
 
     public synchronized void rebalance(int acct, SearchCriteria criteria) {
         Query query = em.createNamedQuery("Account.findById");

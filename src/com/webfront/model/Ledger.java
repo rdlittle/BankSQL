@@ -7,7 +7,6 @@
 package com.webfront.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Ledger.findAll", query = "SELECT l FROM Ledger l order by l.id desc"),
+    @NamedQuery(name = "Ledger.findAllByType", query = "SELECT l FROM Ledger l WHERE l.accountNum in (SELECT a.id FROM Account a where a.accountType = :accountType and a.accountStatus = :accountStatus) ORDER BY l.transDate DESC,l.id"),
     @NamedQuery(name = "Ledger.findById", query = "SELECT l FROM Ledger l WHERE l.id = :id"),
     @NamedQuery(name = "Ledger.findByTransDate", query = "SELECT l FROM Ledger l WHERE l.transDate = :transDate"),
     @NamedQuery(name = "Ledger.findByTransDesc", query = "SELECT l FROM Ledger l WHERE l.transDesc = :transDesc"),
@@ -98,7 +98,6 @@ public class Ledger implements Serializable {
         this.transBal=0;
         this.transDesc="";
         this.checkNum="";
-        this.payments=new ArrayList<>();
     }
 
     public Ledger(Integer id) {

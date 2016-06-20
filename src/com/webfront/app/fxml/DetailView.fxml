@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 
-<Pane id="LedgerViewPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="718.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.LedgerViewController">
+<Pane minHeight="-Infinity" minWidth="-Infinity" prefHeight="718.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.DetailViewController">
     <children>
         <TreeTableView fx:id="table" editable="true" minWidth="-Infinity" prefHeight="656.0" prefWidth="1325.0">
             <columns>
@@ -35,7 +36,7 @@
          <children>
                 <HBox fx:id="buttonPanel" prefHeight="29.0" prefWidth="140.0" spacing="10.0" AnchorPane.rightAnchor="10.0">
                     <children>
-                        <Button fx:id="btnOK" mnemonicParsing="false" prefHeight="18.0" prefWidth="57.0" text="Add" />
+                        <Button fx:id="btnOk" mnemonicParsing="false" onAction="#onAdd" prefHeight="18.0" prefWidth="57.0" text="Add" />
                         <Button fx:id="btnCancel" mnemonicParsing="false" text="Delete" />
                     </children>
                 </HBox>

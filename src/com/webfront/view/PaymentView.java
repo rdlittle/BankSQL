@@ -19,7 +19,9 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -45,7 +47,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class PaymentView extends Pane {
+public class PaymentView extends Pane implements ViewInterface {
 
     private static PaymentView paymentView;
 
@@ -70,11 +72,20 @@ public class PaymentView extends Pane {
     TableColumn accountNumColumn;
     TableColumn transAmtColumn;
 
+    private SimpleObjectProperty<Payment> selectedPaymentProperty;
+
+    private final DeleteListener deleteListener = new DeleteListener();
+    private final CreateListener createListener = new CreateListener();
+    private final UpdateListener updateListener = new UpdateListener();
+
     Button btnAdd;
 
     protected PaymentView() {
         super();
+
         storeAdded = new SimpleBooleanProperty();
+        selectedPaymentProperty = new SimpleObjectProperty<>();
+
         storeAdded.set(false);
         GridPane grid = new GridPane();
 
@@ -174,16 +185,15 @@ public class PaymentView extends Pane {
         transAmtColumn.setCellValueFactory(new PropertyValueFactory("transAmt"));
         transAmtColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transAmtColumn.setMinWidth(100.0);
-        
+
         paymentManager.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-//                System.out.println("PaymentView.paymentManager: onChanged event");
                 list.setAll(paymentManager.getList(""));
                 table.getItems().setAll(list);
                 paymentManager.removeListener(this);
             }
-        });        
+        });
 
         table.getColumns().add(idColumn);
         table.getColumns().add(transDateColumn);
@@ -196,58 +206,76 @@ public class PaymentView extends Pane {
         table.getColumns().add(transAmtColumn);
 
         btnAdd = new Button("Add Receipt");
-        
+
         /*
             Open a new PayementForm, add ListChangeListener
-        */
+         */
         btnAdd.setOnAction((ActionEvent event) -> {
-            PaymentForm paymentForm = new PaymentForm(getInstance(), new Payment());
+            PaymentForm paymentForm = new PaymentForm();
+            paymentForm.getCreatedProperty().addListener(createListener);
+            paymentForm.getUpdatedProperty().addListener(updateListener);
+            paymentForm.getDeletedProperty().addListener(deleteListener);
+            selectedPaymentProperty.set(new Payment());
+            selectedPaymentProperty.bindBidirectional(paymentForm.getSelectedPayment());
             ListChangeListener<Payment> listListener = new ListChangeListener<Payment>() {
                 @Override
                 public void onChanged(ListChangeListener.Change<? extends Payment> c) {
-//                    System.out.println("PaymentView.paymentForm.btnAdd.onAction: listChangeListener invoked");
-                    while(c.next()) {
-                        if(c.wasAdded()) {
-                            for(Payment p : c.getAddedSubList()) {
+                    while (c.next()) {
+                        if (c.wasAdded()) {
+                            for (Payment p : c.getAddedSubList()) {
                                 table.getItems().add(p);
                             }
-                        } else {
-                            if(c.wasRemoved()) {
-                                for(Payment p : c.getRemoved()) {
-                                    table.getItems().remove(p);
-                                }
-                            } else {
-                                if (c.wasUpdated()) {
-                                }
+                        } else if (c.wasRemoved()) {
+                            for (Payment p : c.getRemoved()) {
+                                table.getItems().remove(p);
                             }
+                        } else if (c.wasUpdated()) {
                         }
                     }
                     getTable().getItems().sort(Payment.PaymentComparator);
                 }
-                
+
             };
-            
+
             list.addListener(listListener);
-            
+
             paymentForm.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
                 @Override
                 public void handle(Event event) {
                     list.removeListener(listListener);
+                    paymentForm.getCreatedProperty().removeListener(createListener);
+                    paymentForm.getUpdatedProperty().addListener(updateListener);
+                    paymentForm.getDeletedProperty().removeListener(deleteListener);
+                    selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
                 }
             });
-            
+
         });
-        
-        EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
+
+        EventHandler<MouseEvent> click;
+        click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
-                    PaymentForm paymentForm = new PaymentForm(paymentView, payment);
-                } else {
-                    if(event.isSecondaryButtonDown()) {
-                        
-                    }
+                    PaymentForm paymentForm = new PaymentForm();
+                    paymentForm.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
+                        @Override
+                        public void handle(Event event) {
+                            selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
+                            paymentForm.getCreatedProperty().removeListener(createListener);
+                            paymentForm.getUpdatedProperty().addListener(updateListener);
+                            paymentForm.getDeletedProperty().removeListener(deleteListener);
+                            getPaymentManager().refresh(selectedPaymentProperty.get());
+                        }
+                    });
+                    paymentForm.getCreatedProperty().addListener(createListener);
+                    paymentForm.getUpdatedProperty().addListener(updateListener);
+                    paymentForm.getDeletedProperty().addListener(deleteListener);
+                    selectedPaymentProperty.bindBidirectional(paymentForm.getSelectedPayment());
+                    selectedPaymentProperty.set(payment);
+                } else if (event.isSecondaryButtonDown()) {
+
                 }
             }
         };
@@ -275,9 +303,11 @@ public class PaymentView extends Pane {
     private void loadData() {
         list.setAll(paymentManager.getList(""));
     }
+
     /**
      * @return the table
      */
+    @Override
     public TableView<Payment> getTable() {
         return table;
     }
@@ -292,6 +322,7 @@ public class PaymentView extends Pane {
     /**
      * @return the list
      */
+    @Override
     public ObservableList<Payment> getList() {
         return list;
     }
@@ -306,6 +337,7 @@ public class PaymentView extends Pane {
     /**
      * @return the storeList
      */
+    @Override
     public ObservableList<Stores> getStoreList() {
         return storeList;
     }
@@ -341,6 +373,7 @@ public class PaymentView extends Pane {
     /**
      * @return the storeAdded
      */
+    @Override
     public BooleanProperty getStoreAdded() {
         return storeAdded;
     }
@@ -355,7 +388,77 @@ public class PaymentView extends Pane {
     /**
      * @return the paymentManager
      */
+    @Override
     public PaymentManager getPaymentManager() {
         return paymentManager;
     }
+
+    @Override
+    public void updateItem(Payment p) {
+        int idx = getTable().getSelectionModel().getSelectedIndex();
+        getTable().getItems().set(idx, p);
+        PaymentManager.getInstance().update(p);
+    }
+
+    @Override
+    public void removeItem(Payment p) {
+        int idx = getTable().getSelectionModel().getSelectedIndex();
+        getTable().getItems().remove(idx);
+    }
+
+    @Override
+    public void updateTrans(int idx) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Ledger getLedgerItem(String id) {
+        return LedgerManager.getInstance().getItem(Integer.parseInt(id));
+    }
+
+    private class PaymentChangeListener implements ChangeListener<Payment> {
+
+        @Override
+        public void changed(ObservableValue<? extends Payment> observable, Payment oldValue, Payment newValue) {
+            if (newValue == null) {
+                return;
+            }
+            if (newValue.getId() == null) {
+                getList().add(newValue);
+            } else {
+                updateItem(newValue);
+            }
+        }
+
+    }
+
+    private class DeleteListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().delete(selectedPaymentProperty.get());
+            removeItem(selectedPaymentProperty.get());
+        }
+
+    }
+
+    private class UpdateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            updateItem(selectedPaymentProperty.get());
+        }
+
+    }
+
+    private class CreateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().create(selectedPaymentProperty.get());            
+            getList().add(selectedPaymentProperty.get());
+        }
+
+    }
+
 }

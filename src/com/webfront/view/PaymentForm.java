@@ -7,6 +7,7 @@ package com.webfront.view;
 
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
+import com.webfront.bean.LedgerManager;
 import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
@@ -21,19 +22,21 @@ import java.net.URL;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -89,49 +92,43 @@ public final class PaymentForm extends AnchorPane {
 
     Stage stage;
 
-    static PaymentView view;
-    private final HashMap<String, Stores> storeMap;
+    static ViewInterface view;
+    private final LinkedHashMap<String, Stores> storeMap;
     HashMap<String, Category> categoryMap, subCatMap;
     Payment oldPayment;
     Payment newPayment;
     private SearchCriteria searchCriteria;
-    private SimpleBooleanProperty changedProperty;
+    private SimpleBooleanProperty updatedProperty;
+    private SimpleBooleanProperty createdProperty;
+    private SimpleBooleanProperty deletedProperty;
+    private SimpleBooleanProperty storeAddedProperty;
+    private final ArrayList<String> storeList;
+    private SimpleObjectProperty<Payment> selectedPayment;
+    private final ItemListener itemListener = new ItemListener();
 
-    public PaymentForm(PaymentView parent, Payment prevPayment) {
-        view = parent;
-        oldPayment = prevPayment;
+    public PaymentForm() {
         newPayment = new Payment();
+        oldPayment = new Payment();
+        selectedPayment = new SimpleObjectProperty<>();
+        selectedPayment.addListener(itemListener);
+
         transDate = new DatePicker();
         cbAccount = new ComboBox<>();
         primaryCat = new ComboBox<>();
         subCat = new ComboBox<>();
-        storeMap = new HashMap<>();
+        storeMap = new LinkedHashMap<>();
+        storeMap.putAll(StoresManager.getInstance().getStoresMap());
+        storeList = new ArrayList<>(storeMap.keySet());
+        storeList.sort(comparator);
         categoryMap = new HashMap<>();
         subCatMap = new HashMap<>();
         btnOk = new Button();
         btnDelete = new Button();
         cbStores = new ComboBox<>();
         statusMessage = new Label();
-        changedProperty = new SimpleBooleanProperty(false);
-        buildForm();
-        setFormData();
-    }
-
-    public PaymentForm(LedgerView parent, Payment prevPayment) {
-//        view = parent;
-        oldPayment = prevPayment;
-        newPayment = new Payment();
-        transDate = new DatePicker();
-        cbAccount = new ComboBox<>();
-        primaryCat = new ComboBox<>();
-        subCat = new ComboBox<>();
-        storeMap = new HashMap<>();
-        categoryMap = new HashMap<>();
-        subCatMap = new HashMap<>();
-        btnOk = new Button();
-        btnDelete = new Button();
-        cbStores = new ComboBox<>();
-        statusMessage = new Label();
+        updatedProperty = new SimpleBooleanProperty(false);
+        deletedProperty = new SimpleBooleanProperty(false);
+        createdProperty = new SimpleBooleanProperty(false);
         buildForm();
         setFormData();
     }
@@ -152,10 +149,7 @@ public final class PaymentForm extends AnchorPane {
             stage.setTitle("Payment Form");
 
             // Populate store list
-            for (Stores s : StoresManager.getInstance().getList("SELECT * FROM stores ORDER BY storeName")) {
-                storeMap.put(s.getStoreName(), s);
-                cbStores.getItems().add(s.getStoreName());
-            }
+            cbStores.getItems().addAll(storeList);
 
             for (Account acct : AccountManager.getInstance().getList("Account.findAll")) {
                 SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
@@ -248,10 +242,12 @@ public final class PaymentForm extends AnchorPane {
                 }
             });
 
-            transDescription.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            transDescription.setOnKeyReleased(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
-                    if (!transDescription.getText().equals(oldPayment.getTransDesc())) {
+                    String newDesc = transDescription.getText();
+                    String oldDesc = oldPayment.getTransDesc();
+                    if (!newDesc.equals(oldDesc)) {
                         btnOk.setDisable(false);
                     }
                 }
@@ -299,9 +295,10 @@ public final class PaymentForm extends AnchorPane {
     }
 
     public void setFormData() {
-        // Set default values depending on whether you're editing an existing receipt or creating a new one
+        // Set default values depending on whether you're editing an existing payment or creating a new one
         if (oldPayment.getId() != null) {
             btnOk.setDisable(true);
+            btnDelete.setDisable(false);
             long ldate = oldPayment.getTransDate().getTime();
             Date d2 = new Date(ldate);
             LocalDate localDate = d2.toLocalDate();
@@ -342,19 +339,21 @@ public final class PaymentForm extends AnchorPane {
 
     @FXML
     void addItem() {
-        Payment receipt = newPayment;
+        Payment payment = newPayment;
         String newStoreName = cbStores.getValue();
         String storeKey;
         Stores store = new Stores();
+        getCreatedProperty().set(false);
 
         if (!storeMap.containsKey(newStoreName)) {
             StoresManager storeManager = StoresManager.getInstance();
             store.setStoreName(newStoreName);
             storeManager.create(store);
             storeKey = store.getStoreName();
-            getStoreMap().put(storeKey, store);
-            view.getStoreList().add(store);
-            view.getStoreAdded().set(true);
+            storeManager.getStoresMap().put(storeKey, store);
+//            view.getStoreList().add(store);
+//            view.getStoreAdded().set(true);
+            storeAddedProperty.set(true);
             cbStores.getItems().sort(comparator);
         }
 
@@ -372,31 +371,26 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setPrimaryCat(cat1);
             oldPayment.setSubCat(cat2);
             oldPayment.setStore(store);
-            PaymentManager.getInstance().update(oldPayment);
-            getChangedProperty().set(true);
-            int idx = view.getTable().getSelectionModel().getSelectedIndex();
-            view.getTable().getItems().set(idx, oldPayment);
-            view.getPaymentManager().refresh(oldPayment);
+            getUpdatedProperty().set(true);
+            selectedPayment.setValue(oldPayment);
             closeForm();
         } else {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-            receipt.setTransDate(Date.valueOf(dateStr));
-            receipt.setTransDesc(transDescription.getText());
-            receipt.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
-            receipt.setTransAmt(Float.parseFloat(transAmt.getText()));
+            payment.setTransDate(Date.valueOf(dateStr));
+            payment.setTransDesc(transDescription.getText());
+            payment.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
+            payment.setTransAmt(Float.parseFloat(transAmt.getText()));
             storeKey = cbStores.getValue();
             store = getStoreMap().get(storeKey);
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
-            receipt.setPrimaryCat(cat1);
-            receipt.setSubCat(cat2);
-            receipt.setStore(store);
-            PaymentManager mgr = PaymentManager.getInstance();
-            mgr.create(receipt);
-            view.getList().add(receipt);
-            getChangedProperty().set(true);
+            payment.setPrimaryCat(cat1);
+            payment.setSubCat(cat2);
+            payment.setStore(store);
+            selectedPayment.set(payment);
             newPayment = new Payment();
+            getCreatedProperty().set(true);
         }
         transDescription.clear();
         transId.clear();
@@ -407,8 +401,7 @@ public final class PaymentForm extends AnchorPane {
     public void deleteItem() {
         if (oldPayment != null) {
             if (oldPayment.getId() != null) {
-                view.getPaymentManager().delete(oldPayment);
-                view.getTable().getItems().remove(oldPayment);
+                deletedProperty.set(true);
                 closeForm();
             }
         }
@@ -416,10 +409,11 @@ public final class PaymentForm extends AnchorPane {
 
     @FXML
     void closeForm() {
-        stage.fireEvent(new WindowEvent(stage,WindowEvent.WINDOW_CLOSE_REQUEST));
+        selectedPayment.removeListener(itemListener);
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
         stage.close();
     }
-    
+
     /**
      *
      * @param eventHandler
@@ -427,7 +421,7 @@ public final class PaymentForm extends AnchorPane {
     public void addEventHandler(EventHandler eventHandler) {
         stage.setOnCloseRequest(eventHandler);
     }
-    
+
     /**
      * @return the storeMap
      */
@@ -457,7 +451,7 @@ public final class PaymentForm extends AnchorPane {
         sql += "AND accountNum = " + oldPayment.getAccountNum() + " ";
         sql += "ORDER BY transDate";
         ObservableList<Ledger> results;
-        results = view.getLedgerManager().doSqlQuery(sql);
+        results = LedgerManager.getInstance().doSqlQuery(sql);
 
         SearchResults searchResults = new SearchResults();
         searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
@@ -505,32 +499,92 @@ public final class PaymentForm extends AnchorPane {
         if (id != null && !id.isEmpty()) {
             try {
                 Ledger ledger;
-                ledger = view.getLedgerManager().getItem(Integer.parseInt(id));
-                oldPayment.setLedgerEntry(ledger);
-                btnOk.setDisable(false);
-                statusMessage.setText("");
+                ledger = LedgerManager.getInstance().getItem(Integer.parseInt(id));
+                if (ledger != null) {
+                    oldPayment.setLedgerEntry(ledger);
+                    btnOk.setDisable(false);
+                    statusMessage.setText("");
+                }
             } catch (javax.persistence.NoResultException ex) {
                 statusMessage.setText("Ledger ID (" + id + ") not found.");
                 transId.setText("");
             }
         }
     }
-    
+
     public void removeEventHandler(EventHandler eventHandler) {
         stage.removeEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, eventHandler);
     }
 
     /**
-     * @return the changedProperty
+     * @return the updatedProperty
      */
-    public SimpleBooleanProperty getChangedProperty() {
-        return changedProperty;
+    public SimpleBooleanProperty getUpdatedProperty() {
+        return updatedProperty;
     }
 
     /**
-     * @param changedProperty the changedProperty to set
+     * @param updatedProperty the updatedProperty to set
      */
-    public void setChangedProperty(SimpleBooleanProperty changedProperty) {
-        this.changedProperty = changedProperty;
+    public void setUpdatedProperty(SimpleBooleanProperty updatedProperty) {
+        this.updatedProperty = updatedProperty;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    /**
+     * @return the selectedPayment
+     */
+    public SimpleObjectProperty getSelectedPayment() {
+        return selectedPayment;
+    }
+
+    /**
+     * @param selectedPayment the selectedPayment to set
+     */
+    public void setSelectedPayment(SimpleObjectProperty selectedPayment) {
+        this.selectedPayment = selectedPayment;
+    }
+
+    /**
+     * @return the createProperty
+     */
+    public SimpleBooleanProperty getCreatedProperty() {
+        return createdProperty;
+    }
+
+    /**
+     * @param createProperty the createProperty to set
+     */
+    public void setNewProperty(SimpleBooleanProperty createProperty) {
+        this.createdProperty = createProperty;
+    }
+
+    /**
+     * @return the deleted
+     */
+    public SimpleBooleanProperty getDeletedProperty() {
+        return deletedProperty;
+    }
+
+    /**
+     * @param deleted the deleted to set
+     */
+    public void setDeleted(SimpleBooleanProperty deleted) {
+        this.deletedProperty = deleted;
+    }
+
+    private class ItemListener implements ChangeListener<Payment> {
+
+        @Override
+        public void changed(ObservableValue<? extends Payment> observable, Payment oldValue, Payment newValue) {
+            if (newValue != null) {
+                oldPayment = (Payment) newValue;
+                setFormData();
+            }
+        }
+
     }
 }

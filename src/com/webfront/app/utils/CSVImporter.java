@@ -67,54 +67,70 @@ public class CSVImporter extends Importer {
     public void processSection(Element section) throws ParseException {
         int bufferSize = buffer.size();
         int lineNum;
+        int fields;
         String line;
 
-        Matcher lineMatcher = null;
+        Matcher lineMatcher;
+        Matcher fieldMatcher;
+        Element lineDefinition = section.getChild("line");
         Element dataDefinition = section.getChild("data");
         if (dataDefinition == null) {
             return;
         }
-        Element lineDefinition = section.getChild("line");
-
-        for (lineNum = 1; lineNum <= bufferSize; lineNum++) {
+        if (dataDefinition.getAttribute("fields") == null) {
+            fields = 0;
+        } else {
+            fields = Integer.parseInt(dataDefinition.getAttributeValue("fields"));
+        }
+        for (lineNum = 0; lineNum <= bufferSize; lineNum++) {
             line = buffer.get(lineNum);
             if (line == null || line.isEmpty()) {
                 continue;
             }
 
             Float amount;
-            
+
             if (lineDefinition != null) {
                 lineMatcher = Pattern.compile(lineDefinition.getText()).matcher(line);
+
                 if (lineMatcher.matches()) {
                     LedgerItem item = new LedgerItem();
                     int groups = lineMatcher.groupCount();
-//                    for (int g = 1; g <= groups; g++) {
-//                        System.out.println(g + ") " + lineMatcher.group(g));
-//                    }
-                    item.setDate(lineMatcher.group(1).replaceAll("\"", ""));
-                    item.setDescription(lineMatcher.group(3).replaceAll("\"", ""));
-                    if (lineMatcher.group(4) != null) {
-                        String charge = lineMatcher.group(4).replaceAll("\"", "");
-                        item.setAmount(charge.replaceAll(",", ""));
-                    }
-                    if (lineMatcher.group(8) != null) {
-                        String payment = lineMatcher.group(8).replaceAll("\"", "");
-                        amount = Float.parseFloat(payment.replaceAll(",", ""));
-                        amount = amount * -1;
-                        item.setAmount(amount.toString());
+                    for (Element dataElement : dataDefinition.getChildren()) {
+                        int fieldNumber = Integer.parseInt(dataElement.getAttributeValue("number"));
+                        String fieldName = dataElement.getAttributeValue("name");
+                        String fieldPattern = dataElement.getText();
+                        fieldMatcher = Pattern.compile(fieldPattern).matcher(line);
+                        String fieldData = lineMatcher.group(fieldNumber);
+                        if (fieldName.equalsIgnoreCase("transDate")) {
+                            item.setDate(fieldData);
+                        } else if (fieldName.equalsIgnoreCase("checkNumber")) {
+                            item.setCheckNumber(fieldData);
+                        } else if (fieldName.equalsIgnoreCase("transDescription")) {
+                            if(fieldData.isEmpty() && !item.getCheckNumber().isEmpty()) {
+                                fieldData = "Check # "+item.getCheckNumber();
+                            }
+                            item.setDescription(fieldData);
+                        } else if (fieldName.equalsIgnoreCase("transType")) {
+                            item.setTransType(fieldData);
+                        } else if (fieldName.equalsIgnoreCase("transAmount")) {
+                            if (item.getTransType().equalsIgnoreCase("D")) {
+                                fieldData = "-" + fieldData;
+                            }
+                            item.setAmount(fieldData);
+                        }
                     }
                     entries.add(item);
                 }
             }
+            doSort();
         }
-        
-        
+
         for (LedgerItem item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
             String amountString = item.getAmount();
             boolean isCredit = false;
-            if (item.getAmount().startsWith("-")) {
+            if (item.getAmount().startsWith("-") || item.getTransType().equalsIgnoreCase("C")) {
                 isCredit = true;
                 String amt = item.getAmount().replaceFirst("-", "");
                 item.setAmount(amt);
@@ -139,7 +155,7 @@ public class CSVImporter extends Importer {
             getItemList().add(ledger);
         }
     }
-    
+
     @Override
     public void doSort() {
         entries.sort(LedgerItem.LedgerComparator);

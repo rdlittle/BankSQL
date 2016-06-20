@@ -10,7 +10,8 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
-<AnchorPane id="AnchorPane" prefHeight="760.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.BankController">
+<AnchorPane prefHeight="760.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.BankController">
+    
     <children>
         <MenuBar layoutX="14.0" layoutY="14.0" AnchorPane.leftAnchor="0.0">
             <menus>
@@ -21,7 +22,7 @@
                                 <MenuItem fx:id="fileNewAccount" onAction="#onFileNewAccount" text="_Account" />
                                 <MenuItem fx:id="fileNewCategory" onAction="#onFileNewCategory" text="_Category" />
                                 <MenuItem fx:id="fileNewStore" onAction="#onFileNewStore" text="_Store" />
-                        <MenuItem fx:id="fileNewStatement" onAction="#onFileNewStatement" text="Statement _type" />
+                                <MenuItem fx:id="fileNewStatement" onAction="#onFileNewStatement" text="Statement _type" />
                             </items>
                         </Menu>
                         <MenuItem fx:id="fileOpen" onAction="#onFileOpen" text="_Open" />
@@ -36,7 +37,7 @@
                         <Menu fx:id="editAccountMenu" text="Acco_unts">
                             <items>
                                 <MenuItem fx:id="editAccountsRebalance" text="Re_balance" />
-                        <MenuItem mnemonicParsing="false" onAction="#onImportSetup" text="Import setup" />
+                                <MenuItem mnemonicParsing="false" onAction="#onImportSetup" text="Import setup" />
                             </items>
                         </Menu>
                         <MenuItem fx:id="editCategories" onAction="#onEditCategories" text="Ca_tegories" />
@@ -60,9 +61,9 @@
                     </content>
                 </Tab>
                 <Tab fx:id="detailTab" closable="false" text="Detail">
-                   <content>
-                       <fx:include source="LedgerView.fxml" />
-                   </content>
+                    <content>
+                        <fx:include fx:id="detailView" source="DetailView.fxml" />                       
+                    </content>
                 </Tab>
                 <Tab fx:id="storesTab" text="Stores &amp; Categories">
                     <content>

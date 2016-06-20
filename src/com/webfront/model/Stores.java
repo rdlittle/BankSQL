@@ -7,6 +7,7 @@
 package com.webfront.model;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "stores")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Stores.findAll", query = "SELECT s FROM Stores s"),
+    @NamedQuery(name = "Stores.findAll", query = "SELECT s FROM Stores s ORDER BY s.storeName"),
     @NamedQuery(name = "Stores.findById", query = "SELECT s FROM Stores s WHERE s.id = :id"),
     @NamedQuery(name = "Stores.findByStoreName", query = "SELECT s FROM Stores s WHERE s.storeName = :storeName")})
 public class Stores implements Serializable {
@@ -86,5 +87,13 @@ public class Stores implements Serializable {
     public String toString() {
         return "com.webfont.view.Stores[ id=" + id + " ]";
     }
+    
+    public static Comparator<Stores> storeComparator = new Comparator<Stores>() {
+        @Override
+        public int compare(Stores s1, Stores s2) {
+            return s1.getStoreName().compareToIgnoreCase(s2.getStoreName());
+        }
+        
+    };
     
 }

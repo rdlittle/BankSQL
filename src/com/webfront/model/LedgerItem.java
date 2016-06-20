@@ -26,6 +26,7 @@ public class LedgerItem {
     private String amount;
     private float balance;
     private final String dateFormat = "MM/dd/yyyy";
+    private String transType;
 
     public LedgerItem() {
         date = "";
@@ -41,6 +42,7 @@ public class LedgerItem {
         description = desc;
         amount = amt;
         balance = 0;
+        transType = "";
     }
 
     public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
@@ -158,5 +160,20 @@ public class LedgerItem {
      */
     public void setCheckNumber(String checkNumber) {
         this.checkNumber = checkNumber;
+    }
+
+    /**
+     * @return the transType
+     */
+    public String getTransType() {
+        return transType;
+    }
+
+    /**
+     * @param transType the transType to set
+     */
+    public void setTransType(String transType) {
+        this.transType = transType;
+        
     }
 }

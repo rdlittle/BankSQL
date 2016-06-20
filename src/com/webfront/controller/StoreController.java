@@ -9,6 +9,7 @@ import com.webfront.bean.StoresManager;
 import com.webfront.model.Stores;
 import com.webfront.view.StoreForm;
 import java.util.Comparator;
+import java.util.HashMap;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -43,7 +44,7 @@ import javafx.stage.Stage;
  */
 public class StoreController {
 
-    private final ObservableList<Stores> list;
+    private final ObservableList<Stores> storeList;
     final StoresManager storesManager;
     EventHandler<MouseEvent> doubleClick;
     Stores selectedStore;
@@ -65,10 +66,10 @@ public class StoreController {
 
     @FXML
     Button btnStoreDelete;
-
+    
     public StoreController() {
         storesManager = StoresManager.getInstance();
-        list = FXCollections.<Stores>observableArrayList();
+        storeList = FXCollections.<Stores>observableArrayList();
         delMenu = new MenuItem("Delete");
         editMenu = new MenuItem("Edit");
     }
@@ -100,7 +101,7 @@ public class StoreController {
                 System.out.println(r);
                 if (r == StoreController.ConfirmDialog.CONFIRM_YES) {
                     storesManager.delete(s);
-                    list.remove(s);
+                    storeList.remove(s);
                 }
             }
         });
@@ -116,10 +117,10 @@ public class StoreController {
 
         storesTable.addEventHandler(MouseEvent.MOUSE_CLICKED, doubleClick);
 
-        list.addListener(new ListChangeListener() {
+        storeList.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-                storesTable.getItems().setAll(list);
+                storesTable.getItems().setAll(storeList);
             }
         });
 
@@ -153,14 +154,14 @@ public class StoreController {
     }
 
     private void loadData() {
-        list.setAll(storesManager.getList("SELECT * FROM stores ORDER BY storeName"));
+        storeList.setAll(storesManager.getList("SELECT * FROM stores ORDER BY storeName"));
     }
 
     @FXML
     public void onBtnStoreAddClick() {
         selectedStore = new Stores();
-        list.add(selectedStore);
-        int row = list.size() - 1;
+        storeList.add(selectedStore);
+        int row = storeList.size() - 1;
         storesTable.requestFocus();
         storesTable.scrollTo(selectedStore);
         storesTable.getSelectionModel().select(row);
@@ -170,7 +171,7 @@ public class StoreController {
     @FXML
     public void onBtnStoreDeleteClick() {
         selectedStore = storesTable.getSelectionModel().getSelectedItem();
-        list.remove(selectedStore);
+        storeList.remove(selectedStore);
         storesManager.delete(selectedStore);
         btnStoreDelete.disableProperty().set(true);
     }
@@ -189,10 +190,10 @@ public class StoreController {
         @Override
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
             int idx = ((Number) newValue).intValue();
-            if(idx == list.size() || idx < 0) {
+            if(idx == storeList.size() || idx < 0) {
                 return;
             }
-            Stores store = list.get(idx);
+            Stores store = storeList.get(idx);
             selectedStore = store;
             btnStoreDelete.disableProperty().set(false);
         }

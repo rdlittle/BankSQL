@@ -30,8 +30,8 @@ public class Bank extends Application {
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(BankController.class.getResource(location));
         Pane root = loader.load();
-        final BankController controller = loader.getController();
-        controller.setStage(primaryStage);
+//        final BankController controller = loader.getController();
+//        controller.setStage(primaryStage);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("JFX Bank");
@@ -47,6 +47,7 @@ public class Bank extends Application {
                 config.setConfig();
             }
         });
+        
         primaryStage.show();
     }
 

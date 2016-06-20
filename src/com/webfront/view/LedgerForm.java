@@ -278,7 +278,9 @@ public final class LedgerForm extends AnchorPane {
                 primaryCat.setValue(str);
             }
             if (oldItem.getSubCat() != null) {
-                paymentTable.setList(FXCollections.observableList(oldItem.getPayment()));
+                if (oldItem.getPayment() != null && paymentTable != null) {
+                    paymentTable.setList(FXCollections.observableList(oldItem.getPayment()));
+                }
                 Category c = oldItem.getSubCat();
                 if (c != null) {
                     subCat.setValue(c.getDescription());
@@ -330,7 +332,8 @@ public final class LedgerForm extends AnchorPane {
             view.getLedgerManager().update(oldItem);
             TableView tv = (TableView) view.getTable();
             TableViewSelectionModel sm = tv.getSelectionModel();
-            int idx = view.getTable().getSelectionModel().getSelectedIndex();
+//            int idx = view.getTable().getSelectionModel().getSelectedIndex();
+            int idx;
             idx = sm.getSelectedIndex();
             view.getTable().getItems().set(idx, oldItem);
         } else {

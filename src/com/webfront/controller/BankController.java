@@ -8,6 +8,7 @@ package com.webfront.controller;
 import com.webfront.bean.BankManager;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
+import com.webfront.model.Payment;
 import com.webfront.view.AccountPickerForm;
 import com.webfront.view.CategoryView;
 import com.webfront.view.ImportForm;
@@ -16,6 +17,8 @@ import com.webfront.view.PaymentView;
 import com.webfront.view.PreferencesForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -24,12 +27,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
@@ -48,7 +53,7 @@ import javafx.stage.WindowEvent;
  *
  * @author rlittle
  */
-public class BankController {
+public class BankController implements Initializable {
 
     @FXML
     MenuBar menuBar;
@@ -99,8 +104,6 @@ public class BankController {
     @FXML
     Tab categoriesTab;
 
-//    @FXML
-//    HBox buttonPanel;
     @FXML
     Button btnOK;
     @FXML
@@ -116,6 +119,12 @@ public class BankController {
 
     @FXML
     CategoryController categoryController;
+
+    @FXML
+    private Pane detailView;
+
+    @FXML
+    private DetailViewController detailViewController;
 
     private static Stage stage;
     private final Config config;
@@ -133,6 +142,7 @@ public class BankController {
     private final SimpleObjectProperty<LedgerView> selectedAccount;
 
     private ImportForm importForm;
+    private final PaymentListListener paymentListener;
 
     public BankController() {
         this.accountList = FXCollections.<Account>observableArrayList();
@@ -147,6 +157,7 @@ public class BankController {
         this.accountNum = new SimpleIntegerProperty();
         this.selectedAccount = new SimpleObjectProperty<>();
         this.config = Config.getInstance();
+        paymentListener = new PaymentListListener();
         config.getConfig();
     }
 
@@ -155,7 +166,8 @@ public class BankController {
      *
      */
     @FXML
-    public void initialize() {
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         accountList.setAll(bankManager.getList(""));
         for (Account acct : accountList) {
             if (acct.getAccountStatus() != Account.AccountStatus.CLOSED) {
@@ -175,11 +187,15 @@ public class BankController {
                 Node n = newTab.getContent();
                 if (n == null) {
                     isLedgerTab.set(false);
+                } else if (newTab.getText().equals("Payments")) {
+                    isLedgerTab.set(false);
+                    detailViewController.addListener(paymentListener);
                 } else {
                     String title = newTab.getText();
                     Class c = newTab.getContent().getClass();
                     String s = c.getSimpleName();
                     isLedgerTab.set(title.equalsIgnoreCase("Detail"));
+                    detailViewController.removeListener(paymentListener);
                 }
             }
         });
@@ -211,6 +227,16 @@ public class BankController {
 
     }
 
+    private void addLedger(Account acct) {
+        LedgerView lv = LedgerView.newInstance(acct.getId());
+        isRebalance.bind(lv.isRebalance);
+        viewMap.put(acct.getId(), lv);
+        Tab t = new LedgerTab(acct.getBankName(), acct.getId());
+        t.setClosable(true);
+        t.setContent(lv);
+        ledgerTabs.add(t);
+    }
+
     @FXML
     public void onFileImport() {
         importForm = ImportForm.getInstance(accountList);
@@ -221,7 +247,7 @@ public class BankController {
 
     @FXML
     public void onAdd() {
-
+        System.out.println("BankController.onAdd()");
     }
 
     @FXML
@@ -300,7 +326,7 @@ public class BankController {
     public void onEditStores() {
 
     }
-    
+
     @FXML
     public void onImportSetup() {
         PDFViewer view = PDFViewer.getInstance("");
@@ -324,16 +350,6 @@ public class BankController {
         BankController.stage = s;
     }
 
-    private void addLedger(Account acct) {
-        LedgerView lv = LedgerView.newInstance(acct.getId());
-        isRebalance.bind(lv.isRebalance);
-        viewMap.put(acct.getId(), lv);
-        Tab t = new LedgerTab(acct.getBankName(), acct.getId());
-        t.setClosable(true);
-        t.setContent(lv);
-        ledgerTabs.add(t);
-    }
-
     private class LedgerTab extends Tab {
 
         private Integer accountId;
@@ -350,6 +366,13 @@ public class BankController {
                 }
             });
 
+        }
+    }
+
+    private class PaymentListListener implements ListChangeListener<Payment> {
+        @Override
+        public void onChanged(Change<? extends Payment> c) {
+            detailViewController.table.refresh();
         }
     }
 

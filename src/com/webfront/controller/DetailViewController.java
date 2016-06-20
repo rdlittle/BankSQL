@@ -8,22 +8,37 @@ package com.webfront.controller;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
 import com.webfront.bean.PaymentManager;
+import com.webfront.bean.StoresManager;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
+import com.webfront.model.Stores;
+import com.webfront.view.PaymentForm;
+import com.webfront.view.ViewInterface;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.control.Control;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -31,6 +46,7 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 /**
@@ -38,7 +54,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class LedgerViewController implements Initializable {
+public class DetailViewController implements Initializable, ViewInterface {
 
     @FXML
     TreeTableView<Ledger> table;
@@ -62,7 +78,7 @@ public class LedgerViewController implements Initializable {
     TreeTableColumn<Payment, Category> detailCat1Column;
     @FXML
     TreeTableColumn<Payment, Category> detailCat2Column;
-    
+
     @FXML
     HBox buttonPanel;
 
@@ -84,7 +100,67 @@ public class LedgerViewController implements Initializable {
     private Ledger ledgerRollbackValue;
     private Payment selectedPaymentItem;
     private Payment paymentRollbackValue;
+    SimpleObjectProperty<Payment> selectedPaymentProperty = new SimpleObjectProperty<>();
     int selectedRow;
+    private ListChangeListener<Payment> paymentListListener;
+
+    private final DeleteListener deleteListener = new DeleteListener();
+    private final CreateListener createListener = new CreateListener();
+    private final UpdateListener updateListener = new UpdateListener();
+
+    public DetailViewController() {
+
+    }
+
+    @Override
+    public BooleanProperty getStoreAdded() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ObservableList<Stores> getStoreList() {
+        return StoresManager.getInstance().getList("");
+    }
+
+    @Override
+    public Control getTable() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public PaymentManager getPaymentManager() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ObservableList<Payment> getList() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void updateItem(Payment p) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void removeItem(Payment p) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void updateTrans(int idx) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Ledger getLedgerItem(String id) {
+        return getLedgerManager().getItem(Integer.parseInt(id));
+    }
+
+    @Override
+    public LedgerManager getLedgerManager() {
+        return LedgerManager.getInstance();
+    }
 
     enum ItemType {
         PAYMENT, LEDGER;
@@ -97,8 +173,10 @@ public class LedgerViewController implements Initializable {
      * @param url
      * @param rb
      */
+    @FXML
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        selectedLedgerItem = new Ledger();
         root = new TreeItem<>();
         table.showRootProperty().set(false);
         parentList = FXCollections.<Category>observableArrayList(CategoryManager.getInstance().getList("Category.findAllParent"));
@@ -191,12 +269,14 @@ public class LedgerViewController implements Initializable {
                 }
             }
         });
-
         Platform.runLater(() -> loadData());
     }
 
     public void loadData() {
-        list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("accountType", Account.AccountType.CHECKING);
+        map.put("accountStatus", Account.AccountStatus.ACTIVE);
+        list.setAll(ledgerManager.doNamedQuery("Ledger.findAllByType", map));
         Ledger unAssignedPayments = new Ledger();
         TreeItem orphans = new TreeItem<>(unAssignedPayments);
         for (Ledger l : list) {
@@ -285,11 +365,85 @@ public class LedgerViewController implements Initializable {
 
     @FXML
     public void onDetailCat2EditCancel(TreeTableColumn.CellEditEvent<Payment, Category> event) {
-        
+
     }
 
     @FXML
     public void onAdd() {
-        
+        SimpleBooleanProperty isNew = new SimpleBooleanProperty(false);
+
+        if (table.getSelectionModel().getSelectedItem() == null) {
+            selectedPaymentItem = new Payment();
+        }
+
+        ChangeListener listener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                System.out.println("DetailViewController.onAdd.changed()");
+                if (isNew.get()) {
+                    PaymentManager.getInstance().create(selectedPaymentItem);
+                    Ledger l = selectedPaymentItem.getLedgerEntry();
+                    if (l != null) {
+                        for (TreeItem ti : root.getChildren()) {
+                            if (ti.equals(l)) {
+                                ti.getChildren().add(selectedPaymentItem);
+                            }
+                        }
+                    }
+                }
+            }
+
+        };
+
+        PaymentForm paymentForm = new PaymentForm();
+        paymentForm.getCreatedProperty().addListener(createListener);
+        paymentForm.getUpdatedProperty().addListener(updateListener);
+        paymentForm.getDeletedProperty().addListener(deleteListener);
+        isNew.bind(paymentForm.getCreatedProperty());
+        selectedPaymentProperty.bind(paymentForm.getSelectedPayment());
+
+        paymentForm.getStage().addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                selectedPaymentProperty.unbind();
+                paymentForm.getCreatedProperty().removeListener(createListener);
+                paymentForm.getUpdatedProperty().removeListener(updateListener);
+                paymentForm.getDeletedProperty().removeListener(deleteListener);
+            }
+        });
+    }
+
+    public void addListener(ListChangeListener<Payment> l) {
+
+    }
+
+    public void removeListener(ListChangeListener<Payment> l) {
+
+    }
+
+    private class DeleteListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().delete(selectedPaymentProperty.get());
+            removeItem(selectedPaymentProperty.get());
+        }
+    }
+
+    private class UpdateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            updateItem(selectedPaymentProperty.get());
+        }
+    }
+
+    private class CreateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().create(selectedPaymentProperty.get());
+            getList().add(selectedPaymentProperty.get());
+        }
     }
 }

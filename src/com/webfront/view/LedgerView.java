@@ -61,6 +61,8 @@ public class LedgerView extends AnchorPane {
     public SimpleBooleanProperty isRebalance;
     public Ledger selectedItem;
     public SimpleBooleanProperty isLoading = new SimpleBooleanProperty(true);
+    public SimpleBooleanProperty changed = new SimpleBooleanProperty(false);
+    
 
     /**
      *
@@ -141,18 +143,21 @@ public class LedgerView extends AnchorPane {
 
         MenuItem ctxItem1 = new MenuItem("Edit");
         ctxItem1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
         });
         MenuItem ctxItem2 = new MenuItem("Delete");
         ctxItem2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
         });
         MenuItem ctxItem3 = new MenuItem("Refresh");
         ctxItem3.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
@@ -243,7 +248,7 @@ public class LedgerView extends AnchorPane {
         LedgerView view = new LedgerView(acctNum);
         view.accountNumber = acctNum;
         ledgerView = view;
-        return view;
+        return ledgerView;
     }
 
     public void doSearch(String sql) {
