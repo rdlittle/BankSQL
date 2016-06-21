@@ -239,7 +239,7 @@ public class PaymentView extends Pane implements ViewInterface {
 
             list.addListener(listListener);
 
-            paymentForm.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
+            paymentForm.stage.setOnCloseRequest(new EventHandler() {
                 @Override
                 public void handle(Event event) {
                     list.removeListener(listListener);
@@ -259,14 +259,13 @@ public class PaymentView extends Pane implements ViewInterface {
                 if (event.getClickCount() == 2) {
                     Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
                     PaymentForm paymentForm = new PaymentForm();
-                    paymentForm.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, new EventHandler() {
+                    paymentForm.stage.setOnCloseRequest(new EventHandler() {
                         @Override
                         public void handle(Event event) {
                             selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
                             paymentForm.getCreatedProperty().removeListener(createListener);
                             paymentForm.getUpdatedProperty().addListener(updateListener);
                             paymentForm.getDeletedProperty().removeListener(deleteListener);
-                            getPaymentManager().refresh(selectedPaymentProperty.get());
                         }
                     });
                     paymentForm.getCreatedProperty().addListener(createListener);

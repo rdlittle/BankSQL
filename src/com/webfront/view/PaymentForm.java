@@ -415,14 +415,6 @@ public final class PaymentForm extends AnchorPane {
     }
 
     /**
-     *
-     * @param eventHandler
-     */
-    public void addEventHandler(EventHandler eventHandler) {
-        stage.setOnCloseRequest(eventHandler);
-    }
-
-    /**
      * @return the storeMap
      */
     public HashMap<String, Stores> getStoreMap() {
