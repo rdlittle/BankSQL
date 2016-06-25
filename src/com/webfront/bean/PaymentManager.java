@@ -47,7 +47,6 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
     public void refresh() {
         Query query = em.createNamedQuery("Payment.findAll");
         List<Payment> l = query.getResultList();
-        list.clear();
         list.setAll(l);
     }
 

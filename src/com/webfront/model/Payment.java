@@ -60,7 +60,7 @@ public class Payment implements Serializable {
     @Column(name = "transDesc")
     private String transDesc;
     
-    @ManyToOne(cascade = CascadeType.ALL, optional=false)
+    @OneToOne
     @JoinColumn(name = "transId", referencedColumnName="id")
     private Ledger ledgerEntry;
 
