@@ -241,11 +241,15 @@ public class PaymentView extends Pane implements ViewInterface {
             paymentForm.stage.setOnCloseRequest(new EventHandler() {
                 @Override
                 public void handle(Event event) {
+                    int idx = list.indexOf(getSelectedPaymentProperty().get());
+                    Payment p = getSelectedPaymentProperty().get();
+                    p.getLedgerEntry().getPayment().add(p);
+                    list.set(idx, getSelectedPaymentProperty().get());
                     list.removeListener(listListener);
                     paymentForm.getCreatedProperty().removeListener(createListener);
                     paymentForm.getUpdatedProperty().addListener(updateListener);
                     paymentForm.getDeletedProperty().removeListener(deleteListener);
-                    selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
+                    getSelectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
                 }
             });
 
@@ -261,7 +265,11 @@ public class PaymentView extends Pane implements ViewInterface {
                     paymentForm.stage.setOnCloseRequest(new EventHandler() {
                         @Override
                         public void handle(Event event) {
-                            selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
+                            int idx = list.indexOf(getSelectedPaymentProperty().get());
+                            Payment p = getSelectedPaymentProperty().get();
+                            p.getLedgerEntry().getPayment().add(p);
+                            list.set(idx, getSelectedPaymentProperty().get());
+                            getSelectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
                             paymentForm.getCreatedProperty().removeListener(createListener);
                             paymentForm.getUpdatedProperty().addListener(updateListener);
                             paymentForm.getDeletedProperty().removeListener(deleteListener);
@@ -270,8 +278,8 @@ public class PaymentView extends Pane implements ViewInterface {
                     paymentForm.getCreatedProperty().addListener(createListener);
                     paymentForm.getUpdatedProperty().addListener(updateListener);
                     paymentForm.getDeletedProperty().addListener(deleteListener);
-                    selectedPaymentProperty.bindBidirectional(paymentForm.getSelectedPayment());
-                    selectedPaymentProperty.set(payment);
+                    getSelectedPaymentProperty().bindBidirectional(paymentForm.getSelectedPayment());
+                    getSelectedPaymentProperty().set(payment);
                 } else if (event.isSecondaryButtonDown()) {
 
                 }
@@ -414,6 +422,20 @@ public class PaymentView extends Pane implements ViewInterface {
         return LedgerManager.getInstance().getItem(Integer.parseInt(id));
     }
 
+    /**
+     * @return the selectedPaymentProperty
+     */
+    public SimpleObjectProperty<Payment> getSelectedPaymentProperty() {
+        return selectedPaymentProperty;
+    }
+
+    /**
+     * @param selectedPaymentProperty the selectedPaymentProperty to set
+     */
+    public void setSelectedPaymentProperty(SimpleObjectProperty<Payment> selectedPaymentProperty) {
+        this.selectedPaymentProperty = selectedPaymentProperty;
+    }
+
     private class PaymentChangeListener implements ChangeListener<Payment> {
 
         @Override
@@ -434,8 +456,8 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().delete(selectedPaymentProperty.get());
-            removeItem(selectedPaymentProperty.get());
+            getPaymentManager().delete(getSelectedPaymentProperty().get());
+            removeItem(getSelectedPaymentProperty().get());
         }
 
     }
@@ -444,7 +466,7 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            updateItem(selectedPaymentProperty.get());
+            updateItem(getSelectedPaymentProperty().get());
         }
 
     }
@@ -453,8 +475,8 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().create(selectedPaymentProperty.get());            
-            getList().add(selectedPaymentProperty.get());
+            getPaymentManager().create(getSelectedPaymentProperty().get());
+            getList().add(getSelectedPaymentProperty().get());
         }
 
     }

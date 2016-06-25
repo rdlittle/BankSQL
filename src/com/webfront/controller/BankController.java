@@ -178,7 +178,9 @@ public class BankController implements Initializable {
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
         Tab t = new Tab();
+//        PaymentView.getInstance().getList().addListener(paymentListener);
         t.setContent(PaymentView.getInstance());
+        
         t.setText("Payments");
         tabPane.getTabs().add(t);
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
@@ -189,10 +191,10 @@ public class BankController implements Initializable {
                     isLedgerTab.set(false);
                 } else if (newTab.getText().equals("Payments")) {
                     isLedgerTab.set(false);
-                    detailViewController.addListener(paymentListener);
+//                    detailViewController.addListener(paymentListener);
                 } else {
                     isLedgerTab.set(newTab instanceof LedgerTab);
-                    detailViewController.removeListener(paymentListener);
+//                    detailViewController.removeListener(paymentListener);
                 }
             }
         });

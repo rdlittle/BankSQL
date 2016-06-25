@@ -8,6 +8,7 @@ package com.webfront.view;
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
+import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
@@ -372,7 +373,9 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setStore(store);
             getUpdatedProperty().set(true);
             selectedPayment.setValue(oldPayment);
+//            PaymentManager.getInstance().update(oldPayment);
             closeForm();
+            
         } else {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -493,6 +496,12 @@ public final class PaymentForm extends AnchorPane {
                 ledger = LedgerManager.getInstance().getItem(Integer.parseInt(id));
                 if (ledger != null) {
                     oldPayment.setLedgerEntry(ledger);
+                    if(ledger.getPayment().contains(oldPayment)) {
+                        int idx = ledger.getPayment().indexOf(oldPayment);
+                        ledger.getPayment().set(idx, oldPayment);
+                    } else {
+                        ledger.getPayment().add(oldPayment);
+                    }
                     btnOk.setDisable(false);
                     statusMessage.setText("");
                 }
