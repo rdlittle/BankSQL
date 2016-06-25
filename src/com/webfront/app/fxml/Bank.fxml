@@ -36,7 +36,7 @@
                     <items>
                         <Menu fx:id="editAccountMenu" text="Acco_unts">
                             <items>
-                                <MenuItem fx:id="editAccountsRebalance" text="Re_balance" />
+                                <MenuItem fx:id="editAccountsRebalance" onAction="#onEditRebalance" text="Re_balance" />
                                 <MenuItem mnemonicParsing="false" onAction="#onImportSetup" text="Import setup" />
                             </items>
                         </Menu>

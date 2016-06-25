@@ -8,7 +8,6 @@ package com.webfront.view;
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
-import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;

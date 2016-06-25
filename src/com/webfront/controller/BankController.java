@@ -191,10 +191,7 @@ public class BankController implements Initializable {
                     isLedgerTab.set(false);
                     detailViewController.addListener(paymentListener);
                 } else {
-                    String title = newTab.getText();
-                    Class c = newTab.getContent().getClass();
-                    String s = c.getSimpleName();
-                    isLedgerTab.set(title.equalsIgnoreCase("Detail"));
+                    isLedgerTab.set(newTab instanceof LedgerTab);
                     detailViewController.removeListener(paymentListener);
                 }
             }
@@ -318,6 +315,12 @@ public class BankController implements Initializable {
     }
 
     @FXML
+    public void onEditRebalance() {
+        LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
+        lv.doRebalance();
+    }
+
+    @FXML
     public void onEditCategories() {
 
     }
@@ -367,9 +370,11 @@ public class BankController implements Initializable {
             });
 
         }
+
     }
 
     private class PaymentListListener implements ListChangeListener<Payment> {
+
         @Override
         public void onChanged(Change<? extends Payment> c) {
             detailViewController.table.refresh();

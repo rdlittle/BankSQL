@@ -40,7 +40,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 /**
@@ -126,7 +125,7 @@ public class PaymentView extends Pane implements ViewInterface {
                 if (param.getValue().getLedgerEntry() != null) {
                     // From this payment (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
-                    List<Payment> tmpList = l.getPayment();
+//                    List<Payment> tmpList = l.getPayment();
                     if (l.getPayment() != null && l.getPayment().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }

@@ -187,7 +187,7 @@ public class LedgerView extends AnchorPane {
         list.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-                table.getItems().addAll(list);
+                table.getItems().setAll(list);
                 isLoading.set(false);
             }
         });
@@ -257,10 +257,7 @@ public class LedgerView extends AnchorPane {
         if (form.criteria.getSqlStmt() != null) {
             ObservableList<Ledger> copyOfList;
             copyOfList = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
-            list.clear();
-            list.addAll(copyOfList);
-            table.getItems().clear();
-            table.setItems(list);
+            list.setAll(copyOfList);
         }
     }
 
@@ -269,12 +266,7 @@ public class LedgerView extends AnchorPane {
         rebal.showForm();
         if (rebal.hasChanged.get()) {
             ledgerManager.rebalance(accountNumber, rebal.getCriteria());
-            ObservableList<Ledger> copyOfList;
-            copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
-            list.clear();
-            list.addAll(copyOfList);
-            table.getItems().clear();
-            table.setItems(list);
+            doRefresh();
         }
     }
 
@@ -282,9 +274,7 @@ public class LedgerView extends AnchorPane {
         ObservableList<Ledger> copyOfList;
         copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
         list.clear();
-        list.addAll(copyOfList);
-        table.getItems().clear();
-        table.setItems(list);
+        list.setAll(copyOfList);
     }
 
     /**
