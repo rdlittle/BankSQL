@@ -6,9 +6,9 @@
 package com.webfront.view;
 
 import com.webfront.bean.BankManager;
+import com.webfront.bean.LedgerManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
-import com.webfront.model.Distribution;
 import com.webfront.model.Ledger;
 import com.webfront.model.Stores;
 import java.io.IOException;
@@ -43,6 +43,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  *
@@ -91,6 +92,9 @@ public final class LedgerForm extends AnchorPane {
 
     @FXML
     PaymentView paymentTable;
+
+    private boolean pettyCash = false;
+    private Float pettyCashAmount = new Float(0.0);
 
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
@@ -201,11 +205,26 @@ public final class LedgerForm extends AnchorPane {
             subCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                    if(oldValue == null) {
+                        oldValue = "";
+                    }
                     if (newValue != null) {
                         String newCat = newValue.toString();
+                        String oldCat = oldValue.toString();
                         if (subCatMap.containsKey(newCat)) {
                             if (oldItem != null) {
                                 oldItem.setSubCat(subCatMap.get(newCat));
+                                if (!oldCat.equalsIgnoreCase("To Petty Cash")) {
+                                    if (newCat.equalsIgnoreCase("To Petty Cash")) {
+                                        pettyCash = true;
+                                        pettyCashAmount = Math.abs(oldItem.getTransAmt());
+                                    }
+                                } else if (oldCat.equalsIgnoreCase("To Petty Cash")) {
+                                    if (!newValue.toString().equalsIgnoreCase("To Petty Cash")) {
+                                        pettyCash = true;
+                                        pettyCashAmount = Math.abs(oldItem.getTransAmt()) * -1;
+                                    }
+                                }
                                 btnOk.setDisable(false);
                             }
                         }
@@ -321,8 +340,8 @@ public final class LedgerForm extends AnchorPane {
     }
 
     @FXML
-    public void closeForm() {
-        stage.close();
+    public void onBtnCancel() {
+        closeForm();
     }
 
     @FXML
@@ -344,5 +363,25 @@ public final class LedgerForm extends AnchorPane {
         }
 
         closeForm();
+    }
+    
+    public Stage getStage() {
+        return stage;
+    }
+    
+    public void closeForm() {
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
+        stage.close();
+    }
+
+    /**
+     * @return the adjustPettyCash
+     */
+    public boolean isPettyCash() {
+        return pettyCash;
+    }
+    
+    public Float getPettyCashAmount() {
+        return pettyCashAmount;
     }
 }

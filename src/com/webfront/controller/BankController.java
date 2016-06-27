@@ -46,7 +46,6 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 /**
  * FXML Controller class
@@ -178,9 +177,9 @@ public class BankController implements Initializable {
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
         Tab t = new Tab();
-//        PaymentView.getInstance().getList().addListener(paymentListener);
+
         t.setContent(PaymentView.getInstance());
-        
+
         t.setText("Payments");
         tabPane.getTabs().add(t);
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
@@ -191,9 +190,11 @@ public class BankController implements Initializable {
                     isLedgerTab.set(false);
                 } else if (newTab.getText().equals("Payments")) {
                     isLedgerTab.set(false);
+                    PaymentView.getInstance().getList().addListener(paymentListener);
 //                    detailViewController.addListener(paymentListener);
                 } else {
                     isLedgerTab.set(newTab instanceof LedgerTab);
+                    PaymentView.getInstance().getList().removeListener(paymentListener);
 //                    detailViewController.removeListener(paymentListener);
                 }
             }
@@ -223,7 +224,6 @@ public class BankController implements Initializable {
                 selectedAccount.setValue(l);
             }
         });
-
     }
 
     private void addLedger(Account acct) {
@@ -234,6 +234,10 @@ public class BankController implements Initializable {
         t.setClosable(true);
         t.setContent(lv);
         ledgerTabs.add(t);
+    }
+
+    public MenuItem getFileExit() {
+        return fileExit;
     }
 
     @FXML
@@ -256,7 +260,18 @@ public class BankController implements Initializable {
 
     @FXML
     public void onFileNewAccount() {
+        PreferencesForm prefs = PreferencesForm.getInstance(config);
+        prefs.getTabPane().getSelectionModel().select(prefs.getAccountTab());
 
+        prefs.isNewAccount = true;
+        prefs.hasChanged.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                config.setConfig();
+            }
+        });
+        prefs.btnNewOnAction();
+        prefs.showForm();
     }
 
     @FXML
@@ -307,7 +322,6 @@ public class BankController implements Initializable {
 
     @FXML
     public void onFileExit() {
-        stage.fireEvent(new Event(WindowEvent.WINDOW_CLOSE_REQUEST));
         System.exit(0);
     }
 
@@ -340,6 +354,7 @@ public class BankController implements Initializable {
     @FXML
     public void onEditPreferences() {
         PreferencesForm prefs = PreferencesForm.getInstance(config);
+        prefs.isNewAccount = true;
         prefs.hasChanged.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
@@ -379,7 +394,16 @@ public class BankController implements Initializable {
 
         @Override
         public void onChanged(Change<? extends Payment> c) {
-            detailViewController.table.refresh();
+            while (c.next()) {
+                if (c.wasUpdated()) {
+                    ObservableList l = c.getList();
+                    detailViewController.doUpdate(l);
+                } else if (c.wasRemoved()) {
+                } else if (c.wasAdded()) {
+
+                }
+            }
+//            detailViewController.table.refresh();
         }
     }
 

@@ -32,6 +32,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -122,6 +123,9 @@ public class PreferencesForm extends AnchorPane {
     @FXML
     ToggleGroup accountStatus;
 
+    @FXML
+    Label statusLabel;
+    
     @FXML
     Button btnOk;
     @FXML
@@ -261,6 +265,7 @@ public class PreferencesForm extends AnchorPane {
         form.txtBankName.requestFocus();
         form.accountSelected.set(true);
         form.isNewAccount = true;
+        form.statusLabel.setText("");
     }
 
     @FXML
@@ -455,6 +460,7 @@ public class PreferencesForm extends AnchorPane {
         hasChanged.set(false);
         form.accountSelected.set(false);
         form.btnOk.setDisable(true);
+        form.statusLabel.setText("");
     }
 
     @FXML
@@ -465,6 +471,7 @@ public class PreferencesForm extends AnchorPane {
             form.accountMap.put(form.account.getAccountName(), form.account.getId());
             int idx = form.cbAccounts.getSelectionModel().getSelectedIndex();
             form.cbAccounts.getItems().set(idx, form.account.getAccountName());
+            form.statusLabel.setText("Account created");
         } else {
             if (form.account != null) {
                 form.account.setBankName(form.txtBankName.getText());
@@ -481,6 +488,7 @@ public class PreferencesForm extends AnchorPane {
                     form.account.setAccountName(form.account.getId().toString());
                 }
                 acctMgr.update(form.account);
+                form.statusLabel.setText("Account updated");
             }
         }
         form.accountSelected.set(false);

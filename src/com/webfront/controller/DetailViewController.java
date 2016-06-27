@@ -35,6 +35,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -45,6 +46,7 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
@@ -162,6 +164,20 @@ public class DetailViewController implements Initializable, ViewInterface {
         return LedgerManager.getInstance();
     }
 
+    /**
+     * @return the root
+     */
+    public TreeItem<Ledger> getRoot() {
+        return root;
+    }
+
+    /**
+     * @param root the root to set
+     */
+    public void setRoot(TreeItem<Ledger> root) {
+        this.root = root;
+    }
+
     enum ItemType {
         PAYMENT, LEDGER;
     }
@@ -177,7 +193,7 @@ public class DetailViewController implements Initializable, ViewInterface {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         selectedLedgerItem = new Ledger();
-        root = new TreeItem<>();
+        setRoot(new TreeItem<>());
         table.showRootProperty().set(false);
         parentList = FXCollections.<Category>observableArrayList(CategoryManager.getInstance().getList("Category.findAllParent"));
         childList = FXCollections.<Category>observableArrayList();
@@ -269,6 +285,7 @@ public class DetailViewController implements Initializable, ViewInterface {
                 }
             }
         });
+        table.addEventHandler(MouseEvent.MOUSE_CLICKED, new DoubleClick());
         Platform.runLater(() -> loadData());
     }
 
@@ -277,16 +294,50 @@ public class DetailViewController implements Initializable, ViewInterface {
         map.put("accountType", Account.AccountType.CHECKING);
         map.put("accountStatus", Account.AccountStatus.ACTIVE);
         list.setAll(ledgerManager.doNamedQuery("Ledger.findAllByType", map));
-        Ledger unAssignedPayments = new Ledger();
+        Ledger unAssignedPayments = new Ledger(0);
+        unAssignedPayments.setTransDesc("Unassigned");
+        unAssignedPayments.setTransAmt(0);
         TreeItem orphans = new TreeItem<>(unAssignedPayments);
+        ObservableList<Payment> pList = PaymentManager.getInstance().doSqlQuery("Payment.findOrphans");
+        Float amt = new Float(0.0);
+        for (Payment p : pList) {
+            unAssignedPayments.getPayment().add(p);
+            amt += p.getTransAmt();
+            unAssignedPayments.setTransAmt(accountNumber);
+            orphans.getChildren().add(new TreeItem<>(p));
+        }
+        unAssignedPayments.setTransAmt(amt);
+
+        getRoot().getChildren().add(orphans);
+
         for (Ledger l : list) {
             TreeItem ti = new TreeItem<>(l);
             for (Payment p : l.getPayment()) {
-                ti.getChildren().add(new TreeItem<Payment>(p));
+                ti.getChildren().add(new TreeItem<>(p));
             }
-            root.getChildren().add(ti);
+            getRoot().getChildren().add(ti);
         }
-        table.setRoot(root);
+        table.setRoot(getRoot());
+    }
+
+    public void doUpdate(ObservableList<Payment> paymentList) {
+        for (Payment p : paymentList) {
+            for (TreeItem branch : getRoot().getChildren()) {
+                if (branch.getValue() instanceof Ledger) {
+                    Ledger parent = (Ledger) branch.getValue();
+                    if (parent.getId().equals(p.getLedgerEntry().getId())) {
+                        TreeItem<Payment> child = new TreeItem<>(p);
+                        if (!branch.getChildren().contains(child)) {
+                            branch.getChildren().add(child);
+                        } else {
+                            int idx = branch.getChildren().indexOf(child);
+                            branch.getChildren().set(idx, child);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @FXML
@@ -384,7 +435,7 @@ public class DetailViewController implements Initializable, ViewInterface {
                     PaymentManager.getInstance().create(selectedPaymentItem);
                     Ledger l = selectedPaymentItem.getLedgerEntry();
                     if (l != null) {
-                        for (TreeItem ti : root.getChildren()) {
+                        for (TreeItem ti : getRoot().getChildren()) {
                             if (ti.equals(l)) {
                                 ti.getChildren().add(selectedPaymentItem);
                             }
@@ -413,11 +464,41 @@ public class DetailViewController implements Initializable, ViewInterface {
         });
     }
 
-    public void addListener(ListChangeListener<Payment> l) {
+    private void doEdit(TreeItem ti) {
+        TreeItem parent = ti.getParent();
+        selectedRow = table.getSelectionModel().getSelectedIndex();
 
-    }
+        if (ti.isLeaf()) {
+            Payment p = (Payment) ti.getValue();
+            selectedPaymentProperty.set(p);
+            selectedLedgerItem = p.getLedgerEntry();
 
-    public void removeListener(ListChangeListener<Payment> l) {
+            PaymentForm paymentForm = new PaymentForm();
+            paymentForm.getStage().setOnCloseRequest(new EventHandler() {
+                @Override
+                public void handle(Event event) {
+                    Payment p = selectedPaymentProperty.get();
+                    if (p != null) {
+                        Ledger l = p.getLedgerEntry();
+                        if (l != null) {
+                            p.getLedgerEntry().getPayment().add(p);
+                        }
+                    }
+                    selectedPaymentProperty.unbindBidirectional(paymentForm.getSelectedPayment());
+                    paymentForm.getCreatedProperty().removeListener(createListener);
+                    paymentForm.getUpdatedProperty().addListener(updateListener);
+                    paymentForm.getDeletedProperty().removeListener(deleteListener);
+                }
+            });
+
+            paymentForm.getCreatedProperty().addListener(createListener);
+            paymentForm.getUpdatedProperty().addListener(updateListener);
+            paymentForm.getDeletedProperty().addListener(deleteListener);
+            selectedPaymentProperty.bindBidirectional(paymentForm.getSelectedPayment());
+            selectedPaymentProperty.set(p);
+        } else {
+            selectedLedgerItem = (Ledger) ti.getValue();
+        }
 
     }
 
@@ -446,4 +527,19 @@ public class DetailViewController implements Initializable, ViewInterface {
             getList().add(selectedPaymentProperty.get());
         }
     }
+
+    private class DoubleClick implements EventHandler<MouseEvent> {
+
+        @Override
+        public void handle(MouseEvent event) {
+            if (event.getClickCount() == 2) {
+                TreeItem ti = table.getSelectionModel().getSelectedItem();
+                if (ti.isLeaf()) {
+                    doEdit(ti);
+                }
+            }
+        }
+
+    }
+
 }

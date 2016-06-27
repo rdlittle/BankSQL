@@ -49,6 +49,13 @@ public class AccountManager extends DBManager<Account> implements Serializable {
         Account acct = (Account) query.getSingleResult();
         return acct;
     }
+    
+    public Account getAccount(String name) {
+        Query query = em.createNamedQuery("Account.findByAccountName");
+        query.setParameter("accountName", name);
+        Account acct = (Account) query.getSingleResult();
+        return acct;
+    }
 
     @Override
     public ObservableList<Account> doSqlQuery(String q) {

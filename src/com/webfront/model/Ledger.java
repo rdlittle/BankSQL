@@ -7,6 +7,7 @@
 package com.webfront.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -98,10 +99,12 @@ public class Ledger implements Serializable {
         this.transBal=0;
         this.transDesc="";
         this.checkNum="";
+        this.payments=new ArrayList<>();
     }
 
     public Ledger(Integer id) {
         this.id = id;
+        this.payments=new ArrayList<>();
     }
 
     public Ledger(Integer id, Date transDate, float transAmt, float transBal, int accountNum) {
@@ -110,6 +113,7 @@ public class Ledger implements Serializable {
         this.transAmt = transAmt;
         this.transBal = transBal;
         this.accountNum = accountNum;
+        this.payments=new ArrayList<>();
     }
 
     public Integer getId() {

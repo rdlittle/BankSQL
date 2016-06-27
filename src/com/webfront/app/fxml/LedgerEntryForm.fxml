@@ -62,7 +62,7 @@
             </TableView>
          </children></Pane>
         
-        <Button fx:id="btnCancel" layoutX="111.0" layoutY="422.0" mnemonicParsing="false" onAction="#closeForm" text="Cancel" />
+        <Button fx:id="btnCancel" layoutX="111.0" layoutY="422.0" mnemonicParsing="false" onAction="#onBtnCancel" text="Cancel" />
         <Button fx:id="btnOk" layoutX="26.0" layoutY="421.0" mnemonicParsing="false" onAction="#submitItem" prefHeight="26.0" prefWidth="63.0" text="OK" /><Label layoutX="8.464599609375" layoutY="185.5" text="Detail" />
       <Hyperlink fx:id="editLink" layoutX="820.0" layoutY="103.0" onAction="#editLinkClicked" prefHeight="23.0" prefWidth="39.0" text="Edit" />
         

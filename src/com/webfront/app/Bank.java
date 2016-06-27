@@ -12,27 +12,34 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  *
  * @author rlittle
  */
 public class Bank extends Application {
-    
+
     private final String location = "/com/webfront/app/fxml/Bank.fxml";
-    private final Config config=Config.getInstance();
+    private final Config config = Config.getInstance();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         config.getConfig();
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(BankController.class.getResource(location));
-        Pane root = loader.load();
-//        final BankController controller = loader.getController();
-//        controller.setStage(primaryStage);
+        AnchorPane root = loader.<AnchorPane>load();
+        BankController controller = loader.getController();
         Scene scene = new Scene(root);
+        controller.getFileExit().setOnAction(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                primaryStage.fireEvent(new Event(WindowEvent.WINDOW_CLOSE_REQUEST));
+            }
+        });
+
         primaryStage.setScene(scene);
         primaryStage.setTitle("JFX Bank");
         primaryStage.setX(Double.parseDouble(config.getX()));
@@ -47,7 +54,7 @@ public class Bank extends Application {
                 config.setConfig();
             }
         });
-        
+
         primaryStage.show();
     }
 

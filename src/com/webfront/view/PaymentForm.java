@@ -8,7 +8,6 @@ package com.webfront.view;
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
-import com.webfront.bean.PaymentManager;
 import com.webfront.bean.StoresManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
@@ -41,6 +40,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Hyperlink;
@@ -90,6 +90,9 @@ public final class PaymentForm extends AnchorPane {
     @FXML
     Label statusMessage;
 
+    @FXML
+    CheckBox cbCash;
+
     Stage stage;
 
     static ViewInterface view;
@@ -105,6 +108,7 @@ public final class PaymentForm extends AnchorPane {
     private final ArrayList<String> storeList;
     private SimpleObjectProperty<Payment> selectedPayment;
     private final ItemListener itemListener = new ItemListener();
+    private Account cashAccount;
 
     public PaymentForm() {
         newPayment = new Payment();
@@ -126,6 +130,8 @@ public final class PaymentForm extends AnchorPane {
         btnDelete = new Button();
         cbStores = new ComboBox<>();
         statusMessage = new Label();
+        cbCash = new CheckBox();
+        cbCash.setSelected(false);
         updatedProperty = new SimpleBooleanProperty(false);
         deletedProperty = new SimpleBooleanProperty(false);
         createdProperty = new SimpleBooleanProperty(false);
@@ -152,6 +158,9 @@ public final class PaymentForm extends AnchorPane {
             cbStores.getItems().addAll(storeList);
 
             for (Account acct : AccountManager.getInstance().getList("Account.findAll")) {
+                if (acct.getAccountName().equalsIgnoreCase("Petty Cash")) {
+                    cashAccount = acct;
+                }
                 SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
                 cbAccount.getItems().add(se);
             }
@@ -375,7 +384,7 @@ public final class PaymentForm extends AnchorPane {
             selectedPayment.setValue(oldPayment);
 //            PaymentManager.getInstance().update(oldPayment);
             closeForm();
-            
+
         } else {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -442,8 +451,13 @@ public final class PaymentForm extends AnchorPane {
         sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
         sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
-        sql += "AND accountNum = " + oldPayment.getAccountNum() + " ";
-        sql += "ORDER BY transDate";
+        sql += "AND accountNum = ";
+        if (cbCash.isSelected()) {
+            sql += cashAccount.getId();
+        } else {
+            sql += oldPayment.getAccountNum();
+        }
+        sql += " ORDER BY transDate";
         ObservableList<Ledger> results;
         results = LedgerManager.getInstance().doSqlQuery(sql);
 
@@ -496,7 +510,7 @@ public final class PaymentForm extends AnchorPane {
                 ledger = LedgerManager.getInstance().getItem(Integer.parseInt(id));
                 if (ledger != null) {
                     oldPayment.setLedgerEntry(ledger);
-                    if(ledger.getPayment().contains(oldPayment)) {
+                    if (ledger.getPayment().contains(oldPayment)) {
                         int idx = ledger.getPayment().indexOf(oldPayment);
                         ledger.getPayment().set(idx, oldPayment);
                     } else {

@@ -13,7 +13,6 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.Stores;
-import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -436,21 +435,21 @@ public class PaymentView extends Pane implements ViewInterface {
         this.selectedPaymentProperty = selectedPaymentProperty;
     }
 
-    private class PaymentChangeListener implements ChangeListener<Payment> {
-
-        @Override
-        public void changed(ObservableValue<? extends Payment> observable, Payment oldValue, Payment newValue) {
-            if (newValue == null) {
-                return;
-            }
-            if (newValue.getId() == null) {
-                getList().add(newValue);
-            } else {
-                updateItem(newValue);
-            }
-        }
-
-    }
+//    private class PaymentChangeListener implements ChangeListener<Payment> {
+//
+//        @Override
+//        public void changed(ObservableValue<? extends Payment> observable, Payment oldValue, Payment newValue) {
+//            if (newValue == null) {
+//                return;
+//            }
+//            if (newValue.getId() == null) {
+//                getList().add(newValue);
+//            } else {
+//                updateItem(newValue);
+//            }
+//        }
+//
+//    }
 
     private class DeleteListener implements InvalidationListener {
 

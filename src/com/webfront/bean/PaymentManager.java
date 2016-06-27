@@ -62,7 +62,12 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
     
     @Override
     public ObservableList<Payment> doSqlQuery(String q) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(q.isEmpty()) {
+            return FXCollections.observableArrayList();
+        }
+        Query query = em.createNamedQuery(q);
+        List<Payment> l = query.getResultList();
+        return FXCollections.observableArrayList(l);
     }
 
     public synchronized void addListener(ListChangeListener lcl) {

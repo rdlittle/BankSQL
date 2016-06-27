@@ -5,8 +5,10 @@
  */
 package com.webfront.view;
 
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
@@ -19,6 +21,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Side;
 import javafx.scene.control.Button;
@@ -62,7 +65,6 @@ public class LedgerView extends AnchorPane {
     public Ledger selectedItem;
     public SimpleBooleanProperty isLoading = new SimpleBooleanProperty(true);
     public SimpleBooleanProperty changed = new SimpleBooleanProperty(false);
-    
 
     /**
      *
@@ -78,7 +80,6 @@ public class LedgerView extends AnchorPane {
 //        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
 //        buttonBox.setPadding(new Insets(8));
 //        buttonBox.setSpacing(10);
-
         accountNumber = acctNum;
         ledgerManager = LedgerManager.getInstance();
         categoryManager = CategoryManager.getInstance();
@@ -112,11 +113,11 @@ public class LedgerView extends AnchorPane {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
                 if (param.getValue().getSubCat() != null) {
-                        Category c = param.getValue().getSubCat();
-                        if (c != null) {
-                            String desc = c.getDescription();
-                            return new SimpleStringProperty(desc);
-                        }
+                    Category c = param.getValue().getSubCat();
+                    if (c != null) {
+                        String desc = c.getDescription();
+                        return new SimpleStringProperty(desc);
+                    }
                 }
                 return null;
             }
@@ -181,7 +182,7 @@ public class LedgerView extends AnchorPane {
         };
 
         Platform.runLater(() -> loadData());
-        
+
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
         list.addListener(new ListChangeListener() {
@@ -191,8 +192,7 @@ public class LedgerView extends AnchorPane {
                 isLoading.set(false);
             }
         });
-        
-        
+
         table.getItems().addAll(list);
 
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
@@ -219,7 +219,6 @@ public class LedgerView extends AnchorPane {
 //        });
 //
 //        buttonBox.getChildren().addAll(btnSearch, btnReset);
-
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);
