@@ -337,6 +337,7 @@ public final class PaymentForm extends AnchorPane {
             if (oldPayment.getStore().getStoreName() != null) {
                 cbStores.setValue(oldPayment.getStore().getStoreName());
             }
+            cbCash.setSelected(oldPayment.isCashPayment());
         } else {
             transDate.setValue(LocalDate.now());
             cbAccount.getSelectionModel().selectFirst();
@@ -380,11 +381,10 @@ public final class PaymentForm extends AnchorPane {
             oldPayment.setPrimaryCat(cat1);
             oldPayment.setSubCat(cat2);
             oldPayment.setStore(store);
+            oldPayment.setCashPayment(cbCash.isSelected());
             getUpdatedProperty().set(true);
             selectedPayment.setValue(oldPayment);
-//            PaymentManager.getInstance().update(oldPayment);
             closeForm();
-
         } else {
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -399,6 +399,7 @@ public final class PaymentForm extends AnchorPane {
             payment.setPrimaryCat(cat1);
             payment.setSubCat(cat2);
             payment.setStore(store);
+            payment.setCashPayment(false);
             selectedPayment.set(payment);
             newPayment = new Payment();
             getCreatedProperty().set(true);

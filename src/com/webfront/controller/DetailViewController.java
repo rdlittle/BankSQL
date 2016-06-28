@@ -141,7 +141,18 @@ public class DetailViewController implements Initializable, ViewInterface {
 
     @Override
     public void updateItem(Payment p) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        PaymentManager.getInstance().update(p);
+        Ledger l = p.getLedgerEntry();
+        if (l != null) {
+            int idx = table.getRoot().getChildren().indexOf(l);
+            TreeItem<Ledger> parent = table.getRoot().getChildren().get(idx);
+            for (TreeItem child : parent.<Payment>getChildren()) {
+                if (child.equals(p)) {
+
+                }
+            }
+        }
+        
     }
 
     @Override

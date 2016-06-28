@@ -242,7 +242,9 @@ public class PaymentView extends Pane implements ViewInterface {
                 public void handle(Event event) {
                     int idx = list.indexOf(getSelectedPaymentProperty().get());
                     Payment p = getSelectedPaymentProperty().get();
-                    p.getLedgerEntry().getPayment().add(p);
+                    if (p.getLedgerEntry() != null) {
+                        p.getLedgerEntry().getPayment().add(p);
+                    }
                     list.set(idx, getSelectedPaymentProperty().get());
                     list.removeListener(listListener);
                     paymentForm.getCreatedProperty().removeListener(createListener);
@@ -266,7 +268,9 @@ public class PaymentView extends Pane implements ViewInterface {
                         public void handle(Event event) {
                             int idx = list.indexOf(getSelectedPaymentProperty().get());
                             Payment p = getSelectedPaymentProperty().get();
-                            p.getLedgerEntry().getPayment().add(p);
+                            if (p.getLedgerEntry() != null) {
+                                p.getLedgerEntry().getPayment().add(p);
+                            }
                             list.set(idx, getSelectedPaymentProperty().get());
                             getSelectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
                             paymentForm.getCreatedProperty().removeListener(createListener);
@@ -450,7 +454,6 @@ public class PaymentView extends Pane implements ViewInterface {
 //        }
 //
 //    }
-
     private class DeleteListener implements InvalidationListener {
 
         @Override

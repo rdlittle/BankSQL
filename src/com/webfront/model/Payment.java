@@ -84,6 +84,9 @@ public class Payment implements Serializable {
     @Transient
     SimpleObjectProperty<Category> primaryCatProperty;
     
+    @Column(name = "cashPayment")
+    private boolean cashPayment;
+    
     public Payment() {
 //        cat1 = new SimpleObjectProperty<>();
 //        cat1.addListener(new CatChangeListener());
@@ -217,6 +220,20 @@ public class Payment implements Serializable {
     public void setPrimaryCat(Category category1) {
         this.primaryCat = category1;
 //        cat1.set(category1);
+    }
+
+    /**
+     * @return the cashPayment
+     */
+    public boolean isCashPayment() {
+        return cashPayment;
+    }
+
+    /**
+     * @param cashPayment the cashPayment to set
+     */
+    public void setCashPayment(boolean cashPayment) {
+        this.cashPayment = cashPayment;
     }
 
     private class CatChangeListener implements ChangeListener {
