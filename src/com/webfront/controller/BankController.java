@@ -176,12 +176,12 @@ public class BankController implements Initializable {
 
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
+        
         Tab t = new Tab();
-
         t.setContent(PaymentView.getInstance());
-
         t.setText("Payments");
         tabPane.getTabs().add(t);
+        
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
             public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
@@ -320,7 +320,11 @@ public class BankController implements Initializable {
 
     @FXML
     public void onFileClose() {
-
+        Tab t = tabPane.getSelectionModel().selectedItemProperty().get();
+        if (t instanceof LedgerTab) {
+            ledgerTabs.remove(t);
+            tabPane.getTabs().remove(t);
+        }
     }
 
     @FXML

@@ -63,6 +63,7 @@ public abstract class DBManager<T> {
 
     public synchronized void delete(T obj) {
         EntityTransaction transaction = em.getTransaction();
+        
         transaction.begin();
         em.remove(obj);
         transaction.commit();

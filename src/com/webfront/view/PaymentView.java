@@ -5,7 +5,6 @@
  */
 package com.webfront.view;
 
-import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
 import com.webfront.bean.PaymentManager;
@@ -14,7 +13,6 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.Stores;
-import java.util.ArrayList;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -84,6 +82,7 @@ public class PaymentView extends Pane implements ViewInterface {
 
     protected PaymentView() {
         super();
+//        this.getStylesheets().add("com/webfront/app/bank/css/styles.css");
 
         storeAdded = new SimpleBooleanProperty();
         selectedPaymentProperty = new ReadOnlyObjectWrapper<>();
@@ -207,7 +206,7 @@ public class PaymentView extends Pane implements ViewInterface {
         table.getColumns().add(transIdColumn);
         table.getColumns().add(transAmtColumn);
 
-        btnAdd = new Button("Add Receipt");
+        btnAdd = new Button("Add");
 
         /*
             Open a new PayementForm, add ListChangeListener
@@ -279,13 +278,11 @@ public class PaymentView extends Pane implements ViewInterface {
         paymentForm.getUpdatedProperty().addListener(updateListener);
         paymentForm.getDeletedProperty().addListener(deleteListener);
 
-//        getSelectedPaymentProperty().setValue(prevPayment);
         paymentForm.stage.setOnCloseRequest(new EventHandler() {
             @Override
             public void handle(Event event) {
                 int idx = list.indexOf(selectedPaymentProperty().getValue());
                 Payment p = selectedPaymentProperty().getValue();
-                handlePettyCash(prevPayment, p);
                 if (p.getLedgerEntry() != null) {
                     p.getLedgerEntry().getPayment().add(p);
                 }
@@ -415,47 +412,6 @@ public class PaymentView extends Pane implements ViewInterface {
         return LedgerManager.getInstance().getItem(Integer.parseInt(id));
     }
 
-    public void handlePettyCash(Payment prev, Payment curr) {
-        Integer cashAcct = AccountManager.getInstance().getAccount("Petty Cash").getId();
-        Float amount = curr.getTransAmt();
-        if (prev == null || curr == null) {
-            return;
-        }
-
-        if (prev.getAccountNum() == curr.getAccountNum()) {
-            return;
-        }
-
-        if (prev.getAccountNum() != cashAcct && curr.getAccountNum() != cashAcct) {
-            return;
-        }
-
-        if (prev.getAccountNum() == cashAcct) {
-            // Reverse the previous petty cash ledger entry if any
-            Ledger l = prev.getLedgerEntry();
-            if(l != null && l.getAccountNum() == cashAcct) {
-                LedgerManager.getInstance().delete(l);
-                prev.setLedgerEntry(null);
-            }
-        } else {
-            Float bal = LedgerManager.getInstance().getBalance(cashAcct);
-            curr.setTransAmt(curr.getTransAmt() * -1);
-            Ledger l = curr.getLedgerEntry();
-            if(l == null) {
-                l = new Ledger();
-                l.setAccountNum(cashAcct);
-                l.setTransDate(curr.getTransDate());
-                l.setTransDesc(curr.getTransDesc());
-                l.setTransAmt(curr.getTransAmt());
-                l.setTransBal(bal - curr.getTransAmt());
-                ArrayList<Payment> pList = new ArrayList<>();
-                pList.add(curr);
-                l.setPayment(pList);
-                curr.setLedgerEntry(l);
-            }
-        }
-    }
-
     /**
      * @return the selectedPaymentProperty
      */
@@ -463,12 +419,6 @@ public class PaymentView extends Pane implements ViewInterface {
         return selectedPaymentProperty;
     }
 
-    /**
-     * @param selectedPaymentProperty the selectedPaymentProperty to set
-     */
-//    public void setSelectedPaymentProperty(ReadOnlyObjectWrapper<Payment> selectedPaymentProperty) {
-//        this.selectedPaymentProperty = selectedPaymentProperty;
-//    }
     private class DeleteListener implements InvalidationListener {
 
         @Override
@@ -483,7 +433,6 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            handlePettyCash(selectedPaymentProperty().getValue(), prevPayment);
             updateItem(prevPayment);
             selectedPaymentProperty().setValue(prevPayment);
         }
