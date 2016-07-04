@@ -7,6 +7,7 @@ package com.webfront.bean;
 
 import com.webfront.model.Account;
 import com.webfront.model.Ledger;
+import com.webfront.model.Payment;
 import com.webfront.model.SearchCriteria;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +26,11 @@ public class LedgerManager extends DBManager {
     private List<Ledger> selectedItems;
     private final ObservableList<Ledger> ledgerList;
     private static LedgerManager instance = null;
+    private final Account pettyCashAccount;
+
+    public static enum EntryType {
+        CREDIT, DEBIT;
+    }
 
     /**
      *
@@ -32,6 +38,7 @@ public class LedgerManager extends DBManager {
     protected LedgerManager() {
         this.ledgerList = FXCollections.<Ledger>observableArrayList();
         selectedItems = new ArrayList<>();
+        pettyCashAccount = AccountManager.getInstance().getAccount("Petty Cash");
     }
 
     public synchronized static LedgerManager getInstance() {
@@ -134,6 +141,10 @@ public class LedgerManager extends DBManager {
 
     public int getLastId() {
         return 1;
+    }
+    
+    public Float getBalance(int accountNum) {
+        return (getItem(getLastId(accountNum))).getTransBal();
     }
 
     public synchronized void rebalance(int acct, SearchCriteria criteria) {

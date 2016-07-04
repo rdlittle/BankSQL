@@ -5,6 +5,7 @@
  */
 package com.webfront.view;
 
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
 import com.webfront.bean.PaymentManager;
@@ -13,14 +14,15 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.Stores;
+import java.util.ArrayList;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -70,7 +72,9 @@ public class PaymentView extends Pane implements ViewInterface {
     TableColumn accountNumColumn;
     TableColumn transAmtColumn;
 
-    private SimpleObjectProperty<Payment> selectedPaymentProperty;
+    private ReadOnlyObjectWrapper<Payment> selectedPaymentProperty;
+    protected Payment prevPayment;
+    protected Payment prevPaymentCopy;
 
     private final DeleteListener deleteListener = new DeleteListener();
     private final CreateListener createListener = new CreateListener();
@@ -82,7 +86,7 @@ public class PaymentView extends Pane implements ViewInterface {
         super();
 
         storeAdded = new SimpleBooleanProperty();
-        selectedPaymentProperty = new SimpleObjectProperty<>();
+        selectedPaymentProperty = new ReadOnlyObjectWrapper<>();
 
         storeAdded.set(false);
         GridPane grid = new GridPane();
@@ -209,51 +213,8 @@ public class PaymentView extends Pane implements ViewInterface {
             Open a new PayementForm, add ListChangeListener
          */
         btnAdd.setOnAction((ActionEvent event) -> {
-            PaymentForm paymentForm = new PaymentForm();
-            paymentForm.getCreatedProperty().addListener(createListener);
-            paymentForm.getUpdatedProperty().addListener(updateListener);
-            paymentForm.getDeletedProperty().addListener(deleteListener);
-            selectedPaymentProperty.set(new Payment());
-            selectedPaymentProperty.bindBidirectional(paymentForm.getSelectedPayment());
-            ListChangeListener<Payment> listListener = new ListChangeListener<Payment>() {
-                @Override
-                public void onChanged(ListChangeListener.Change<? extends Payment> c) {
-                    while (c.next()) {
-                        if (c.wasAdded()) {
-                            for (Payment p : c.getAddedSubList()) {
-                                table.getItems().add(p);
-                            }
-                        } else if (c.wasRemoved()) {
-                            for (Payment p : c.getRemoved()) {
-                                table.getItems().remove(p);
-                            }
-                        } else if (c.wasUpdated()) {
-                        }
-                    }
-                    getTable().getItems().sort(Payment.PaymentComparator);
-                }
-
-            };
-
-            list.addListener(listListener);
-
-            paymentForm.stage.setOnCloseRequest(new EventHandler() {
-                @Override
-                public void handle(Event event) {
-                    int idx = list.indexOf(getSelectedPaymentProperty().get());
-                    Payment p = getSelectedPaymentProperty().get();
-                    if (p.getLedgerEntry() != null) {
-                        p.getLedgerEntry().getPayment().add(p);
-                    }
-                    list.set(idx, getSelectedPaymentProperty().get());
-                    list.removeListener(listListener);
-                    paymentForm.getCreatedProperty().removeListener(createListener);
-                    paymentForm.getUpdatedProperty().addListener(updateListener);
-                    paymentForm.getDeletedProperty().removeListener(deleteListener);
-                    getSelectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
-                }
-            });
-
+            selectedPaymentProperty().setValue(new Payment());
+            showPaymentForm();
         });
 
         EventHandler<MouseEvent> click;
@@ -261,28 +222,8 @@ public class PaymentView extends Pane implements ViewInterface {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
-                    PaymentForm paymentForm = new PaymentForm();
-                    paymentForm.stage.setOnCloseRequest(new EventHandler() {
-                        @Override
-                        public void handle(Event event) {
-                            int idx = list.indexOf(getSelectedPaymentProperty().get());
-                            Payment p = getSelectedPaymentProperty().get();
-                            if (p.getLedgerEntry() != null) {
-                                p.getLedgerEntry().getPayment().add(p);
-                            }
-                            list.set(idx, getSelectedPaymentProperty().get());
-                            getSelectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
-                            paymentForm.getCreatedProperty().removeListener(createListener);
-                            paymentForm.getUpdatedProperty().addListener(updateListener);
-                            paymentForm.getDeletedProperty().removeListener(deleteListener);
-                        }
-                    });
-                    paymentForm.getCreatedProperty().addListener(createListener);
-                    paymentForm.getUpdatedProperty().addListener(updateListener);
-                    paymentForm.getDeletedProperty().addListener(deleteListener);
-                    getSelectedPaymentProperty().bindBidirectional(paymentForm.getSelectedPayment());
-                    getSelectedPaymentProperty().set(payment);
+                    prevPayment = (Payment) table.getSelectionModel().getSelectedItem();
+                    showPaymentForm();
                 } else if (event.isSecondaryButtonDown()) {
 
                 }
@@ -307,6 +248,55 @@ public class PaymentView extends Pane implements ViewInterface {
             paymentView = new PaymentView();
         }
         return paymentView;
+    }
+
+    public void showPaymentForm() {
+        ListChangeListener<Payment> listListener = new ListChangeListener<Payment>() {
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends Payment> c) {
+                while (c.next()) {
+                    if (c.wasAdded()) {
+                        for (Payment p : c.getAddedSubList()) {
+                            table.getItems().add(p);
+                        }
+                    } else if (c.wasRemoved()) {
+                        for (Payment p : c.getRemoved()) {
+                            table.getItems().remove(p);
+                        }
+                    } else if (c.wasUpdated()) {
+                    }
+                }
+                getTable().getItems().sort(Payment.PaymentComparator);
+            }
+        };
+        list.addListener(listListener);
+
+        prevPaymentCopy = Payment.copy(prevPayment);
+        selectedPaymentProperty().setValue(prevPaymentCopy);
+        PaymentForm paymentForm = new PaymentForm(prevPayment);
+
+        paymentForm.getCreatedProperty().addListener(createListener);
+        paymentForm.getUpdatedProperty().addListener(updateListener);
+        paymentForm.getDeletedProperty().addListener(deleteListener);
+
+//        getSelectedPaymentProperty().setValue(prevPayment);
+        paymentForm.stage.setOnCloseRequest(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                int idx = list.indexOf(selectedPaymentProperty().getValue());
+                Payment p = selectedPaymentProperty().getValue();
+                handlePettyCash(prevPayment, p);
+                if (p.getLedgerEntry() != null) {
+                    p.getLedgerEntry().getPayment().add(p);
+                }
+                list.removeListener(listListener);
+                selectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
+                paymentForm.getCreatedProperty().removeListener(createListener);
+                paymentForm.getUpdatedProperty().removeListener(updateListener);
+                paymentForm.getDeletedProperty().removeListener(deleteListener);
+            }
+        });
+
     }
 
     private void loadData() {
@@ -425,41 +415,66 @@ public class PaymentView extends Pane implements ViewInterface {
         return LedgerManager.getInstance().getItem(Integer.parseInt(id));
     }
 
+    public void handlePettyCash(Payment prev, Payment curr) {
+        Integer cashAcct = AccountManager.getInstance().getAccount("Petty Cash").getId();
+        Float amount = curr.getTransAmt();
+        if (prev == null || curr == null) {
+            return;
+        }
+
+        if (prev.getAccountNum() == curr.getAccountNum()) {
+            return;
+        }
+
+        if (prev.getAccountNum() != cashAcct && curr.getAccountNum() != cashAcct) {
+            return;
+        }
+
+        if (prev.getAccountNum() == cashAcct) {
+            // Reverse the previous petty cash ledger entry if any
+            Ledger l = prev.getLedgerEntry();
+            if(l != null && l.getAccountNum() == cashAcct) {
+                LedgerManager.getInstance().delete(l);
+                prev.setLedgerEntry(null);
+            }
+        } else {
+            Float bal = LedgerManager.getInstance().getBalance(cashAcct);
+            curr.setTransAmt(curr.getTransAmt() * -1);
+            Ledger l = curr.getLedgerEntry();
+            if(l == null) {
+                l = new Ledger();
+                l.setAccountNum(cashAcct);
+                l.setTransDate(curr.getTransDate());
+                l.setTransDesc(curr.getTransDesc());
+                l.setTransAmt(curr.getTransAmt());
+                l.setTransBal(bal - curr.getTransAmt());
+                ArrayList<Payment> pList = new ArrayList<>();
+                pList.add(curr);
+                l.setPayment(pList);
+                curr.setLedgerEntry(l);
+            }
+        }
+    }
+
     /**
      * @return the selectedPaymentProperty
      */
-    public SimpleObjectProperty<Payment> getSelectedPaymentProperty() {
+    public SimpleObjectProperty<Payment> selectedPaymentProperty() {
         return selectedPaymentProperty;
     }
 
     /**
      * @param selectedPaymentProperty the selectedPaymentProperty to set
      */
-    public void setSelectedPaymentProperty(SimpleObjectProperty<Payment> selectedPaymentProperty) {
-        this.selectedPaymentProperty = selectedPaymentProperty;
-    }
-
-//    private class PaymentChangeListener implements ChangeListener<Payment> {
-//
-//        @Override
-//        public void changed(ObservableValue<? extends Payment> observable, Payment oldValue, Payment newValue) {
-//            if (newValue == null) {
-//                return;
-//            }
-//            if (newValue.getId() == null) {
-//                getList().add(newValue);
-//            } else {
-//                updateItem(newValue);
-//            }
-//        }
-//
+//    public void setSelectedPaymentProperty(ReadOnlyObjectWrapper<Payment> selectedPaymentProperty) {
+//        this.selectedPaymentProperty = selectedPaymentProperty;
 //    }
     private class DeleteListener implements InvalidationListener {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().delete(getSelectedPaymentProperty().get());
-            removeItem(getSelectedPaymentProperty().get());
+            getPaymentManager().delete(selectedPaymentProperty().getValue());
+            removeItem(selectedPaymentProperty().getValue());
         }
 
     }
@@ -468,7 +483,9 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            updateItem(getSelectedPaymentProperty().get());
+            handlePettyCash(selectedPaymentProperty().getValue(), prevPayment);
+            updateItem(prevPayment);
+            selectedPaymentProperty().setValue(prevPayment);
         }
 
     }
@@ -477,8 +494,8 @@ public class PaymentView extends Pane implements ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().create(getSelectedPaymentProperty().get());
-            getList().add(getSelectedPaymentProperty().get());
+            getPaymentManager().create(selectedPaymentProperty().getValue());
+            getList().add(selectedPaymentProperty().getValue());
         }
 
     }

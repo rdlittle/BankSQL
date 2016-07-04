@@ -294,6 +294,9 @@ public class BankController implements Initializable {
         AccountPickerForm picker = new AccountPickerForm();
         picker.showForm();
         int newId = picker.accountId;
+        if (newId == 0) {
+            return;
+        }
         if (!viewMap.containsKey(newId)) {
             for (Account acct : accountList) {
                 if (acct.getId() == newId) {

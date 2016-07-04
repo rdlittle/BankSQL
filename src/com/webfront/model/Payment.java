@@ -84,9 +84,6 @@ public class Payment implements Serializable {
     @Transient
     SimpleObjectProperty<Category> primaryCatProperty;
     
-    @Column(name = "cashPayment")
-    private boolean cashPayment;
-    
     public Payment() {
 //        cat1 = new SimpleObjectProperty<>();
 //        cat1.addListener(new CatChangeListener());
@@ -206,6 +203,20 @@ public class Payment implements Serializable {
     public String toString() {
         return "com.webfront.model.Payment[ id=" + id + " ]";
     }
+    
+    public static Payment copy(Payment p) {
+        Payment copyOfPayment = new Payment();
+        copyOfPayment.setId(p.getId());
+        copyOfPayment.setAccountNum(p.getAccountNum());
+        copyOfPayment.setLedgerEntry(p.getLedgerEntry());
+        copyOfPayment.setPrimaryCat(p.getPrimaryCat());
+        copyOfPayment.setSubCat(p.getSubCat());
+        copyOfPayment.setTransAmt(p.getTransAmt());
+        copyOfPayment.setTransDate(p.getTransDate());
+        copyOfPayment.setStore(p.getStore());
+        copyOfPayment.setTransDesc(p.getTransDesc());
+        return copyOfPayment;
+    }
 
     /**
      * @return the category1
@@ -220,20 +231,6 @@ public class Payment implements Serializable {
     public void setPrimaryCat(Category category1) {
         this.primaryCat = category1;
 //        cat1.set(category1);
-    }
-
-    /**
-     * @return the cashPayment
-     */
-    public boolean isCashPayment() {
-        return cashPayment;
-    }
-
-    /**
-     * @param cashPayment the cashPayment to set
-     */
-    public void setCashPayment(boolean cashPayment) {
-        this.cashPayment = cashPayment;
     }
 
     private class CatChangeListener implements ChangeListener {
