@@ -82,7 +82,6 @@ public class PaymentView extends Pane implements ViewInterface {
 
     protected PaymentView() {
         super();
-//        this.getStylesheets().add("com/webfront/app/bank/css/styles.css");
 
         storeAdded = new SimpleBooleanProperty();
         selectedPaymentProperty = new ReadOnlyObjectWrapper<>();

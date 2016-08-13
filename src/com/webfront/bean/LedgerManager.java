@@ -131,7 +131,7 @@ public class LedgerManager extends DBManager {
     public int getLastId(int accountNum) {
         String queryString = "SELECT id FROM ledger WHERE accountNum = ";
         queryString += Integer.toString(accountNum);
-        queryString += " ORDER BY id DESC LIMIT 0,1";
+        queryString += " ORDER BY transDate DESC LIMIT 0,1";
         Query query = em.createNativeQuery(queryString);
         List<Integer> result = query.getResultList();
         if (result.isEmpty()) {

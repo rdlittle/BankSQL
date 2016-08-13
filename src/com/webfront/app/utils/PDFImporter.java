@@ -96,10 +96,6 @@ public class PDFImporter extends Importer {
         Extract the currTextual data from the PDF
          */
 
-//        PDFProcessor pdfProcessor = new PDFProcessor(fileName);
-        String pdfOutput="/tmp/pdfOut";
-        PDFTool pdfTool = new PDFTool();
-        pdfTool.extract(fileName, pdfOutput);
         PDFTextStripper pdfStripper = new PDFTextStripper();
         BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(fileName));
         PDDocument document = PDDocument.load(inStream);
@@ -259,6 +255,8 @@ public class PDFImporter extends Importer {
         Element endElement = section.getChild("end");
         Element dataDefinition = section.getChild("data");
         Element lineDefinition = section.getChild("line");
+        Element lineStart = null;
+        Element lineEnd = null;
 
         Pattern linePattern = null;
 
@@ -293,6 +291,7 @@ public class PDFImporter extends Importer {
             prevText = buffer.get(currentLine - 1);
             currText = buffer.get(currentLine);
             nextText = buffer.get(currentLine + 1);
+
             Matcher lineMatcher = null;
             if (lineDefinition != null) {
                 if (linePattern != null) {
@@ -306,8 +305,21 @@ public class PDFImporter extends Importer {
                 if (dataDefinition.getAttribute("fields") != null) {
                     fieldCount = Integer.parseInt(dataDefinition.getAttribute("fields").getValue());
                 }
+                if (dataDefinition.getChild("start") != null) {
+                    lineStart = dataDefinition.getChild("start");
+                }
+                if (dataDefinition.getChild("end") != null) {
+                    lineEnd = dataDefinition.getChild("end");
+                }
             }
 
+            /*
+            pageBreak 
+            Relies on there being text that indicates the end one page and the start of another
+            "start" refers to text at the end of a page
+            "end" refers to text at the start of the next page
+            Example: "continued on next page" (start) "page 2" (end)
+             */
             if (hasPageBreak && pageBreakStartPattern.matcher(currText).matches()) {
                 while (!pageBreakEndPattern.matcher(currText).matches()) {
                     currentLine++;
@@ -317,16 +329,44 @@ public class PDFImporter extends Importer {
                 }
             }
 
-            if (lineMatcher != null && !lineMatcher.matches() && fieldCount > 1 && offset > 0) {
-                buffer.put(currentLine + 1, currText + " " + nextText);
-                buffer.put(currentLine, "");
+            if (lineMatcher != null) {
+                if (fieldCount > 1) {
+                    if (!lineMatcher.matches() && offset > 0) {
+                        // Look for text that starts with field 0
+                        if (dataDefinition != null) {
+                            boolean hasStart = false;
+                            boolean hasEnd = false;
+                            if (lineStart != null) {
+                                Pattern pStart = Pattern.compile(lineStart.getText());
+                                if (pStart.matcher(currText).find()) {
+                                    hasStart = true;
+                                }
+                            }
+                            if (lineEnd != null) {
+                                Pattern pEnd = Pattern.compile(lineEnd.getText());
+                                if (pEnd.matcher(currText).matches()) {
+                                    hasEnd = true;
+                                } else if (hasStart && pEnd.matcher(nextText).find()) {
+                                    buffer.put(currentLine + 1, currText + " " + nextText);
+                                    buffer.put(currentLine, "");
+                                }
+                            }
+                            
+                            if (lineStart == null && lineEnd == null) {
+                                buffer.put(currentLine + 1, currText + " " + nextText);
+                                buffer.put(currentLine, "");
+                            }
+                        }
+                    }
+                }
             }
 
             if (lineMatcher != null && lineMatcher.matches()) {
+                System.out.println(currText);
                 if (dataDefinition != null) {
                     LedgerItem entry = new LedgerItem();
                     for (Element dataLine : dataDefinition.getChildren()) {
-                        String tag = dataLine.getAttributeValue("name");
+                        String tag = dataLine.getAttributeValue("name") == null ? "" : dataLine.getAttributeValue("name");
                         String regex = dataLine.getText();
                         Matcher matcher = Pattern.compile(regex).matcher(currText);
                         int fieldNumber = 0;
