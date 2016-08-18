@@ -35,7 +35,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -131,12 +130,12 @@ public class DetailViewController implements Initializable, ViewInterface {
 
     @Override
     public PaymentManager getPaymentManager() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return PaymentManager.getInstance();
     }
 
     @Override
     public ObservableList<Payment> getList() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return PaymentManager.getInstance().getList("");
     }
 
     @Override
@@ -152,17 +151,17 @@ public class DetailViewController implements Initializable, ViewInterface {
                 }
             }
         }
-        
+
     }
 
     @Override
     public void removeItem(Payment p) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//        getPaymentManager().delete(p);
     }
 
     @Override
     public void updateTrans(int idx) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //getPaymentManager().update(idx);
     }
 
     @Override
@@ -296,6 +295,7 @@ public class DetailViewController implements Initializable, ViewInterface {
                 }
             }
         });
+
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, new DoubleClick());
         Platform.runLater(() -> loadData());
     }
@@ -517,8 +517,14 @@ public class DetailViewController implements Initializable, ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().delete(selectedPaymentProperty.get());
-            removeItem(selectedPaymentProperty.get());
+            if (selectedPaymentProperty.get().getLedgerEntry() == null) {
+                int si = table.getSelectionModel().getSelectedIndex();
+                TreeItem ti = table.getSelectionModel().getModelItem(si);
+                if (ti.getValue() instanceof com.webfront.model.Payment) {
+                    getPaymentManager().delete(selectedPaymentProperty.get());
+                    ti.getParent().getChildren().remove(ti);
+                }
+            }
         }
     }
 

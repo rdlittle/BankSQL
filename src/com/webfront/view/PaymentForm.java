@@ -375,6 +375,7 @@ public final class PaymentForm extends AnchorPane {
         }
 
         if (prevPayment.getId() != null) {
+            // Updating existing transaction
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             prevPayment.setTransDate(Date.valueOf(dateStr));
@@ -392,6 +393,7 @@ public final class PaymentForm extends AnchorPane {
             getUpdatedProperty().set(true);
             closeForm();
         } else {
+            // Creating new transaction
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             payment.setTransDate(Date.valueOf(dateStr));

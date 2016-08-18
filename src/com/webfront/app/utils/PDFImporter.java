@@ -362,7 +362,7 @@ public class PDFImporter extends Importer {
             }
 
             if (lineMatcher != null && lineMatcher.matches()) {
-                System.out.println(currText);
+//                System.out.println(currText);
                 if (dataDefinition != null) {
                     LedgerItem entry = new LedgerItem();
                     for (Element dataLine : dataDefinition.getChildren()) {
