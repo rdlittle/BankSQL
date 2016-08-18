@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC, r.id DESC"),
-    @NamedQuery(name = "Payment.findOrphans",query = "SELECT r FROM Payment r WHERE r.ledgerEntry IS NULL ORDER BY r.transDate DESC, r.id DESC"),
+    @NamedQuery(name = "Payment.findOrphans", query = "SELECT r FROM Payment r WHERE r.ledgerEntry IS NULL ORDER BY r.transDate DESC, r.id DESC"),
     @NamedQuery(name = "Payment.findById", query = "SELECT r FROM Payment r WHERE r.id = :id"),
     @NamedQuery(name = "Payment.findByTransDate", query = "SELECT r FROM Payment r WHERE r.transDate = :transDate"),
     @NamedQuery(name = "Payment.findByTransDesc", query = "SELECT r FROM Payment r WHERE r.transDesc = :transDesc"),
@@ -57,9 +57,9 @@ public class Payment implements Serializable {
     private Date transDate;
     @Column(name = "transDesc")
     private String transDesc;
-    
+
     @OneToOne
-    @JoinColumn(name = "transId", referencedColumnName="id")
+    @JoinColumn(name = "transId", referencedColumnName = "id")
     private Ledger ledgerEntry;
 
     @OneToOne
@@ -76,14 +76,14 @@ public class Payment implements Serializable {
 
     @Column(name = "accountNum")
     private Integer accountNum;
-    
+
     @Basic(optional = false)
     @Column(name = "transAmt")
     private float transAmt;
-    
+
     @Transient
     SimpleObjectProperty<Category> primaryCatProperty;
-    
+
     public Payment() {
 //        cat1 = new SimpleObjectProperty<>();
 //        cat1.addListener(new CatChangeListener());
@@ -133,9 +133,9 @@ public class Payment implements Serializable {
     public Ledger getLedgerEntry() {
         return this.ledgerEntry;
     }
-    
+
     public void setLedgerEntry(Ledger entry) {
-        this.ledgerEntry=entry;
+        this.ledgerEntry = entry;
     }
 
     public Stores getStore() {
@@ -185,7 +185,7 @@ public class Payment implements Serializable {
             return entry2.compareTo(entry1);
         }
     };
-    
+
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
@@ -203,18 +203,20 @@ public class Payment implements Serializable {
     public String toString() {
         return "com.webfront.model.Payment[ id=" + id + " ]";
     }
-    
+
     public static Payment copy(Payment p) {
         Payment copyOfPayment = new Payment();
-        copyOfPayment.setId(p.getId());
-        copyOfPayment.setAccountNum(p.getAccountNum());
-        copyOfPayment.setLedgerEntry(p.getLedgerEntry());
-        copyOfPayment.setPrimaryCat(p.getPrimaryCat());
-        copyOfPayment.setSubCat(p.getSubCat());
-        copyOfPayment.setTransAmt(p.getTransAmt());
-        copyOfPayment.setTransDate(p.getTransDate());
-        copyOfPayment.setStore(p.getStore());
-        copyOfPayment.setTransDesc(p.getTransDesc());
+        if (p != null) {
+            copyOfPayment.setId(p.getId());
+            copyOfPayment.setAccountNum(p.getAccountNum());
+            copyOfPayment.setLedgerEntry(p.getLedgerEntry());
+            copyOfPayment.setPrimaryCat(p.getPrimaryCat());
+            copyOfPayment.setSubCat(p.getSubCat());
+            copyOfPayment.setTransAmt(p.getTransAmt());
+            copyOfPayment.setTransDate(p.getTransDate());
+            copyOfPayment.setStore(p.getStore());
+            copyOfPayment.setTransDesc(p.getTransDesc());
+        }
         return copyOfPayment;
     }
 
@@ -239,7 +241,7 @@ public class Payment implements Serializable {
         public void changed(ObservableValue observable, Object oldValue, Object newValue) {
             System.out.println(newValue.toString());
         }
-        
+
     }
 
 }
