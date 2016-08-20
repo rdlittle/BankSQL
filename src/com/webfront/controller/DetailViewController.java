@@ -19,6 +19,7 @@ import com.webfront.view.ViewInterface;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -43,6 +44,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.TreeTableView.TreeTableViewSelectionModel;
 import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.input.MouseEvent;
@@ -141,16 +143,16 @@ public class DetailViewController implements Initializable, ViewInterface {
     @Override
     public void updateItem(Payment p) {
         PaymentManager.getInstance().update(p);
-        Ledger l = p.getLedgerEntry();
-        if (l != null) {
-            int idx = table.getRoot().getChildren().indexOf(l);
-            TreeItem<Ledger> parent = table.getRoot().getChildren().get(idx);
-            for (TreeItem child : parent.<Payment>getChildren()) {
-                if (child.equals(p)) {
-
-                }
-            }
-        }
+//        Ledger l = p.getLedgerEntry();
+//        if (l != null) {
+//            int idx = table.getRoot().getChildren().indexOf(l);
+//            TreeItem<Ledger> parent = table.getRoot().getChildren().get(idx);
+//            for (TreeItem child : parent.<Payment>getChildren()) {
+//                if (child.equals(p)) {
+//
+//                }
+//            }
+//        }
 
     }
 
@@ -532,7 +534,23 @@ public class DetailViewController implements Initializable, ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            updateItem(selectedPaymentProperty.get());
+            Payment p = selectedPaymentProperty.get();
+            TreeTableViewSelectionModel<Ledger> sm = table.getSelectionModel();
+            updateItem(p);
+            if (p.getLedgerEntry() != null) {
+                int si = sm.getSelectedIndex();
+                TreeItem ti = sm.getModelItem(si);
+                if (ti.getValue() instanceof com.webfront.model.Payment) {
+                    Ledger pLedger = p.getLedgerEntry();
+                    for (TreeItem<Ledger> lti : root.getChildren()) {
+                        if (lti.getValue().getId().equals(pLedger.getId())) {
+                            ti.getParent().getChildren().remove(ti);
+                            lti.getChildren().add(ti);
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -540,8 +558,37 @@ public class DetailViewController implements Initializable, ViewInterface {
 
         @Override
         public void invalidated(Observable observable) {
-            getPaymentManager().create(selectedPaymentProperty.get());
-            getList().add(selectedPaymentProperty.get());
+            Payment p = selectedPaymentProperty.get();
+            TreeItem pti = new TreeItem<>(p);
+            getPaymentManager().create(p);
+            if (p.getLedgerEntry() == null) {
+                for(TreeItem<Ledger> lti : root.getChildren()) {
+                    if(lti.getValue().getId()==0) {
+                        lti.getChildren().add(pti);
+                        lti.getChildren().sort(new Comparator<TreeItem>() {
+                            @Override
+                            public int compare(TreeItem o1, TreeItem o2) {
+                                Payment p1 = (Payment) o1.getValue();
+                                Payment p2 = (Payment) o2.getValue();
+                                if(p1.getTransDate().equals(p2.getTransDate())) {
+                                    return p2.getId().compareTo(p1.getId());
+                                }
+                                return p2.getTransDate().compareTo(p1.getTransDate());
+                            }
+                        });
+                        table.refresh();
+                        break;
+                    }
+                }
+            } else {
+                for (TreeItem<Ledger> lti : root.getChildren()) {
+                    if (lti.getValue().getId().equals(p.getLedgerEntry().getId())) {
+                        pti.getParent().getChildren().remove(pti);
+                        lti.getChildren().add(pti);
+                        break;
+                    }
+                }
+            }
         }
     }
 
