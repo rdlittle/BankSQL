@@ -210,9 +210,12 @@ public class PaymentView extends Pane implements ViewInterface {
         /*
             Open a new PayementForm, add ListChangeListener
          */
-        btnAdd.setOnAction((ActionEvent event) -> {
-            selectedPaymentProperty().setValue(new Payment());
-            showPaymentForm();
+        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                prevPayment = new Payment();
+                showPaymentForm();
+            }
         });
 
         EventHandler<MouseEvent> click;
@@ -269,9 +272,11 @@ public class PaymentView extends Pane implements ViewInterface {
         };
         list.addListener(listListener);
 
-        prevPaymentCopy = Payment.copy(prevPayment);
-        selectedPaymentProperty().setValue(prevPaymentCopy);
+//        prevPaymentCopy = Payment.copy(selectedPaymentProperty().get());
+//        selectedPaymentProperty().setValue(prevPaymentCopy);
+        
         PaymentForm paymentForm = new PaymentForm(prevPayment);
+        selectedPaymentProperty().bind(paymentForm.selectedPaymentProperty());
 
         paymentForm.getCreatedProperty().addListener(createListener);
         paymentForm.getUpdatedProperty().addListener(updateListener);

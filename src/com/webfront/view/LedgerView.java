@@ -185,15 +185,16 @@ public class LedgerView extends AnchorPane {
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
-        list.addListener(new ListChangeListener() {
-            @Override
-            public void onChanged(ListChangeListener.Change c) {
-                table.getItems().setAll(list);
-                isLoading.set(false);
-            }
-        });
-
-        table.getItems().addAll(list);
+//        list.addListener(new ListChangeListener() {
+//            @Override
+//            public void onChanged(ListChangeListener.Change c) {
+//                table.getItems().setAll(list);
+//                isLoading.set(false);
+//            }
+//        });
+//
+//        table.getItems().addAll(list);
+        
 
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
 
@@ -234,6 +235,7 @@ public class LedgerView extends AnchorPane {
 
     public void loadData() {
         list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
+        table.itemsProperty().setValue(list);
     }
 
     public synchronized LedgerView getInstance(int acctNum) {

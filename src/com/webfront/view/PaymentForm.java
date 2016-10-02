@@ -131,7 +131,7 @@ public final class PaymentForm extends AnchorPane {
         buildForm();
         setFormData();
     }
-    
+
     public PaymentForm(Payment p) {
         this();
         prevPayment = p;
@@ -189,6 +189,9 @@ public final class PaymentForm extends AnchorPane {
             transDate.setOnAction(new EventHandler() {
                 @Override
                 public void handle(Event event) {
+                    if (prevPayment == null) {
+                        return;
+                    }
                     if (prevPayment.getId() != null) {
                         Date d = new Date(prevPayment.getTransDate().getTime());
                         LocalDate oDate = d.toLocalDate();
@@ -204,6 +207,9 @@ public final class PaymentForm extends AnchorPane {
             cbStores.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                    if (prevPayment == null) {
+                        return;
+                    }
                     if (prevPayment.getId() != null) {
                         if (!prevPayment.getStore().getStoreName().equals(cbStores.getValue())) {
                             btnOk.setDisable(false);
@@ -228,7 +234,7 @@ public final class PaymentForm extends AnchorPane {
                         }
                         subCat.getItems().addAll(subCatMap.keySet());
                         subCat.getSelectionModel().selectFirst();
-                        if (prevPayment.getId() != null) {
+                        if (prevPayment != null && prevPayment.getId() != null) {
                             if (prevPayment.getPrimaryCat().getDescription() != primaryCat.getValue()) {
                                 btnOk.setDisable(false);
                             }
@@ -240,6 +246,9 @@ public final class PaymentForm extends AnchorPane {
             subCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                    if (prevPayment == null) {
+                        return;
+                    }
                     if (prevPayment.getId() != null) {
                         if (prevPayment.getSubCat() != null) {
                             if (prevPayment.getSubCat().getDescription() != subCat.getValue()) {
@@ -253,6 +262,9 @@ public final class PaymentForm extends AnchorPane {
             transDescription.setOnKeyReleased(new EventHandler<KeyEvent>() {
                 @Override
                 public void handle(KeyEvent event) {
+                    if (prevPayment == null) {
+                        return;
+                    }                    
                     String newDesc = transDescription.getText();
                     String oldDesc = prevPayment.getTransDesc();
                     if (!newDesc.equals(oldDesc)) {
@@ -290,12 +302,12 @@ public final class PaymentForm extends AnchorPane {
                     }
                 }
             });
-            
+
             cbAccount.selectionModelProperty().addListener(new ChangeListener() {
                 @Override
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                     SelectItem se = (SelectItem) newValue;
-                    selectedPaymentProperty.getValue().setAccountNum((Integer)se.getKey());
+                    selectedPaymentProperty.getValue().setAccountNum((Integer) se.getKey());
                     btnOk.setDisable(false);
                 }
             });
@@ -310,8 +322,19 @@ public final class PaymentForm extends AnchorPane {
         }
     }
 
+    public void updateModel() {
+        
+    }
+    
+    public void getModel() {
+        
+    }
+    
     public void setFormData() {
         // Set default values depending on whether you're editing an existing payment or creating a new one
+        if (prevPayment == null) {
+            return;
+        }
         if (prevPayment.getId() != null) {
             btnOk.setDisable(true);
             btnDelete.setDisable(false);
@@ -345,8 +368,12 @@ public final class PaymentForm extends AnchorPane {
                 cbStores.setValue(prevPayment.getStore().getStoreName());
             }
         } else {
-            transDate.setValue(LocalDate.now());
-            cbAccount.getSelectionModel().selectFirst();
+            if (prevPayment.getTransDate() == null) {
+                transDate.setValue(LocalDate.now());
+            }
+            if (prevPayment.getAccountNum() == null) {
+                cbAccount.getSelectionModel().selectFirst();
+            }
             transId.setText("0");
             transAmt.setText("0");
             btnDelete.setDisable(true);
@@ -373,7 +400,7 @@ public final class PaymentForm extends AnchorPane {
             cbStores.getItems().sort(comparator);
         }
 
-        if (prevPayment.getId() != null) {
+        if (prevPayment != null && prevPayment.getId() != null) {
             // Updating existing transaction
             LocalDate localDate = transDate.getValue();
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -389,7 +416,7 @@ public final class PaymentForm extends AnchorPane {
             prevPayment.setSubCat(cat2);
             prevPayment.setStore(store);
             selectedPaymentProperty().setValue(prevPayment);
-            getUpdatedProperty().set(true);
+            getUpdatedProperty().set(!(getUpdatedProperty().getValue()));
             closeForm();
         } else {
             // Creating new transaction
@@ -407,8 +434,12 @@ public final class PaymentForm extends AnchorPane {
             payment.setSubCat(cat2);
             payment.setStore(store);
             selectedPaymentProperty().setValue(payment);
-            currPayment = new Payment();
-            getCreatedProperty().set(true);
+//            currPayment = new Payment();
+            getCreatedProperty().set(!(getCreatedProperty().getValue()));
+            currPayment = Payment.copy(payment);
+            currPayment.setId(null);
+            selectedPaymentProperty().setValue(currPayment);
+
         }
         transDescription.clear();
         transId.clear();
@@ -554,6 +585,7 @@ public final class PaymentForm extends AnchorPane {
     public SimpleObjectProperty selectedPaymentProperty() {
         return selectedPaymentProperty;
     }
+
     /**
      * @return the selectedPaymentProperty
      */
@@ -588,7 +620,7 @@ public final class PaymentForm extends AnchorPane {
     public SimpleBooleanProperty getDeletedProperty() {
         return deletedProperty;
     }
-    
+
     public Payment getPayment() {
         return (Payment) selectedPaymentProperty().getValue();
     }

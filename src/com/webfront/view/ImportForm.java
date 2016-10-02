@@ -179,6 +179,7 @@ public class ImportForm extends AnchorPane {
     @FXML
     public void btnOKClicked() {
         importProgress.setVisible(true);
+        importProgress.progressProperty().set(0);
         importDone.set(false);
 
         Importer importer;

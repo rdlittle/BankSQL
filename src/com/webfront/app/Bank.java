@@ -8,6 +8,7 @@ package com.webfront.app;
 import com.webfront.controller.BankController;
 import com.webfront.model.Config;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -52,6 +53,7 @@ public class Bank extends Application {
                 config.setX(Double.toString(primaryStage.getX()));
                 config.setY(Double.toString(primaryStage.getY()));
                 config.setConfig();
+                Platform.exit();
             }
         });
 

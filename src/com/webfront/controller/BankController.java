@@ -205,10 +205,10 @@ public class BankController implements Initializable {
             public void invalidated(Observable observable) {
                 if (importDone.getValue() == true) {
                     if (ImportForm.accountNum != null) {
-                        LedgerView view = viewMap.get(Integer.valueOf(accountNum.get()));
+                        LedgerView view = viewMap.get(accountNum.get());
                         view.getList().addAll(ImportForm.newItems);
                         view.getList().sort(LedgerView.LedgerComparator);
-                        view.getTable().setItems(view.getList());
+                        detailViewController.addLedgerEntries(ImportForm.newItems);
                         importDone.unbind();
                         accountNum.unbind();
                     }
@@ -220,7 +220,7 @@ public class BankController implements Initializable {
         accountNum.addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                LedgerView l = viewMap.get(newValue);
+                LedgerView l = viewMap.get((Integer)newValue);
                 selectedAccount.setValue(l);
             }
         });
@@ -361,7 +361,7 @@ public class BankController implements Initializable {
     @FXML
     public void onEditPreferences() {
         PreferencesForm prefs = PreferencesForm.getInstance(config);
-        prefs.isNewAccount = true;
+        prefs.isNewAccount = false;
         prefs.hasChanged.addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {

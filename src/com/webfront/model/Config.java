@@ -133,10 +133,14 @@ public class Config {
             } else {
                 Element xmlRoot = xmlDoc.getRootElement();
                 Element dims = xmlRoot.getChild("window");
+                Element sys = xmlRoot.getChild("system");
                 dims.getChild("width").setText(getWidth());
                 dims.getChild("height").setText(getHeight());
                 dims.getChild("x").setText(getX());
                 dims.getChild("y").setText(getY());
+                sys.getChild("installDir").setText(getInstallDir());
+                sys.getChild("importDir").setText(getImportDir());
+                sys.getChild("tmpDir").setText(getTmpDir());
             }
             writer = new FileWriter(getInstallDir() + getFileSep() + configFileName);
             XMLOutputter xml = new XMLOutputter();

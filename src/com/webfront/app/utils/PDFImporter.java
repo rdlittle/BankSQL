@@ -178,6 +178,7 @@ public class PDFImporter extends Importer {
                     }
                 }
             }
+            document.close();
         }
 
         ArrayList<Integer> lineNumbers = new ArrayList<>(markers.values());

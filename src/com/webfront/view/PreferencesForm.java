@@ -139,6 +139,8 @@ public class PreferencesForm extends AnchorPane {
     public SimpleBooleanProperty hasChanged;
     public SimpleBooleanProperty accountSelected;
     public SimpleStringProperty installDirProperty;
+    public SimpleStringProperty importDirProperty;
+    public SimpleStringProperty tmpDirProperty;
 
     public SimpleStringProperty bankNameProperty;
     public SimpleStringProperty accountNumberProperty;
@@ -158,8 +160,12 @@ public class PreferencesForm extends AnchorPane {
         ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
         hasChanged = new SimpleBooleanProperty(false);
         accountSelected = new SimpleBooleanProperty(false);
+        isNewAccount = false;
 
         installDirProperty = new SimpleStringProperty();
+        importDirProperty = new SimpleStringProperty();
+        tmpDirProperty = new SimpleStringProperty();
+        
         loader = new FXMLLoader(location, resources);
         stage = new Stage();
         scene = new Scene(this);
@@ -338,7 +344,6 @@ public class PreferencesForm extends AnchorPane {
                 form.hasChanged.addListener(new InvalidationListener() {
                     @Override
                     public void invalidated(Observable observable) {
-                        String value = observable.toString();
                         form.btnOk.setDisable(false);
                     }
                 });
@@ -406,8 +411,9 @@ public class PreferencesForm extends AnchorPane {
                         }
                     }
                 });
-
+                
                 form.btnOk.setDisable(true);
+                
             } catch (IOException ex) {
                 Logger.getLogger(PreferencesForm.class.getName()).log(Level.SEVERE, null, ex);
             }

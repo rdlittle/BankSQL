@@ -19,6 +19,7 @@ import com.webfront.view.ViewInterface;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -110,6 +111,7 @@ public class DetailViewController implements Initializable, ViewInterface {
     private final DeleteListener deleteListener = new DeleteListener();
     private final CreateListener createListener = new CreateListener();
     private final UpdateListener updateListener = new UpdateListener();
+    SimpleBooleanProperty isNew = new SimpleBooleanProperty(false);
 
     public DetailViewController() {
 
@@ -138,6 +140,10 @@ public class DetailViewController implements Initializable, ViewInterface {
     @Override
     public ObservableList<Payment> getList() {
         return PaymentManager.getInstance().getList("");
+    }
+    
+    public ObservableList<Ledger> getLedgerList() {
+        return list;
     }
 
     @Override
@@ -332,6 +338,13 @@ public class DetailViewController implements Initializable, ViewInterface {
         }
         table.setRoot(getRoot());
     }
+    
+    public void addLedgerEntries(ArrayList<Ledger> l) {
+        for(Ledger le : l) {
+            TreeItem<Ledger> ti = new TreeItem<>(le);
+            root.getChildren().add(ti);
+        }
+    }
 
     public void doUpdate(ObservableList<Payment> paymentList) {
         for (Payment p : paymentList) {
@@ -434,8 +447,6 @@ public class DetailViewController implements Initializable, ViewInterface {
 
     @FXML
     public void onAdd() {
-        SimpleBooleanProperty isNew = new SimpleBooleanProperty(false);
-
         if (table.getSelectionModel().getSelectedItem() == null) {
             selectedPaymentItem = new Payment();
         }
@@ -480,8 +491,8 @@ public class DetailViewController implements Initializable, ViewInterface {
     private void doEdit(TreeItem ti) {
         TreeItem parent = ti.getParent();
         selectedRow = table.getSelectionModel().getSelectedIndex();
-
-        if (ti.isLeaf()) {
+        boolean isPayment = (ti.getValue() instanceof Payment);
+        if (isPayment) {
             Payment p = (Payment) ti.getValue();
             selectedPaymentProperty.set(p);
             selectedLedgerItem = p.getLedgerEntry();
@@ -559,8 +570,8 @@ public class DetailViewController implements Initializable, ViewInterface {
         @Override
         public void invalidated(Observable observable) {
             Payment p = selectedPaymentProperty.get();
-            TreeItem pti = new TreeItem<>(p);
             getPaymentManager().create(p);
+            TreeItem pti = new TreeItem<>(p);
             if (p.getLedgerEntry() == null) {
                 for(TreeItem<Ledger> lti : root.getChildren()) {
                     if(lti.getValue().getId()==0) {
@@ -589,6 +600,10 @@ public class DetailViewController implements Initializable, ViewInterface {
                     }
                 }
             }
+//            selectedPaymentProperty.set(p);
+            selectedPaymentProperty.getValue().setId(null);
+//            selectedPaymentProperty.getValue().setTransDate(p.getTransDate());
+//            isNew.setValue(false);
         }
     }
 
