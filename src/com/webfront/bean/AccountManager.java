@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 import javax.persistence.Query;
 
 /**
@@ -19,7 +20,7 @@ import javax.persistence.Query;
  */
 public class AccountManager extends DBManager<Account> implements Serializable {
 
-    private ObservableList<Account> list;
+    private static ObservableList<Account> list;
     private static AccountManager manager=null;
     
     public AccountManager() {
@@ -67,6 +68,29 @@ public class AccountManager extends DBManager<Account> implements Serializable {
             manager = new AccountManager();
         }
         return manager;
+    }
+    
+    public static class AccountConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            Account acct = (Account) object;
+            if(object==null) {
+                acct = new Account();
+            }
+            return acct.getAccountName();
+        }
+
+        @Override
+        public Object fromString(String string) {
+            for(Account acct : list) {
+                if(acct.getAccountName().equalsIgnoreCase(string)) {
+                    return acct;
+                }
+            }
+            return string;
+        }
+        
     }
 
 }

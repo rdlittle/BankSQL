@@ -35,6 +35,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -97,6 +98,7 @@ public class DetailViewController implements Initializable, ViewInterface {
     private final LedgerManager ledgerManager = LedgerManager.getInstance();
 
     private TreeItem<Ledger> root;
+    private SortedList<Ledger> sortedList;
     private ObservableList<Category> parentList;
     private ObservableList<Category> childList;
 
@@ -214,6 +216,7 @@ public class DetailViewController implements Initializable, ViewInterface {
         setRoot(new TreeItem<>());
         table.showRootProperty().set(false);
         parentList = FXCollections.<Category>observableArrayList(CategoryManager.getInstance().getList("Category.findAllParent"));
+        sortedList = new SortedList(parentList);
         childList = FXCollections.<Category>observableArrayList();
 
         decimalFormatter.setMaximumFractionDigits(2);

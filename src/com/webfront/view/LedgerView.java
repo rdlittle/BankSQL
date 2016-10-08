@@ -5,10 +5,8 @@
  */
 package com.webfront.view;
 
-import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
-import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
@@ -18,10 +16,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Side;
 import javafx.scene.control.Button;

@@ -366,6 +366,7 @@ public class PaymentView extends Pane implements ViewInterface {
     /**
      * @return the ledgerManager
      */
+    @Override
     public LedgerManager getLedgerManager() {
         return ledgerManager;
     }

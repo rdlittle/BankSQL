@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.webfront.model;
 
+import com.webfront.bean.StoresManager;
 import java.io.Serializable;
 import java.util.Comparator;
+import javafx.util.StringConverter;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,6 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Stores.findById", query = "SELECT s FROM Stores s WHERE s.id = :id"),
     @NamedQuery(name = "Stores.findByStoreName", query = "SELECT s FROM Stores s WHERE s.storeName = :storeName")})
 public class Stores implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +43,10 @@ public class Stores implements Serializable {
     private String storeName;
 
     public Stores() {
+    }
+    
+    public Stores(String name) {
+        storeName = name;
     }
 
     public Stores(Integer id) {
@@ -85,15 +91,38 @@ public class Stores implements Serializable {
 
     @Override
     public String toString() {
-        return "com.webfont.view.Stores[ id=" + id + " ]";
+        return storeName;
     }
-    
+
     public static Comparator<Stores> storeComparator = new Comparator<Stores>() {
         @Override
         public int compare(Stores s1, Stores s2) {
             return s1.getStoreName().compareToIgnoreCase(s2.getStoreName());
         }
-        
+
     };
-    
+
+    public static class StoreConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            if(object==null) {
+                return "";
+            }
+            Stores store = (Stores) object;
+            return store.storeName;
+        }
+
+        @Override
+        public Object fromString(String string) {
+            for(Stores s : StoresManager.getInstance().getStoreList()) {
+                if (s.storeName.equalsIgnoreCase(string)) {
+                    return s;
+                }
+            }
+            return new Stores(string);
+        }
+        
+    }
+
 }

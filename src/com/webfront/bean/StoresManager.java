@@ -60,6 +60,18 @@ public class StoresManager extends DBManager {
         ObservableList olist = FXCollections.observableList(storeList);
         return olist;
     }
+    
+    public synchronized void create(Stores s) {
+        super.create(s);
+        Query query = em.createNamedQuery("Stores.findByStoreName");
+        query.setParameter("storeName", s.getStoreName());
+        Stores store = (Stores) query.getSingleResult();
+        list.add(store);
+    }
+    
+    public synchronized ObservableList<Stores> getStoreList() {
+        return list;
+    }
 
     public Stores getItem(Stores s) {
         String sql = "SELECT * FROM stores WHERE ";

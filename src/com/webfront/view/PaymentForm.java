@@ -61,7 +61,7 @@ public final class PaymentForm extends AnchorPane {
     @FXML
     DatePicker transDate;
     @FXML
-    ComboBox<SelectItem> cbAccount;
+    ComboBox<Account> cbAccount;
     @FXML
     ComboBox<String> primaryCat;
     @FXML
@@ -81,7 +81,7 @@ public final class PaymentForm extends AnchorPane {
     Button btnDelete;
 
     @FXML
-    ComboBox<String> cbStores;
+    ComboBox<Stores> cbStores;
 
     @FXML
     Hyperlink searchLink;
@@ -100,11 +100,9 @@ public final class PaymentForm extends AnchorPane {
     private SimpleBooleanProperty updatedProperty;
     private SimpleBooleanProperty createdProperty;
     private SimpleBooleanProperty deletedProperty;
-    private SimpleBooleanProperty storeAddedProperty;
     private final ArrayList<String> storeList = new ArrayList<>();
     private SimpleObjectProperty<Payment> selectedPaymentProperty;
     private final ItemListener itemListener = new ItemListener();
-    private Account cashAccount;
 
     public PaymentForm() {
         currPayment = new Payment();
@@ -153,27 +151,22 @@ public final class PaymentForm extends AnchorPane {
             stage.setScene(scene);
             stage.setTitle("Payment Form");
 
+            cbAccount.setItems(AccountManager.getInstance().getAccounts());
+            cbAccount.converterProperty().set(new AccountManager.AccountConverter());
             // Populate store list
-            cbStores.getItems().addAll(storeList);
+            cbStores.converterProperty().set(new Stores.StoreConverter());
+            cbStores.setItems(StoresManager.getInstance().getStoreList());
 
-            for (Account acct : AccountManager.getInstance().getList("Account.findAll")) {
-                if (acct.getAccountName().equalsIgnoreCase("Petty Cash")) {
-                    cashAccount = acct;
-                }
-                SelectItem<Integer, String> se = new SelectItem<>(acct.getId(), acct.getAccountName());
-                cbAccount.getItems().add(se);
-            }
-            cbStores.setEditable(true);
             cbStores.setPromptText("Enter store name...");
-            cbStores.setOnAction(new EventHandler() {
-                @Override
-                public void handle(Event event) {
-                    ComboBox cb = (ComboBox) event.getSource();
-                    if (cb.getValue() != null && !cb.getValue().toString().isEmpty()) {
-                        String sName = cb.getValue().toString();
-                    }
-                }
-            });
+//            cbStores.setOnAction(new EventHandler() {
+//                @Override
+//                public void handle(Event event) {
+//                    ComboBox cb = (ComboBox) event.getSource();
+//                    if (cb.getValue() != null && !cb.getValue().toString().isEmpty()) {
+//                        String sName = cb.getValue().toString();
+//                    }
+//                }
+//            });
 
             // Populate category 1 and category 2 lists
             ObservableList<Category> subList = (ObservableList<Category>) CategoryManager.getInstance().getCategories();
@@ -264,7 +257,7 @@ public final class PaymentForm extends AnchorPane {
                 public void handle(KeyEvent event) {
                     if (prevPayment == null) {
                         return;
-                    }                    
+                    }
                     String newDesc = transDescription.getText();
                     String oldDesc = prevPayment.getTransDesc();
                     if (!newDesc.equals(oldDesc)) {
@@ -323,13 +316,13 @@ public final class PaymentForm extends AnchorPane {
     }
 
     public void updateModel() {
-        
+
     }
-    
+
     public void getModel() {
-        
+
     }
-    
+
     public void setFormData() {
         // Set default values depending on whether you're editing an existing payment or creating a new one
         if (prevPayment == null) {
@@ -349,23 +342,18 @@ public final class PaymentForm extends AnchorPane {
                 transId.setText(l.getId().toString());
                 Integer aid = l.getAccountNum();
                 Account acct = AccountManager.getInstance().getAccount(aid);
-                SelectItem<Integer, String> se = new SelectItem<>(aid, acct.getAccountName());
-                cbAccount.setValue(se);
+                cbAccount.setValue(acct);
             } else {
                 cbAccount.getSelectionModel().selectFirst();
-                for (SelectItem se : cbAccount.getItems()) {
-                    if (se.getKey() == prevPayment.getAccountNum()) {
-                        cbAccount.getSelectionModel().select(se);
-                        break;
-                    }
-                }
+                Account acct = AccountManager.getInstance().getAccount(prevPayment.getAccountNum());
+                cbAccount.getSelectionModel().select(acct);
             }
             primaryCat.setValue(prevPayment.getPrimaryCat().getDescription());
             if (prevPayment.getSubCat() != null) {
                 subCat.setValue(prevPayment.getSubCat().getDescription());
             }
             if (prevPayment.getStore().getStoreName() != null) {
-                cbStores.setValue(prevPayment.getStore().getStoreName());
+                cbStores.setValue(prevPayment.getStore());
             }
         } else {
             if (prevPayment.getTransDate() == null) {
@@ -383,21 +371,13 @@ public final class PaymentForm extends AnchorPane {
     @FXML
     void btnOkOnAction() {
         Payment payment = currPayment;
-        String newStoreName = cbStores.getValue();
-        String storeKey;
-        Stores store = new Stores();
+        Stores store = cbStores.getValue();
         getCreatedProperty().set(false);
 
-        if (!storeMap.containsKey(newStoreName)) {
+        if (store.getId() == null) {
             StoresManager storeManager = StoresManager.getInstance();
-            store.setStoreName(newStoreName);
             storeManager.create(store);
-            storeKey = store.getStoreName();
-            storeManager.getStoresMap().put(storeKey, store);
-//            view.getStoreList().add(store);
-//            view.getStoreAdded().set(true);
-            storeAddedProperty.set(true);
-            cbStores.getItems().sort(comparator);
+            cbStores.getItems().sort(Stores.storeComparator);
         }
 
         if (prevPayment != null && prevPayment.getId() != null) {
@@ -406,15 +386,13 @@ public final class PaymentForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             prevPayment.setTransDate(Date.valueOf(dateStr));
             prevPayment.setTransDesc(transDescription.getText());
-            prevPayment.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
+            prevPayment.setAccountNum((Integer) cbAccount.getValue().getId());
             prevPayment.setTransAmt(Float.parseFloat(transAmt.getText()));
-            storeKey = cbStores.getValue();
-            store = getStoreMap().get(storeKey);
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
             prevPayment.setPrimaryCat(cat1);
             prevPayment.setSubCat(cat2);
-            prevPayment.setStore(store);
+            prevPayment.setStore(cbStores.getValue());
             selectedPaymentProperty().setValue(prevPayment);
             getUpdatedProperty().set(!(getUpdatedProperty().getValue()));
             closeForm();
@@ -424,15 +402,13 @@ public final class PaymentForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             payment.setTransDate(Date.valueOf(dateStr));
             payment.setTransDesc(transDescription.getText());
-            payment.setAccountNum((Integer) cbAccount.getSelectionModel().getSelectedItem().getKey());
+            payment.setAccountNum((Integer) cbAccount.getValue().getId());
             payment.setTransAmt(Float.parseFloat(transAmt.getText()));
-            storeKey = cbStores.getValue();
-            store = getStoreMap().get(storeKey);
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
             payment.setPrimaryCat(cat1);
             payment.setSubCat(cat2);
-            payment.setStore(store);
+            payment.setStore(cbStores.getValue());
             selectedPaymentProperty().setValue(payment);
 //            currPayment = new Payment();
             getCreatedProperty().set(!(getCreatedProperty().getValue()));
