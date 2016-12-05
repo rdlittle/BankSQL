@@ -6,7 +6,6 @@
 package com.webfront.bean;
 
 import com.webfront.model.Stores;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import javafx.beans.InvalidationListener;
@@ -14,6 +13,7 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 import javax.persistence.Query;
 
 /**
@@ -70,6 +70,9 @@ public class StoresManager extends DBManager {
     }
     
     public synchronized ObservableList<Stores> getStoreList() {
+        if(list.isEmpty()) {
+            getList("");
+        }
         return list;
     }
 
@@ -106,6 +109,21 @@ public class StoresManager extends DBManager {
             getList("SELECT * FROM stores ORDER BY storeName");
         }
 
+    }
+    
+    public static class StoreConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            Stores s = (Stores) object;
+            return s.getStoreName();
+        }
+
+        @Override
+        public Object fromString(String string) {
+            return getInstance().getStoresMap().get(string);
+        }
+        
     }
     
 }

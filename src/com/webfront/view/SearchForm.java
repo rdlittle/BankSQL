@@ -6,8 +6,10 @@
 package com.webfront.view;
 
 import com.webfront.app.utils.DateConvertor;
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.StoresManager;
+import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.SearchCriteria;
@@ -22,16 +24,18 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -48,20 +52,31 @@ public final class SearchForm extends AnchorPane {
     Stage stage;
     Scene scene;
     private LedgerView view;
-    //private TransactionView tView;
-    Map<String, Category> primeCatMap;
-    Map<String, Category> subCatMap;
-    Map<String, Stores> storeMap;
-
-    private ObservableList<Stores> stores;
-    private ObservableList<String> primaryCats;
-    private ObservableList<String> subCats;
+    private FilteredList<Category> childCatList;
 
     URL location;
     ResourceBundle resources = ResourceBundle.getBundle("com.webfront.app.bank");
 
     @FXML
-    TextField txtSubject;
+    Button btnOk;
+
+    @FXML
+    Button btnCancel;
+
+    @FXML
+    CheckBox chkChecks;
+
+    @FXML
+    ComboBox<Account> cbAccounts;
+
+    @FXML
+    ComboBox<Category> cbPrimary;
+
+    @FXML
+    ComboBox<Category> cbSecondary;
+
+    @FXML
+    ComboBox<Stores> cbStores;
 
     @FXML
     DatePicker startDate;
@@ -70,25 +85,25 @@ public final class SearchForm extends AnchorPane {
     DatePicker endDate;
 
     @FXML
+    Label lblCheckStart;
+
+    @FXML
+    Label lblCheckEnd;
+
+    @FXML
+    TextField txtCheckStart;
+
+    @FXML
+    TextField txtCheckEnd;
+
+    @FXML
+    TextField txtPayee;
+
+    @FXML
     TextField minAmount;
 
     @FXML
     TextField maxAmount;
-
-    @FXML
-    ComboBox<String> cbPrimary;
-
-    @FXML
-    ComboBox<String> cbSecondary;
-
-    @FXML
-    ComboBox<String> cbStores;
-
-    @FXML
-    Button btnOk;
-
-    @FXML
-    Button btnCancel;
 
     public SearchForm() {
         location = getClass().getResource("/com/webfront/app/fxml/SearchForm.fxml");
@@ -99,24 +114,24 @@ public final class SearchForm extends AnchorPane {
 
         stage = new Stage();
         scene = new Scene(this);
-        txtSubject = new TextField();
         cbPrimary = new ComboBox<>();
         cbSecondary = new ComboBox<>();
         cbStores = new ComboBox<>();
+        cbAccounts = new ComboBox<>();
         btnOk = new Button();
         btnCancel = new Button();
 
-        primaryCats = FXCollections.observableArrayList();
-        subCats = FXCollections.observableArrayList();
-        stores = FXCollections.observableArrayList();
-
-        primeCatMap = new HashMap<>();
-        subCatMap = new HashMap<>();
-        storeMap = new HashMap<>();
         endDate = new DatePicker();
         startDate = new DatePicker();
-        minAmount = new TextField();
-        maxAmount = new TextField();
+        minAmount = new TextField("0");
+        maxAmount = new TextField("999999");
+        txtCheckStart = new TextField();
+        txtCheckEnd = new TextField();
+        txtPayee = new TextField();
+        chkChecks = new CheckBox();
+        chkChecks.selectedProperty().set(false);
+        lblCheckStart = new Label();
+        lblCheckEnd = new Label();
 
         try {
             loader.load();
@@ -151,6 +166,24 @@ public final class SearchForm extends AnchorPane {
             criteria = new SearchCriteria();
         }
 
+        criteria.getStartDateProperty().bind(startDate.valueProperty());
+        criteria.getEndDateProperty().bind(endDate.valueProperty());
+
+        criteria.getMinAmountProperty().bind(minAmount.textProperty());
+        criteria.getMaxAmountProperty().bind(maxAmount.textProperty());
+
+        criteria.getPrimaryCatProperty().bind(cbPrimary.valueProperty());
+        criteria.getSecondaryCatProperty().bind(cbSecondary.valueProperty());
+
+        criteria.getChkStartProperty().bind(txtCheckStart.textProperty());
+        criteria.getChkEndProperty().bind(txtCheckEnd.textProperty());
+
+        criteria.getStoreProperty().bind(cbStores.valueProperty());
+
+        criteria.getAccountProperty().bind(cbAccounts.valueProperty());
+        
+        criteria.getPayeeProperty().bind(txtPayee.textProperty());
+
         if (startDate.getValue() == null) {
             startDate.setValue(LocalDate.now());
         }
@@ -165,33 +198,38 @@ public final class SearchForm extends AnchorPane {
         if ("".equals(criteria.getEndDate())) {
             criteria.setEndDate(endDate.getValue().format(DateTimeFormatter.ISO_LOCAL_DATE));
         }
+
         endDate.setValue(LocalDate.parse(criteria.getEndDate()));
-        ObservableList<Category> list = catManager.getCategories();
-        for (Category c : list) {
-            if (null != c.getParent() && c.getParent() == 0) {
-                primeCatMap.put(c.getDescription(), c);
-                getPrimaryCats().add(c.getDescription());
-            }
-        }
 
-        cbPrimary.getItems().add("--Select--");
-        cbPrimary.getItems().addAll(getPrimaryCats());
-        cbPrimary.getSelectionModel().selectFirst();
+        cbAccounts.setItems(AccountManager.getInstance().getAccounts());
+        cbAccounts.converterProperty().set(new AccountManager.AccountConverter());
 
-        cbSecondary.getItems().add("--Select--");
-        cbSecondary.getSelectionModel().selectFirst();
+        cbPrimary.converterProperty().set(new CategoryManager.CategoryConverter());
+        cbPrimary.getItems().addAll(CategoryManager.getInstance().getCategories("SELECT * FROM categories WHERE parent = 0"));
 
-        StoresManager storeManager = StoresManager.getInstance();
-        stores = storeManager.getList("SELECT * FROM stores ORDER BY storeName");
-        for (Stores store : stores) {
-            cbStores.getItems().add(store.getStoreName());
-            storeMap.put(store.getStoreName(), store);
-        }
+        childCatList = new FilteredList<>(CategoryManager.getInstance().getCategories("SELECT * FROM categories WHERE parent > 0"));
+        childCatList.setPredicate((e) -> true);
+        cbSecondary.converterProperty().set(new CategoryManager.CategoryConverter());
+        cbSecondary.setItems(childCatList);
+
+        cbStores.setItems(StoresManager.getInstance().getStoreList());
+        cbStores.converterProperty().set(new StoresManager.StoreConverter());
+
+        txtCheckStart.disableProperty().bind(chkChecks.selectedProperty().not());
+        txtCheckEnd.disableProperty().bind(chkChecks.selectedProperty().not());
+        lblCheckStart.disableProperty().bind(chkChecks.selectedProperty().not());
+        lblCheckEnd.disableProperty().bind(chkChecks.selectedProperty().not());
 
         setFormData();
         stage.setScene(scene);
         stage.setTitle("Search Form");
 
+    }
+
+    @FXML
+    public void cbPrimaryOnAction() {
+        Category p = cbPrimary.getValue();
+        childCatList.setPredicate((c) -> (p.getId() == c.getParent()));
     }
 
     public void showForm() {
@@ -226,60 +264,7 @@ public final class SearchForm extends AnchorPane {
             }
         });
 
-        cbPrimary.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                String newCat = newValue.toString();
-                if (primeCatMap.containsKey(newCat)) {
-                    Category c = primeCatMap.get(newCat);
-                    criteria.setPrimaryCat(c);
-                    String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
-                    sqlStmt += " order by description";
-                    ObservableList<Category> subCatList = catManager.getCategories(sqlStmt);
-                    cbSecondary.getItems().clear();
-                    subCatMap.clear();
-                    for (Category cat2 : subCatList) {
-                        subCatMap.put(cat2.getDescription(), cat2);
-                    }
-                    cbSecondary.getItems().addAll(subCatMap.keySet());
-                }
-            }
-        });
-
-        cbSecondary.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                if (newValue != null) {
-                    String newCat = newValue.toString();
-                    if (subCatMap.containsKey(newCat)) {
-                        Category c = subCatMap.get(newCat);
-                        criteria.setSecondaryCat(c);
-                    }
-                }
-            }
-        });
-        
-        cbStores.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                if(newValue != null) {
-                    String storeName = newValue.toString();
-                    if(storeMap.containsKey(storeName)) {
-                        criteria.setStoreId(storeMap.get(storeName).getId());
-                    }
-                }
-            }
-        });
-        
-        txtSubject.textProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                criteria.setSearchTarget(newValue.toString());
-            }
-        });
-
         minAmount.textProperty().addListener(new ChangeListener() {
-
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 criteria.setMinAmount(newValue.toString());
@@ -287,7 +272,6 @@ public final class SearchForm extends AnchorPane {
         });
 
         maxAmount.textProperty().addListener(new ChangeListener() {
-
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 criteria.setMaxAmount(newValue.toString());
@@ -306,6 +290,8 @@ public final class SearchForm extends AnchorPane {
         // AND l.transDesc like "%SPEED%";
         StringBuilder sql = new StringBuilder();
         float min, max;
+        int startCheck = 0;
+        int endCheck = 0;
         boolean hasPrimaryCat = false;
         boolean hasSecondaryCat = false;
         boolean hasStartDate = false;
@@ -314,7 +300,39 @@ public final class SearchForm extends AnchorPane {
         boolean hasMaxAmt = false;
         boolean hasStore = false;
         boolean hasDescription = false;
+        boolean hasAccount = false;
+        boolean hasStartCheck = false;
+        boolean hasEndCheck = false;
+        boolean hasPayee = false;
         int args = 0;
+
+        Account a = cbAccounts.getValue();
+        if (a != null) {
+            hasAccount = true;
+            args++;
+        }
+
+        String chkNum = txtCheckStart.getText();
+        if (chkNum != null && !chkNum.isEmpty()) {
+            try {
+                Integer chk = Integer.parseInt(chkNum);
+                hasStartCheck = true;
+                args++;
+            } catch (NumberFormatException nfe) {
+
+            }
+        }
+
+        chkNum = txtCheckStart.getText();
+        if (chkNum != null && !chkNum.isEmpty()) {
+            try {
+                Integer chk = Integer.parseInt(chkNum);
+                hasEndCheck = true;
+                args++;
+            } catch (NumberFormatException nfe) {
+
+            }
+        }
 
         if (criteria.getSecondaryCat() != null && criteria.getSecondaryCat().getId() != null) {
             hasSecondaryCat = true;
@@ -359,7 +377,7 @@ public final class SearchForm extends AnchorPane {
             hasDescription = true;
         }
 
-        if (criteria.getStoreId()!=null) {
+        if (criteria.getStoreId() != null) {
             args++;
             hasStore = true;
         }
@@ -381,20 +399,20 @@ public final class SearchForm extends AnchorPane {
             AND l.primaryCat = 11 
             AND p.storeId = 46
             AND p.subCat = 47;
-        */
+         */
         Map<Integer, String> map = new HashMap<>();
         int ptr = 0;
         if (args > 0) {
             String[] argv = new String[args + 1];
             sql = sql.append("SELECT * from ledger l ");
-            
-            if(hasSecondaryCat) {
+
+            if (hasSecondaryCat) {
                 sql = sql.append(", categories c2 ");
             }
-            if(hasStore) {
+            if (hasStore) {
                 sql = sql.append(", stores s ");
             }
-            if(hasSecondaryCat || hasStore) {
+            if (hasSecondaryCat || hasStore) {
                 sql = sql.append(", payment p ");
             }
 
@@ -402,9 +420,9 @@ public final class SearchForm extends AnchorPane {
                 argv[ptr] = "l.transDesc like \"%" + criteria.getSearchTarget() + "%\"";
                 map.put(ptr++, "ledger");
             }
-            
+
             if (hasStartDate && hasEndDate) {
-                argv[ptr] = "l.transDate BETWEEN \"" + criteria.getStartDate() + "\" AND \""+criteria.getEndDate()+"\"";
+                argv[ptr] = "l.transDate BETWEEN \"" + criteria.getStartDate() + "\" AND \"" + criteria.getEndDate() + "\"";
                 map.put(ptr++, "ledger");
             } else if (hasStartDate) {
                 argv[ptr] = "l.transDate >= \"" + criteria.getStartDate() + "\"";
@@ -412,8 +430,8 @@ public final class SearchForm extends AnchorPane {
             } else if (hasEndDate) {
                 argv[ptr] = "l.transDate <= \"" + criteria.getEndDate() + "\"";
                 map.put(ptr++, "ledger");
-            } 
-            
+            }
+
             if (hasMinAmt && hasMaxAmt) {
                 argv[ptr] = "abs(l.transAmt) BETWEEN " + criteria.getMinAmount() + " AND " + criteria.getMaxAmount();
                 map.put(ptr++, "ledger");
@@ -429,16 +447,16 @@ public final class SearchForm extends AnchorPane {
                 argv[ptr] = "l.primaryCat = " + criteria.getPrimaryCat().getId();
                 map.put(ptr++, "ledger");
             }
-            
+
             if (hasSecondaryCat) {
-                argv[ptr] = "p.subCat = "+criteria.getSecondaryCat().getId();
+                argv[ptr] = "p.subCat = " + criteria.getSecondaryCat().getId();
                 map.put(ptr++, "payment");
             }
-            
+
             if (hasStore) {
-                argv[ptr] = "AND s.storeId = "+criteria.getStoreId();
+                argv[ptr] = "AND s.storeId = " + criteria.getStoreId();
                 map.put(ptr++, "stores");
-            }            
+            }
 
             for (Integer i : map.keySet()) {
                 if (map.get(i).equals("ledger")) {
@@ -465,43 +483,8 @@ public final class SearchForm extends AnchorPane {
     }
 
     @FXML
-    public void searchStringChanged() {
-        if (txtSubject.getText() != null) {
-
-            criteria.setSearchTarget(txtSubject.getText());
-        }
-    }
-
-    @FXML
     public void closeForm() {
         stage.close();
     }
 
-    /**
-     * @return the primaryCats
-     */
-    public ObservableList<String> getPrimaryCats() {
-        return primaryCats;
-    }
-
-    /**
-     * @param primaryCats the primaryCats to set
-     */
-    public void setPrimaryCats(ObservableList<String> primaryCats) {
-        primaryCats = primaryCats;
-    }
-
-    /**
-     * @return the subCats
-     */
-    public ObservableList<String> getSubCats() {
-        return subCats;
-    }
-
-    /**
-     * @param subCats the subCats to set
-     */
-    public void setSubCats(ObservableList<String> subCats) {
-        subCats = subCats;
-    }
 }

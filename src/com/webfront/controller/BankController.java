@@ -15,6 +15,7 @@ import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PaymentView;
 import com.webfront.view.PreferencesForm;
+import com.webfront.view.SearchForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
 import java.net.URL;
@@ -168,11 +169,9 @@ public class BankController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         accountList.setAll(bankManager.getList(""));
-        for (Account acct : accountList) {
-            if (acct.getAccountStatus() != Account.AccountStatus.CLOSED) {
-                addLedger(acct);
-            }
-        }
+        accountList.stream().filter((acct) -> (acct.getAccountStatus() != Account.AccountStatus.CLOSED)).forEachOrdered((acct) -> {
+            addLedger(acct);
+        });
 
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
@@ -334,13 +333,20 @@ public class BankController implements Initializable {
 
     @FXML
     public void onEditAccount() {
-
+        
     }
 
     @FXML
     public void onEditRebalance() {
         LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
         lv.doRebalance();
+    }
+    
+    @FXML
+    public void onEditSearch() {
+        SearchForm sf = new SearchForm();
+        sf.setForm();
+        sf.showForm();
     }
 
     @FXML

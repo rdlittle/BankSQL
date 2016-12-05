@@ -258,6 +258,7 @@ public class PDFImporter extends Importer {
         Element lineDefinition = section.getChild("line");
         Element lineStart = null;
         Element lineEnd = null;
+        Element descStrip = null;
 
         Pattern linePattern = null;
 
@@ -311,6 +312,10 @@ public class PDFImporter extends Importer {
                 }
                 if (dataDefinition.getChild("end") != null) {
                     lineEnd = dataDefinition.getChild("end");
+                }
+                if(dataDefinition.getChild("strip") != null) {
+                    descStrip = dataDefinition.getChild("strip");
+                    //Pattern.compile(lineDefinition.getText())
                 }
             }
 
@@ -445,6 +450,9 @@ public class PDFImporter extends Importer {
                                 }
                                 break;
                             case "description":
+                                if(descStrip != null) {
+                                    value = value.replaceFirst(descStrip.getText(), "");
+                                }
                                 entry.setDescription(value);
                                 break;
                         }

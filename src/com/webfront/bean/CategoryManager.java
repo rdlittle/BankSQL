@@ -15,6 +15,8 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+import javafx.util.StringConverter;
 import javax.persistence.Query;
 import javax.swing.SwingWorker;
 
@@ -26,10 +28,12 @@ public class CategoryManager extends DBManager<Category> {
 
     private ObservableList<Category> categories;
     private static CategoryManager instance = null;
+    private SortedList<Category> sortedCategories;
 
     protected CategoryManager() {
         super();
         categories = FXCollections.emptyObservableList();
+        sortedCategories = new SortedList<>(categories);
     }
 
     public synchronized static CategoryManager getInstance() {
@@ -38,7 +42,7 @@ public class CategoryManager extends DBManager<Category> {
         }
         return instance;
     }
-    
+
     public List<Category> getTree() {
         Query query = em.createNamedQuery("Category.tree");
         List<Category> l = query.getResultList();
@@ -148,6 +152,31 @@ public class CategoryManager extends DBManager<Category> {
 
     public void removeListener(InvalidationListener listener) {
         categories.removeListener(listener);
+    }
+
+    public static class CategoryConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            Category target = (Category) object;
+            for (Category c : CategoryManager.getInstance().categories) {
+                if (target.getId().equals(c.getId())) {
+                    return c.getDescription();
+                }
+            }
+            return object.toString();
+        }
+
+        @Override
+        public Object fromString(String string) {
+            for (Category c : CategoryManager.getInstance().categories) {
+                if (c.getDescription().equalsIgnoreCase(string)) {
+                    return c;
+                }
+            }
+            return null;
+        }
+
     }
 
 }

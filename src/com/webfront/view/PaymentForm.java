@@ -458,13 +458,15 @@ public final class PaymentForm extends AnchorPane {
         searchCriteria = new SearchCriteria();
         String sql = "SELECT * from ledger where transDate >= \"";
         LocalDate localDate = transDate.getValue();
-        searchCriteria.setDate(localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
         LocalDate startDate = localDate.minusDays(5);
-        LocalDate endDate = localDate.plusDays(5);
-        String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        sql += startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
+        LocalDate endDate = localDate.plusDays(5);        
+        searchCriteria.getTargetDateProperty().setValue(localDate);
+        searchCriteria.setDate(localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        searchCriteria.getStartDateProperty().setValue(startDate);
+        searchCriteria.getEndDateProperty().setValue(endDate);
+        sql += searchCriteria.getStartDateProperty().get().format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
-        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
+        sql += searchCriteria.getEndDateProperty().get().format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "AND accountNum = ";
         sql += prevPayment.getAccountNum();
         sql += " ORDER BY transDate";
@@ -472,8 +474,8 @@ public final class PaymentForm extends AnchorPane {
         results = LedgerManager.getInstance().doSqlQuery(sql);
 
         SearchResults searchResults = new SearchResults();
-        searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+//        searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+//        searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         searchCriteria.setAmount(Float.toString(prevPayment.getTransAmt()));
         if (prevPayment.getStore() != null) {
             searchCriteria.setStoreId(prevPayment.getStore().getId());
