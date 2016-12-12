@@ -38,6 +38,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 
@@ -78,11 +79,13 @@ public class PaymentView extends Pane implements ViewInterface {
     private final CreateListener createListener = new CreateListener();
     private final UpdateListener updateListener = new UpdateListener();
 
+    private VBox vbox;
     Button btnAdd;
 
     protected PaymentView() {
         super();
-
+        vbox = new VBox();
+        vbox.maxHeightProperty().bind(this.heightProperty());
         storeAdded = new SimpleBooleanProperty();
         selectedPaymentProperty = new ReadOnlyObjectWrapper<>();
 
@@ -101,7 +104,8 @@ public class PaymentView extends Pane implements ViewInterface {
 
         table = new TableView<>();
         table.setMinWidth(1325.0);
-        table.setMinHeight(640.0);
+//        table.setMinHeight(640.0);
+        table.minHeightProperty().bind(this.heightProperty().subtract(40D));
         table.setEditable(true);
 
         idColumn = new TableColumn("ID");
@@ -233,15 +237,16 @@ public class PaymentView extends Pane implements ViewInterface {
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
-        grid.setHgap(10.0);
-        grid.add(table, 0, 0);
+//        grid.setHgap(10.0);
+//        grid.add(table, 0, 0);
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
         buttons.setPadding(new Insets(10, 10, 10, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
-        grid.add(buttons, 0, 1);
-        getChildren().add(grid);
+//        grid.add(buttons, 0, 1);
+        vbox.getChildren().addAll(table, buttons);
+        getChildren().add(vbox);
     }
 
     public static PaymentView getInstance() {
@@ -274,7 +279,6 @@ public class PaymentView extends Pane implements ViewInterface {
 
 //        prevPaymentCopy = Payment.copy(selectedPaymentProperty().get());
 //        selectedPaymentProperty().setValue(prevPaymentCopy);
-        
         PaymentForm paymentForm = new PaymentForm(prevPayment);
         selectedPaymentProperty().bind(paymentForm.selectedPaymentProperty());
 
@@ -392,6 +396,13 @@ public class PaymentView extends Pane implements ViewInterface {
     @Override
     public PaymentManager getPaymentManager() {
         return paymentManager;
+    }
+
+    /**
+     * @return the vbox
+     */
+    public VBox getVbox() {
+        return vbox;
     }
 
     @Override

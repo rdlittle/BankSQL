@@ -212,6 +212,7 @@ public class DetailViewController implements Initializable, ViewInterface {
     @FXML
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
         selectedLedgerItem = new Ledger();
         setRoot(new TreeItem<>());
         table.showRootProperty().set(false);
@@ -306,7 +307,8 @@ public class DetailViewController implements Initializable, ViewInterface {
                 }
             }
         });
-
+//        table.minHeightProperty().bind();
+        
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, new DoubleClick());
         Platform.runLater(() -> loadData());
     }

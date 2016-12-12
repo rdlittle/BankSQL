@@ -7,7 +7,7 @@
 
 <Pane minHeight="-Infinity" minWidth="-Infinity" prefHeight="718.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.DetailViewController">
     <children>
-        <TreeTableView fx:id="table" editable="true" minWidth="-Infinity" prefHeight="641.0" prefWidth="1325.0">
+        <TreeTableView fx:id="table" editable="true">
             <columns>
                 <TreeTableColumn fx:id="idColumn" prefWidth="75.0" text="Id" />
                 <TreeTableColumn fx:id="dateColumn" prefWidth="86.0" text="Date" />
@@ -30,6 +30,6 @@
                 </TreeTableColumn>
             </columns>
         </TreeTableView>
-            <Button fx:id="btnOk" layoutX="1270.0" layoutY="650.0" mnemonicParsing="false" onAction="#onAdd" prefHeight="19.0" prefWidth="45.0" text="Add" />      
+            <Button fx:id="btnOk" layoutX="1270.0" layoutY="680.0" mnemonicParsing="false" onAction="#onAdd" prefHeight="19.0" prefWidth="45.0" text="Add" />      
     </children>
 </Pane>
