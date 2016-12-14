@@ -5,6 +5,7 @@
  */
 package com.webfront.view;
 
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.BankManager;
 import com.webfront.bean.CategoryManager;
 import com.webfront.model.Account;
@@ -63,7 +64,7 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     DatePicker transDate;
     @FXML
-    ChoiceBox<Integer> accountNum;
+    ChoiceBox<Account> cbAccount;
     @FXML
     ComboBox<Category> primaryCat;
     @FXML
@@ -110,15 +111,12 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     TableColumn detailAmt;
 
-    private boolean pettyCash = false;
-    private Float pettyCashAmount = new Float(0.0);
-
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
         oldItem = item;
         newItem = new Ledger();
         transDate = new DatePicker();
-        accountNum = new ChoiceBox<>();
+        cbAccount = new ChoiceBox<>();
         primaryCat = new ComboBox<>();
         subCat = new ComboBox<>();
         transId = new TextField();
@@ -156,100 +154,25 @@ public final class LedgerForm extends AnchorPane {
             loader.setController(this);
             loader.load();
 
-            ObservableList<Category> cList = view.getCategoryManager().getCategories();
+            cbAccount.converterProperty().setValue(new AccountManager.AccountConverter());
+            cbAccount.itemsProperty().setValue(AccountManager.getInstance().getAccounts());
 
-            ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(BankManager.getInstance().getList(""));
-            accountList.stream().forEach((acct) -> {
-                accountNum.getItems().add(acct.getId());
-            });
-
-           primaryCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
-           primaryCat.itemsProperty().setValue(CategoryManager.getInstance().getCategories());
-           
-           subCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
-//            for (Category c : cList) {
-//                Integer parent = c.getParent();
-//                categoryMap.put(c.getDescription(), c);
-//                if (parent == 0) {
-//                    primaryCat.getItems().add(c.getDescription());
-//                } else if (oldItem != null) {
-//                    if (oldItem.getPrimaryCat() != null) {
-//                        if (parent == oldItem.getPrimaryCat().getId()) {
-//                            subCat.getItems().add(c.getDescription());
-//                        }
-//                    }
-//                }
-//            }
-
-//            if (oldItem != null) {
-//                if (oldItem.getSubCat() != null) {
-//                    Category c = oldItem.getSubCat();
-//                    if (c != null) {
-//                        String desc = c.getDescription();
-//                        if (!subCat.getItems().contains(desc)) {
-//                            subCat.getItems().add(desc);
-//                        }
-////                        subCat.setValue(oldItem.getDistribution().get(0).getCategory().getDescription());
-//                    }
-//                }
-//            }
-
-            primaryCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            primaryCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
+            primaryCat.itemsProperty().setValue(CategoryManager.getInstance().getCategories());
+            primaryCat.valueProperty().addListener(new ChangeListener<Category>() {
                 @Override
-                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    String newCat = newValue.toString();
-                    if (categoryMap.containsKey(newCat)) {
-                        if (oldItem.getId() != null) {
-                            Category c = categoryMap.get(newCat);
-                            String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
-                            sqlStmt += " order by description";
-                            ObservableList<Category> subCatList = view.getCategoryManager().getCategories(sqlStmt);
-                            subCat.getItems().clear();
-                            subCatMap.clear();
-                            for (Category cat2 : subCatList) {
-                                subCatMap.put(cat2.getDescription(), cat2);
-                            }
-                            subCat.getItems().addAll(subCatList);
-                            if (oldItem.getPrimaryCat() == null) {
-                                oldItem.setPrimaryCat(c);
-                                btnOk.setDisable(false);
-                            }
-                            if (!oldItem.getPrimaryCat().getDescription().equals(primaryCat.getValue())) {
-                                oldItem.setPrimaryCat(c);
-                                btnOk.setDisable(false);
-                            }
-                        }
-                    }
+                public void changed(ObservableValue<? extends Category> observable, Category oldValue, Category newValue) {
+                    CategoryManager.getInstance().getFilteredCategoryList().setPredicate((p) -> p.getParent() == newValue.getId());
+                    btnOk.disableProperty().set(false);
                 }
             });
 
-            subCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            subCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
+            subCat.itemsProperty().setValue(CategoryManager.getInstance().getFilteredCategoryList());
+            subCat.valueProperty().addListener(new ChangeListener<Category>() {
                 @Override
-                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    if (oldValue == null) {
-                        oldValue = "";
-                    }
-                    if (newValue != null) {
-                        String newCat = newValue.toString();
-                        String oldCat = oldValue.toString();
-                        if (subCatMap.containsKey(newCat)) {
-                            if (oldItem != null) {
-                                oldItem.setSubCat(subCatMap.get(newCat));
-                                if (!oldCat.equalsIgnoreCase("To Petty Cash")) {
-                                    if (newCat.equalsIgnoreCase("To Petty Cash")) {
-                                        pettyCash = true;
-                                        pettyCashAmount = Math.abs(oldItem.getTransAmt());
-                                    }
-                                } else if (oldCat.equalsIgnoreCase("To Petty Cash")) {
-                                    if (!newValue.toString().equalsIgnoreCase("To Petty Cash")) {
-                                        pettyCash = true;
-                                        pettyCashAmount = Math.abs(oldItem.getTransAmt()) * -1;
-                                    }
-                                }
-                                btnOk.setDisable(false);
-                            }
-                        }
-                    }
+                public void changed(ObservableValue<? extends Category> observable, Category oldValue, Category newValue) {
+                    btnOk.disableProperty().set(false);
                 }
             });
 
@@ -319,7 +242,7 @@ public final class LedgerForm extends AnchorPane {
                 @Override
                 public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
                     Payment p = param.getValue();
-                    if (p.getPrimaryCat()!= null) {
+                    if (p.getPrimaryCat() != null) {
                         return new SimpleStringProperty(p.getPrimaryCat().toString());
                     }
                     return null;
@@ -358,7 +281,7 @@ public final class LedgerForm extends AnchorPane {
             transDescription.setText(oldItem.getTransDesc());
             transAmt.setText(Float.toString(oldItem.getTransAmt()));
             transBalance.setText(Float.toString(oldItem.getTransBal()));
-            accountNum.setValue(oldItem.getAccountNum());
+            cbAccount.setValue(oldItem.getAccount());
             transId.setText(oldItem.getId().toString());
             if (oldItem.getPrimaryCat() != null) {
                 primaryCat.setValue(oldItem.getPrimaryCat());
@@ -386,7 +309,7 @@ public final class LedgerForm extends AnchorPane {
             transDate.setValue(date.toLocalDate());
             transAmt.setText(Float.toString(newItem.getTransAmt()));
             transDescription.setText(newItem.getTransDesc());
-            accountNum.setValue(newItem.getAccountNum());
+            cbAccount.setValue(newItem.getAccount());
             transId.setText(newItem.getId().toString());
             primaryCat.setValue(newItem.getPrimaryCat());
         }
@@ -394,12 +317,19 @@ public final class LedgerForm extends AnchorPane {
 
     public void updateModel(Ledger item) {
         item.setId(Integer.parseInt(transId.getText()));
-        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+        item.setAccount(cbAccount.getValue());
         item.setTransDesc(transDescription.getText());
-        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
         item.setCheckNum(checkNum.getText());
         item.setTransAmt(Float.parseFloat(transAmt.getText()));
         item.setTransBal(Float.parseFloat(transBalance.getText()));
+        if (item.getPayment() == null || item.getPayment().isEmpty()) {
+            if (primaryCat.getValue() != null) {
+                item.setPrimaryCat(primaryCat.getValue());
+            }
+            if (subCat.getValue() != null) {
+                item.setSubCat(subCat.getValue());
+            }
+        }
     }
 
     @FXML
@@ -441,16 +371,5 @@ public final class LedgerForm extends AnchorPane {
     public void closeForm() {
         stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
         stage.close();
-    }
-
-    /**
-     * @return the adjustPettyCash
-     */
-    public boolean isPettyCash() {
-        return pettyCash;
-    }
-
-    public Float getPettyCashAmount() {
-        return pettyCashAmount;
     }
 }

@@ -51,6 +51,8 @@ import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
@@ -86,6 +88,11 @@ public class DetailViewController implements Initializable, ViewInterface {
 
     @FXML
     HBox buttonPanel;
+    
+    @FXML
+    Pane pane;
+    @FXML
+    VBox vbox;
 
     private final String dateFormat = "MM/dd/yyyy";
     private final SimpleDateFormat dateFormatter = new SimpleDateFormat(dateFormat);
@@ -212,7 +219,10 @@ public class DetailViewController implements Initializable, ViewInterface {
     @FXML
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
+        pane = new Pane();
+        vbox = new VBox();
+        vbox.alignmentProperty().set(Pos.CENTER_RIGHT);
+        table.minHeightProperty().bind(pane.heightProperty().subtract(200D));
         selectedLedgerItem = new Ledger();
         setRoot(new TreeItem<>());
         table.showRootProperty().set(false);

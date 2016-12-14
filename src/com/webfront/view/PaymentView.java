@@ -450,7 +450,7 @@ public class PaymentView extends Pane implements ViewInterface {
         @Override
         public void invalidated(Observable observable) {
             updateItem(prevPayment);
-            selectedPaymentProperty().setValue(prevPayment);
+//            selectedPaymentProperty().setValue(prevPayment);
         }
 
     }

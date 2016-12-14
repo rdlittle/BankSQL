@@ -15,6 +15,7 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.util.StringConverter;
 import javax.persistence.Query;
@@ -26,19 +27,30 @@ import javax.swing.SwingWorker;
  */
 public class CategoryManager extends DBManager<Category> {
 
+    /**
+     * @return the filteredCategoryList
+     */
+    public FilteredList<Category> getFilteredCategoryList() {
+        return filteredCategoryList;
+    }
+
     private ObservableList<Category> categories;
     private static CategoryManager instance = null;
-    private SortedList<Category> sortedCategories;
+    private final SortedList<Category> sortedCategories;
+    private FilteredList<Category> filteredCategoryList;
 
     protected CategoryManager() {
         super();
         categories = FXCollections.emptyObservableList();
         sortedCategories = new SortedList<>(categories);
+        
     }
 
     public synchronized static CategoryManager getInstance() {
         if (instance == null) {
             instance = new CategoryManager();
+            instance.filteredCategoryList = new FilteredList<>(instance.getCategories("select * from categories where parent > 0"));
+            instance.filteredCategoryList.setPredicate((e)->true);
         }
         return instance;
     }

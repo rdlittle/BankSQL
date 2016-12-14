@@ -340,7 +340,7 @@ public final class PaymentForm extends AnchorPane {
             Ledger l = prevPayment.getLedgerEntry();
             if (l != null) {
                 transId.setText(l.getId().toString());
-                Integer aid = l.getAccountNum();
+                Integer aid = l.getAccount().getId();
                 Account acct = AccountManager.getInstance().getAccount(aid);
                 cbAccount.setValue(acct);
             } else {
@@ -394,7 +394,14 @@ public final class PaymentForm extends AnchorPane {
             prevPayment.setSubCat(cat2);
             prevPayment.setStore(cbStores.getValue());
             selectedPaymentProperty().setValue(prevPayment);
-            getUpdatedProperty().set(!(getUpdatedProperty().getValue()));
+            if (updatedProperty.isBound()) {
+                updatedProperty.not();
+            } else {
+                Boolean b = updatedProperty.get();
+                b = Boolean.logicalXor(b, true);
+                updatedProperty.set(b);
+//                getUpdatedProperty().set(!(getUpdatedProperty().getValue()));
+            }
             closeForm();
         } else {
             // Creating new transaction
@@ -459,7 +466,7 @@ public final class PaymentForm extends AnchorPane {
         String sql = "SELECT * from ledger where transDate >= \"";
         LocalDate localDate = transDate.getValue();
         LocalDate startDate = localDate.minusDays(5);
-        LocalDate endDate = localDate.plusDays(5);        
+        LocalDate endDate = localDate.plusDays(5);
         searchCriteria.getTargetDateProperty().setValue(localDate);
         searchCriteria.setDate(localDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
         searchCriteria.getStartDateProperty().setValue(startDate);

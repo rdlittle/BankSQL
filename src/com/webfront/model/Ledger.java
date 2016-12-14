@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Ledger.findAll", query = "SELECT l FROM Ledger l order by l.id desc"),
-    @NamedQuery(name = "Ledger.findAllByType", query = "SELECT l FROM Ledger l WHERE l.accountNum in (SELECT a.id FROM Account a where a.accountType = :accountType and a.accountStatus = :accountStatus) ORDER BY l.transDate DESC,l.id"),
+    @NamedQuery(name = "Ledger.findAllByType", query = "SELECT l FROM Ledger l WHERE l.account in (SELECT a FROM Account a where a.accountType = :accountType and a.accountStatus = :accountStatus) ORDER BY l.transDate DESC,l.id"),
     @NamedQuery(name = "Ledger.findById", query = "SELECT l FROM Ledger l WHERE l.id = :id"),
     @NamedQuery(name = "Ledger.findByTransDate", query = "SELECT l FROM Ledger l WHERE l.transDate = :transDate"),
     @NamedQuery(name = "Ledger.findByTransDesc", query = "SELECT l FROM Ledger l WHERE l.transDesc = :transDesc"),
@@ -45,10 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByTransBal", query = "SELECT l FROM Ledger l WHERE l.transBal = :transBal"),
     @NamedQuery(name = "Ledger.findByPrimaryCat", query = "SELECT l FROM Ledger l WHERE l.primaryCat = :primaryCat"),
     @NamedQuery(name = "Ledger.findByCheckNum", query = "SELECT l FROM Ledger l WHERE l.checkNum = :checkNum"),
-    @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.transDate desc,l.id desc"),
-    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})
+    @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.account.id = :accountNum order by l.transDate desc,l.id desc"),
+    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.account = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.account = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
+    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.account = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})
 public class Ledger implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -84,9 +84,9 @@ public class Ledger implements Serializable {
     @Column(name = "checkNum")
     private String checkNum;
     
-    @Basic(optional = false)
-    @Column(name = "accountNum")
-    private int accountNum;
+    @OneToOne
+    @JoinColumn(name = "accountNum")
+    private Account account;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
     private List<Payment> payments;
@@ -95,7 +95,7 @@ public class Ledger implements Serializable {
         this.id=null;
         this.transDate=Calendar.getInstance().getTime();
         this.transAmt=0;
-        this.accountNum=1;
+//        this.accountNum=1;
         this.transBal=0;
         this.transDesc="";
         this.checkNum="";
@@ -112,7 +112,7 @@ public class Ledger implements Serializable {
         this.transDate = transDate;
         this.transAmt = transAmt;
         this.transBal = transBal;
-        this.accountNum = accountNum;
+//        this.accountNum = accountNum;
         this.payments=new ArrayList<>();
     }
 
@@ -180,12 +180,12 @@ public class Ledger implements Serializable {
         this.checkNum = checkNum;
     }
 
-    public int getAccountNum() {
-        return accountNum;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setAccountNum(int accountNum) {
-        this.accountNum = accountNum;
+    public void setAccount(Account acct) {
+        this.account = acct;
     }
 
     @Override

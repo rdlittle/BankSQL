@@ -19,8 +19,8 @@
         <Label layoutX="10.0" layoutY="29.0" text="Date" />
         <DatePicker fx:id="transDate" layoutX="75.0" layoutY="24.0" />
         
-        <Label layoutX="397.5" layoutY="29.0" text="Account" />
-        <ChoiceBox fx:id="accountNum" layoutX="465.5" layoutY="24.0" xmlns:fx="http://javafx.com/fxml">
+        <Label layoutX="373.5" layoutY="29.0" text="Account" />
+        <ChoiceBox fx:id="cbAccount" layoutX="446.0" layoutY="24.0" prefHeight="26.0" prefWidth="207.0" xmlns:fx="http://javafx.com/fxml">
             <items>
                 <FXCollections fx:factory="observableArrayList">
                     <String fx:value="1" />
@@ -29,7 +29,7 @@
             </items>
         </ChoiceBox>        
         
-        <Label layoutX="792.0" layoutY="29.0" text="ID" />
+        <Label layoutX="812.0" layoutY="29.0" text="ID" />
         <TextField fx:id="transId" layoutX="843.0" layoutY="22.0" prefHeight="26.0" prefWidth="87.0" />
         
         <Label layoutX="10.0" layoutY="81.0" text="Category" />
@@ -40,8 +40,8 @@
         <ComboBox fx:id="subCat" layoutX="443.0" layoutY="78.0" prefHeight="26.0" prefWidth="291.0" xmlns:fx="http://javafx.com/fxml">
         </ComboBox>
 
-        <Label layoutX="612.5" layoutY="29.0" text="Check#" />
-        <TextField fx:id="checkNum" layoutX="682.0" layoutY="24.0" prefHeight="26.0" prefWidth="50.0" />
+        <Label layoutX="662.5" layoutY="29.0" text="Check#" />
+        <TextField fx:id="checkNum" layoutX="724.0" layoutY="24.0" prefHeight="26.0" prefWidth="63.0" />
         
         <Label layoutX="750.0" layoutY="81.0" text="Amount" />
         <TextField fx:id="transAmt" layoutX="820.0" layoutY="76.0" prefHeight="26.0" prefWidth="111.0" />
