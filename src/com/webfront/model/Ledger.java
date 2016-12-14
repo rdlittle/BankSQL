@@ -107,12 +107,12 @@ public class Ledger implements Serializable {
         this.payments=new ArrayList<>();
     }
 
-    public Ledger(Integer id, Date transDate, float transAmt, float transBal, int accountNum) {
+    public Ledger(Integer id, Date transDate, float transAmt, float transBal, Account acct) {
         this.id = id;
         this.transDate = transDate;
         this.transAmt = transAmt;
         this.transBal = transBal;
-//        this.accountNum = accountNum;
+        this.account = acct;
         this.payments=new ArrayList<>();
     }
 

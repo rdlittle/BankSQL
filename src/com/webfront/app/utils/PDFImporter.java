@@ -6,6 +6,7 @@
 package com.webfront.app.utils;
 
 import com.webfront.bean.LedgerManager;
+import com.webfront.model.Account;
 import com.webfront.model.Config;
 import com.webfront.model.Ledger;
 import com.webfront.model.LedgerItem;
@@ -66,8 +67,8 @@ public class PDFImporter extends Importer {
     Pattern pageBreakStartPattern;
     Pattern pageBreakEndPattern;
 
-    public PDFImporter(String fileName, int accountId) {
-        super(fileName, accountId);
+    public PDFImporter(String fileName, Account acct) {
+        super(fileName, acct);
         this.fileName = fileName;
         entries = new ArrayList<>();
         lastBalance = new Float(0.0);
@@ -75,7 +76,7 @@ public class PDFImporter extends Importer {
         markers = new HashMap<>();
         currentLine = 0;
         LedgerManager mgr = LedgerManager.getInstance();
-        int lastId = mgr.getLastId(accountId);
+        int lastId = mgr.getLastId(acct.getId());
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);
             if (item != null) {
@@ -233,7 +234,7 @@ public class PDFImporter extends Importer {
                 lastBalance += amount;
                 totalWithdrawals += amount;
             }
-            Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);
+            Ledger ledger = new Ledger(null, date, amount, lastBalance, account);
             if (item.getDescription().length() > 120) {
                 item.setDescription(item.getDescription().substring(0, 119));
             }

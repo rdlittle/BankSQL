@@ -9,6 +9,7 @@ import com.webfront.app.BankOld;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
+import com.webfront.bean.AccountManager;
 import com.webfront.model.Account;
 import com.webfront.model.Account.StatementFormat;
 import com.webfront.model.Config;
@@ -25,9 +26,10 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -51,18 +53,18 @@ public class ImportForm extends AnchorPane {
     @FXML
     TextField txtFileName;
     @FXML
-    ComboBox cbAccount;
+    ComboBox<Account> cbAccount;
     @FXML
     Label lblMessage;
     @FXML
     ProgressBar importProgress;
 
-    ObservableList<Account> accountList;
+//    ObservableList<Account> accountList;
     public static ArrayList<Ledger> newItems;
-    private SimpleObjectProperty<LedgerView> ledgerViewProperty;
-    
+    private final SimpleObjectProperty<LedgerView> ledgerViewProperty;
+
     Stage stage;
-    public int selectedAccount;
+    public Account selectedAccount;
     public String fileName;
 
     private static ImportForm form = null;
@@ -70,18 +72,17 @@ public class ImportForm extends AnchorPane {
     private boolean hasAccount;
     public static SimpleBooleanProperty importDone;
     public static SimpleIntegerProperty accountNum;
-    
-    private final HashMap<StatementFormat,String> stmtFormatFileTypes;
+
+    private final HashMap<StatementFormat, String> stmtFormatFileTypes;
 
     private ImportForm(ObservableList<Account> list) {
         fileName = "";
-        selectedAccount = -1;
         newItems = new ArrayList<>();
         btnOK = new Button();
         btnCancel = new Button();
         txtFileName = new TextField();
-        cbAccount = new ComboBox();
-        accountList = list;
+        cbAccount = new ComboBox<>();
+//        accountList = list;
         importProgress = new ProgressBar();
         importDone = new SimpleBooleanProperty();
         accountNum = new SimpleIntegerProperty();
@@ -111,26 +112,20 @@ public class ImportForm extends AnchorPane {
             } catch (IOException ex) {
                 Logger.getLogger(ImportForm.class.getName()).log(Level.SEVERE, null, ex);
             }
-            form.accountList.stream().forEach((acct) -> {
-                form.cbAccount.getItems().addAll(acct.getBankName() + " - " + acct.getAccountName());
-            });
 
-            form.cbAccount.setOnAction((Event event) -> {
-                ComboBox cb = (ComboBox) event.getSource();
-                if (cb.getValue() != null && !cb.getValue().toString().isEmpty()) {
-                    String sName = cb.getValue().toString();
-                    for (Account acct : form.accountList) {
-                        if (sName.equals(acct.getBankName() + " - " + acct.getAccountName())) {
-                            form.selectedAccount = acct.getId();
-                            form.hasAccount = true;
-                            form.btnOK.setDisable(form.hasFile == true ? false : true);
-                            ImportForm.accountNum.set(acct.getId());
-                            break;
-                        }
-                    }
+            form.cbAccount.converterProperty().setValue(new AccountManager.AccountConverter());
+            form.cbAccount.itemsProperty().setValue(AccountManager.getInstance().getAccounts());
+
+            form.cbAccount.valueProperty().addListener(new ChangeListener<Account>() {
+                @Override
+                public void changed(ObservableValue<? extends Account> observable, Account oldValue, Account newValue) {
+                    form.selectedAccount = form.cbAccount.getValue();
+                    form.hasAccount = true;
+                    form.btnOK.setDisable(form.hasFile == true ? false : true);
+                    ImportForm.accountNum.set(form.cbAccount.getValue().getId());
                 }
             });
-            
+
             form.btnOK.setDisable(true);
             form.stage.setScene(scene);
             form.stage.setTitle("Import Statement");
@@ -149,24 +144,14 @@ public class ImportForm extends AnchorPane {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        if(ledgerViewProperty != null && ledgerViewProperty.getValue() != null) {
-            Integer n = ledgerViewProperty.getValue().accountNumber;
-            for(Account a: accountList) {
-                if(a.getId() == n) {
-                    StatementFormat sf = a.getStatementFormat();
-                    if(sf.equals(StatementFormat.CSV)) {
-                        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
-                    }
-                    if(sf.equals(StatementFormat.PDF)) {
-                        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
-                    }
-                    break;
-                }
-            }
+
+        StatementFormat sf = form.cbAccount.getValue().getStatementFormat();
+        if (sf.equals(StatementFormat.PDF)) {
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
         } else {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
         }
+
         File selectedFile = fileChooser.showOpenDialog(stage);
         if (selectedFile != null) {
             form.txtFileName.setText(selectedFile.getAbsolutePath());
@@ -184,11 +169,11 @@ public class ImportForm extends AnchorPane {
 
         Importer importer;
         if (fileName.contains("pdf")) {
-            importer = new PDFImporter(fileName, form.selectedAccount);
+            importer = new PDFImporter(fileName, form.cbAccount.getValue());
         } else {
-            importer = new CSVImporter(fileName, form.selectedAccount);
+            importer = new CSVImporter(fileName, form.cbAccount.getValue());
         }
-        
+
         Thread t = new Thread(importer);
         t.start();
         while (t.isAlive()) {
@@ -236,20 +221,20 @@ public class ImportForm extends AnchorPane {
             @Override
             protected void failed() {
                 super.failed();
-                updateMessage("Import failed!  "+super.exceptionProperty().toString());
+                updateMessage("Import failed!  " + super.exceptionProperty().toString());
                 importProgress.progressProperty().unbind();
                 importProgress.setProgress(0);
-                importProgress.setVisible(false);                
+                importProgress.setVisible(false);
                 form.stage.close();
             }
         };
         importProgress.progressProperty().bind(importTask.progressProperty());
         if (Platform.isFxApplicationThread()) {
-            new Thread((Runnable)importTask).start();
+            new Thread((Runnable) importTask).start();
         } else {
             Platform.runLater(importTask);
         }
-        
+
     }
 
     @FXML

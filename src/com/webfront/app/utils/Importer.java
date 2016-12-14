@@ -5,7 +5,6 @@
  */
 package com.webfront.app.utils;
 
-import com.webfront.bean.AccountManager;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
 import com.webfront.model.Ledger;
@@ -39,7 +38,6 @@ public abstract class Importer implements Runnable {
     public static String configName;
     boolean headerDone;
 
-    public String accountNumber;
     public String statementPeriod;
     public String startDate;
     public String endDate;
@@ -57,7 +55,7 @@ public abstract class Importer implements Runnable {
     private ArrayList<Ledger> itemList;
 
     String fileName;
-    public int accountId;
+    public Account account;
 
     SAXBuilder jdomBuilder;
     Document accountConfigXml;
@@ -69,8 +67,8 @@ public abstract class Importer implements Runnable {
     * @param accountId The value of the id column from the bank.account table for this account
     */
    
-    public Importer(String fileName, int accountId) {
-        this.accountId = accountId;
+    public Importer(String fileName, Account acct) {
+        this.account = acct;
         this.fileName = fileName;
         this.startDate = "";
         this.endDate = "";
@@ -119,13 +117,8 @@ public abstract class Importer implements Runnable {
     }
 
     public void getAccountConfig() {
-        AccountManager mgr = new AccountManager();
-        for (Account acct : mgr.getAccounts()) {
-            if (acct.getId() == accountId) {
-                configName = acct.getConfigName() + ".xml";
-                break;
-            }
-        }
+        configName = account.getConfigName()+".xml";
+        
         if (!configName.isEmpty()) {
             jdomBuilder = new SAXBuilder();
             String xmlSource = cfg.getInstallDir() + cfg.getFileSep() + configName;

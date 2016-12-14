@@ -6,6 +6,7 @@
 package com.webfront.app.utils;
 
 import com.webfront.bean.LedgerManager;
+import com.webfront.model.Account;
 import com.webfront.model.Ledger;
 import com.webfront.model.LedgerItem;
 import java.io.BufferedReader;
@@ -26,15 +27,17 @@ public class CSVImporter extends Importer {
     HashMap<Integer, String> buffer;
     ArrayList<LedgerItem> entries;
     Float lastBalance;
+    Account account;
 
-    public CSVImporter(String fileName, int accountId) {
-        super(fileName, accountId);
+    public CSVImporter(String fileName, Account acct) {
+        super(fileName, acct);
+        account = acct;
         getAccountConfig();
         buffer = new HashMap<>();
         entries = new ArrayList<>();
         lastBalance = new Float(0.0);
         LedgerManager mgr = LedgerManager.getInstance();
-        int lastId = mgr.getLastId(accountId);
+        int lastId = mgr.getLastId(account.getId());
         if (lastId > 0) {
             Ledger item = mgr.getItem(lastId);
             if (item != null) {
@@ -143,7 +146,7 @@ public class CSVImporter extends Importer {
                 lastBalance += amount;
                 totalWithdrawals += amount;
             }
-            Ledger ledger = new Ledger(null, date, amount, lastBalance, accountId);
+            Ledger ledger = new Ledger(null, date, amount, lastBalance, account);
             if (item.getDescription().length() > 120) {
                 item.setDescription(item.getDescription().substring(0, 119));
             }
