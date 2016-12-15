@@ -14,7 +14,7 @@ import com.webfront.view.CategoryView;
 import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PaymentView;
-import com.webfront.view.PreferencesForm;
+import com.webfront.view.SetupForm;
 import com.webfront.view.SearchForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
@@ -259,7 +259,7 @@ public class BankController implements Initializable {
 
     @FXML
     public void onFileNewAccount() {
-        PreferencesForm prefs = PreferencesForm.getInstance(config);
+        SetupForm prefs = SetupForm.getInstance(config);
         prefs.getTabPane().getSelectionModel().select(prefs.getAccountTab());
 
         prefs.isNewAccount = true;
@@ -366,7 +366,7 @@ public class BankController implements Initializable {
 
     @FXML
     public void onEditPreferences() {
-        PreferencesForm prefs = PreferencesForm.getInstance(config);
+        SetupForm prefs = SetupForm.getInstance(config);
         prefs.isNewAccount = false;
         prefs.hasChanged.addListener(new InvalidationListener() {
             @Override

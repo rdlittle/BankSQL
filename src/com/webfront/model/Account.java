@@ -75,6 +75,11 @@ public class Account implements Serializable {
     
     @Column
     private String configName;
+    
+    @Column
+    private boolean xlateStore;
+    
+    @Column boolean xlateCat;
 
     public static enum AccountType {
         CHECKING, SAVINGS, CREDIT;
@@ -87,7 +92,6 @@ public class Account implements Serializable {
     public static enum AccountStatus {
         ACTIVE,INACTIVE,CLOSED;
     }
-    
 
     /**
      *
@@ -318,6 +322,28 @@ public class Account implements Serializable {
      */
     public void setConfigName(String configName) {
         this.configName = configName;
+    }
+
+    /**
+     * @return the zlateStore
+     */
+    public boolean isXlateStore() {
+        return xlateStore;
+    }
+
+    /**
+     * @param xlateStore the translateStoreName to set
+     */
+    public void setXlateStore(boolean xlateStore) {
+        this.xlateStore = xlateStore;
+    }
+    
+    public boolean isXlateCat() {
+        return this.xlateCat;
+    }
+    
+    public void setXlateCat(boolean b) {
+        this.xlateCat = b;
     }
 
 }
