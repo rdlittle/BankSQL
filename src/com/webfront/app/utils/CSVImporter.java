@@ -105,29 +105,41 @@ public class CSVImporter extends Importer {
                         String fieldPattern = dataElement.getText();
                         fieldMatcher = Pattern.compile(fieldPattern).matcher(line);
                         String fieldData = lineMatcher.group(fieldNumber);
+                        
                         if (fieldName.equalsIgnoreCase("transDate")) {
                             item.setDate(fieldData);
                         } else if (fieldName.equalsIgnoreCase("checkNumber")) {
                             item.setCheckNumber(fieldData);
                         } else if (fieldName.equalsIgnoreCase("transDescription")) {
-                            if(fieldData.isEmpty() && !item.getCheckNumber().isEmpty()) {
-                                fieldData = "Check # "+item.getCheckNumber();
+                            if (fieldData.isEmpty() && !item.getCheckNumber().isEmpty()) {
+                                fieldData = "Check # " + item.getCheckNumber();
                             }
                             item.setDescription(fieldData);
-                        } else if (fieldName.equalsIgnoreCase("transType")) {
-                            item.setTransType(fieldData);
-                        } else if (fieldName.equalsIgnoreCase("transAmount")) {
+                        } else if (fieldName.equalsIgnoreCase("category")) {
+                            if (fieldData.startsWith("Payment")) {
+                                item.setTransType("C");
+                            } else {
+                                item.setTransType("D");
+                            }
+                        } else if (fieldName.equalsIgnoreCase("credit")) {
+                            if (fieldData != null) {
+                                item.setAmount(fieldData);
+                            }
+                        } else if (fieldName.equalsIgnoreCase("debit")) {
                             if (item.getTransType().equalsIgnoreCase("D")) {
                                 fieldData = "-" + fieldData;
                             }
-                            item.setAmount(fieldData);
+                            if (fieldData != null) {
+                                item.setAmount(fieldData);
+                            }
                         }
                     }
                     entries.add(item);
                 }
             }
-            doSort();
         }
+
+        doSort();
 
         for (LedgerItem item : entries) {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
