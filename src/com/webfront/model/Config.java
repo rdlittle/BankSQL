@@ -5,7 +5,7 @@
  */
 package com.webfront.model;
 
-import com.webfront.app.BankOld;
+import com.webfront.app.Bank;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,7 +63,7 @@ public class Config {
             }
 
         } catch (MissingResourceException e) {
-            Logger.getLogger(BankOld.class.getName()).log(Level.WARNING, "Can't find resource bank.properties");
+            Logger.getLogger(Bank.class.getName()).log(Level.WARNING, "Can't find resource bank.properties");
         }
         // Set up some system-dependant defaults
         Properties properties;

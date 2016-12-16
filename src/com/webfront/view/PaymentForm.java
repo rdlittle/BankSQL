@@ -14,7 +14,6 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.SearchCriteria;
-import com.webfront.model.SelectItem;
 import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
@@ -158,15 +157,6 @@ public final class PaymentForm extends AnchorPane {
             cbStores.setItems(StoresManager.getInstance().getStoreList());
 
             cbStores.setPromptText("Enter store name...");
-//            cbStores.setOnAction(new EventHandler() {
-//                @Override
-//                public void handle(Event event) {
-//                    ComboBox cb = (ComboBox) event.getSource();
-//                    if (cb.getValue() != null && !cb.getValue().toString().isEmpty()) {
-//                        String sName = cb.getValue().toString();
-//                    }
-//                }
-//            });
 
             // Populate category 1 and category 2 lists
             ObservableList<Category> subList = (ObservableList<Category>) CategoryManager.getInstance().getCategories();
@@ -296,15 +286,13 @@ public final class PaymentForm extends AnchorPane {
                 }
             });
 
-            cbAccount.selectionModelProperty().addListener(new ChangeListener() {
+            cbAccount.valueProperty().addListener(new ChangeListener<Account>() {
                 @Override
-                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    SelectItem se = (SelectItem) newValue;
-                    selectedPaymentProperty.getValue().setAccountNum((Integer) se.getKey());
-                    btnOk.setDisable(false);
+                public void changed(ObservableValue<? extends Account> observable, Account oldValue, Account newValue) {
+                    selectedPaymentProperty.getValue().setAccountNum(newValue.getId());
                 }
             });
-
+            
             searchLink = new Hyperlink();
             searchLink.setOnAction((ActionEvent e) -> {
                 System.out.println("This link is clicked");
