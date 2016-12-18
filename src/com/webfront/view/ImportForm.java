@@ -59,7 +59,6 @@ public class ImportForm extends AnchorPane {
     @FXML
     ProgressBar importProgress;
 
-//    ObservableList<Account> accountList;
     public static ArrayList<Ledger> newItems;
     private final SimpleObjectProperty<LedgerView> ledgerViewProperty;
 
@@ -82,7 +81,6 @@ public class ImportForm extends AnchorPane {
         btnCancel = new Button();
         txtFileName = new TextField();
         cbAccount = new ComboBox<>();
-//        accountList = list;
         importProgress = new ProgressBar();
         importDone = new SimpleBooleanProperty();
         accountNum = new SimpleIntegerProperty();

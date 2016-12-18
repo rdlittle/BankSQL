@@ -19,6 +19,48 @@ import java.util.logging.Logger;
  */
 public class LedgerItem {
 
+    /**
+     * @return the primaryCat
+     */
+    public int getPrimaryCat() {
+        return primaryCat;
+    }
+
+    /**
+     * @param primaryCat the primaryCat to set
+     */
+    public void setPrimaryCat(int primaryCat) {
+        this.primaryCat = primaryCat;
+    }
+
+    /**
+     * @return the subCat
+     */
+    public int getSubCat() {
+        return subCat;
+    }
+
+    /**
+     * @param subCat the subCat to set
+     */
+    public void setSubCat(int subCat) {
+        this.subCat = subCat;
+    }
+
+    /**
+     * @return the storeId
+     */
+    public int getStoreId() {
+        return storeId;
+    }
+
+    /**
+     * @param storeId the storeId to set
+     */
+    public void setStoreId(int storeId) {
+        this.storeId = storeId;
+    }
+
     private String date;
     private String description;
     private String refNumber;
@@ -27,6 +69,9 @@ public class LedgerItem {
     private float balance;
     private final String dateFormat = "MM/dd/yyyy";
     private String transType;
+    private int primaryCat;
+    private int subCat;
+    private int storeId;
 
     public LedgerItem() {
         date = "";

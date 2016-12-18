@@ -13,18 +13,34 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 /**
  *
  * @author rlittle
  */
 @Entity
+@Table(name = "xref")
 @NamedQueries({
     @NamedQuery(name = "Xref.findAll", query = "SELECT xref FROM Xref xref"),
     @NamedQuery(name = "Xref.findAllByType", query = "SELECT xref FROM Xref xref WHERE xref.type = :type"),
     @NamedQuery(name = "Xref.findByXrefName", query = "SELECT xref FROM Xref xref WHERE xref.name = :name and xref.type = :type"),
     })
 public class Xref implements Serializable {
+
+    /**
+     * @return the cat2
+     */
+    public Integer getCat2() {
+        return cat2;
+    }
+
+    /**
+     * @param cat2 the cat2 to set
+     */
+    public void setCat2(Integer cat2) {
+        this.cat2 = cat2;
+    }
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -39,7 +55,10 @@ public class Xref implements Serializable {
     private String name;
     
     @Column
-    private Integer fkey;
+    private Integer cat1;
+    
+    @Column
+    private Integer cat2;
     
 
     public Integer getId() {
@@ -106,15 +125,15 @@ public class Xref implements Serializable {
     /**
      * @return the fkey
      */
-    public Integer getFkey() {
-        return fkey;
+    public Integer getCat1() {
+        return cat1;
     }
 
     /**
-     * @param fkey the fkey to set
+     * @param cat1 the fkey to set
      */
-    public void setFkey(Integer fkey) {
-        this.fkey = fkey;
+    public void setCat1(Integer cat1) {
+        this.cat1 = cat1;
     }
     
 }

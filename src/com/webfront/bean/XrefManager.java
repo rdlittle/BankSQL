@@ -22,23 +22,26 @@ public class XrefManager extends DBManager<Xref> implements Serializable {
     private static XrefManager instance = null;
 
     protected XrefManager() {
-        instance = new XrefManager();
-        instance.getList("");
+
     }
 
-    public XrefManager getInstance() {
-        if(instance == null) {
+    public static XrefManager getInstance() {
+        if (instance == null) {
             instance = new XrefManager();
+            instance.getList("Xref.findAll");
         }
         return instance;
     }
-            
-            public List<Xref> lookup(String n, Character t) {
-        Query query = em.createNamedQuery("Xref.findXrefByName");
-        query.setParameter("name", n);
-        query.setParameter("type", t);
-        List<Xref> xref = query.getResultList();
-        return xref;
+
+    public Xref lookup(String n, Character t) {
+        for (Xref target : list) {
+            if (target.getName().equalsIgnoreCase(n) && target.getType().compareTo(t) == 0) {
+                if (target.getCat1() != 0) {
+                    return target;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

@@ -6,9 +6,11 @@
 package com.webfront.app.utils;
 
 import com.webfront.bean.LedgerManager;
+import com.webfront.bean.XrefManager;
 import com.webfront.model.Account;
 import com.webfront.model.Ledger;
 import com.webfront.model.LedgerItem;
+import com.webfront.model.Xref;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.ParseException;
@@ -28,6 +30,7 @@ public class CSVImporter extends Importer {
     ArrayList<LedgerItem> entries;
     Float lastBalance;
     Account account;
+    private XrefManager xrefManager;
 
     public CSVImporter(String fileName, Account acct) {
         super(fileName, acct);
@@ -45,6 +48,9 @@ public class CSVImporter extends Importer {
             }
         }
         beginningBalance = lastBalance;
+        if (account.isXlateCat() || account.isXlateStore()) {
+            xrefManager = XrefManager.getInstance();
+        }
     }
 
     @Override
@@ -115,11 +121,23 @@ public class CSVImporter extends Importer {
                                 fieldData = "Check # " + item.getCheckNumber();
                             }
                             item.setDescription(fieldData);
+                            if (account.isXlateStore()) {
+                                Xref xref = xrefManager.lookup(fieldData, 'S');
+                                if (xref!= null) {
+                                    item.setStoreId(groups);
+                                }
+                            }
                         } else if (fieldName.equalsIgnoreCase("category")) {
                             if (fieldData.startsWith("Payment")) {
                                 item.setTransType("C");
                             } else {
                                 item.setTransType("D");
+                            }
+                            if(account.isXlateCat()) {
+                                Xref xref = xrefManager.lookup(fieldData,'C');
+                                if (xref != null) {
+                                    
+                                }
                             }
                         } else if (fieldName.equalsIgnoreCase("credit")) {
                             if (fieldData != null) {
