@@ -18,8 +18,11 @@ import com.webfront.view.SetupForm;
 import com.webfront.view.SearchForm;
 import com.webfront.view.StoresView;
 import com.webfront.view.SummaryView;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -34,9 +37,12 @@ import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -44,8 +50,10 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TreeView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 /**
@@ -71,6 +79,8 @@ public class BankController implements Initializable {
     MenuItem fileNewCategory;
     @FXML
     MenuItem fileNewStore;
+    @FXML
+    MenuItem fileExport;
     @FXML
     MenuItem fileImport;
     @FXML
@@ -144,6 +154,8 @@ public class BankController implements Initializable {
     private ImportForm importForm;
     private final PaymentListListener paymentListener;
 
+    private ResourceBundle res;
+
     public BankController() {
         this.accountList = FXCollections.<Account>observableArrayList();
         this.bankManager = BankManager.getInstance();
@@ -159,6 +171,7 @@ public class BankController implements Initializable {
         this.config = Config.getInstance();
         paymentListener = new PaymentListListener();
         config.getConfig();
+        this.res = ResourceBundle.getBundle("com.webfront.app.bank");
     }
 
     /**
@@ -168,6 +181,7 @@ public class BankController implements Initializable {
     @FXML
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        this.res = resources;
         accountList.setAll(bankManager.getList(""));
         accountList.stream().filter((acct) -> (acct.getAccountStatus() != Account.AccountStatus.CLOSED)).forEachOrdered((acct) -> {
             addLedger(acct);
@@ -175,12 +189,12 @@ public class BankController implements Initializable {
 
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
-        
+
         Tab t = new Tab();
         t.setContent(PaymentView.getInstance());
         t.setText("Payments");
         tabPane.getTabs().add(t);
-        
+
         tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
             public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
@@ -219,7 +233,7 @@ public class BankController implements Initializable {
         accountNum.addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                LedgerView l = viewMap.get((Integer)newValue);
+                LedgerView l = viewMap.get((Integer) newValue);
                 selectedAccount.setValue(l);
             }
         });
@@ -237,6 +251,23 @@ public class BankController implements Initializable {
 
     public MenuItem getFileExit() {
         return fileExit;
+    }
+
+    @FXML
+    public void onFileExport() {
+        FXMLLoader loader = new FXMLLoader();
+        URL url = getClass().getResource("/com/webfront/app/fxml/ExportForm.fxml");
+        loader.setLocation(url);
+        try {
+            loader.load();
+            ExportFormController controller = loader.getController();
+            Stage s = new Stage();
+            s.setScene(new Scene(loader.getRoot()));
+            controller.setStage(s);
+            s.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(ExportFormController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
@@ -333,7 +364,7 @@ public class BankController implements Initializable {
 
     @FXML
     public void onEditAccount() {
-        
+
     }
 
     @FXML
@@ -341,7 +372,7 @@ public class BankController implements Initializable {
         LedgerView lv = (LedgerView) tabPane.getSelectionModel().getSelectedItem().getContent();
         lv.doRebalance();
     }
-    
+
     @FXML
     public void onEditSearch() {
         SearchForm sf = new SearchForm();
@@ -357,6 +388,37 @@ public class BankController implements Initializable {
     @FXML
     public void onEditStores() {
 
+    }
+
+    @FXML
+    public void onEditXref() {
+        FXMLLoader viewLoader = new FXMLLoader();
+        String v = "/com/webfront/app/fxml/XrefView.fxml";
+        String t = "Cross-references";
+        String rs = res.getString("viewXref");
+        URL url = BankController.class.getResource(v);
+        viewLoader.setLocation(url);
+        viewLoader.setResources(res);
+        try {
+            Pane root = viewLoader.<AnchorPane>load();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(new Scene(root));
+//            root.addEventFilter(KeyEvent.KEY_PRESSED, event -> System.out.println("Pressed: "+event.getCode()));
+            stage.setTitle(t);
+            ControllerInterface ctrl = viewLoader.getController();
+            ctrl.getBtnClose().setOnAction(new EventHandler() {
+                @Override
+                public void handle(Event event) {
+                    ctrl.getBtnClose().removeEventHandler(EventType.ROOT, this);
+                    stage.close();
+                }
+            });
+
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(BankController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
@@ -381,6 +443,13 @@ public class BankController implements Initializable {
 
     public void setStage(Stage s) {
         BankController.stage = s;
+    }
+
+    /**
+     * @return the stage
+     */
+    public static Stage getStage() {
+        return stage;
     }
 
     private class LedgerTab extends Tab {

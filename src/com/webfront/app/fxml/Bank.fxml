@@ -27,6 +27,7 @@
                         </Menu>
                         <MenuItem fx:id="fileOpen" onAction="#onFileOpen" text="_Open" />
                         <MenuItem fx:id="fileClose" onAction="#onFileClose" text="C_lose" />
+                  <MenuItem fx:id="fileExport" mnemonicParsing="false" onAction="#onFileExport" text="Export" />
                         <MenuItem fx:id="fileImport" onAction="#onFileImport" text="_Import" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem fx:id="fileExit" onAction="#onFileExit" text="E_xit" />
@@ -41,6 +42,7 @@
                             </items>
                         </Menu>
                         <MenuItem fx:id="editCategories" onAction="#onEditCategories" text="Ca_tegories" />
+                  <MenuItem fx:id="editXref" mnemonicParsing="false" onAction="#onEditXref" text="Cross-reference" />
                         <MenuItem fx:id="editStores" onAction="#onEditStores" text="Sto_res" />
                         <MenuItem fx:id="editSearch" onAction="#onEditSearch" text="Searc_h" />
                         <MenuItem fx:id="editPreferences" onAction="#onEditPreferences" text="_Preferences" />

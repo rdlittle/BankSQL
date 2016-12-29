@@ -125,6 +125,8 @@ public class CSVImporter extends Importer {
                                 Xref xref = xrefManager.lookup(fieldData, 'S');
                                 if (xref!= null) {
                                     item.setStoreId(groups);
+                                } else {
+                                    xrefManager.addXref(fieldData, 'S');
                                 }
                             }
                         } else if (fieldName.equalsIgnoreCase("category")) {
@@ -137,6 +139,8 @@ public class CSVImporter extends Importer {
                                 Xref xref = xrefManager.lookup(fieldData,'C');
                                 if (xref != null) {
                                     
+                                } else {
+                                    xrefManager.addXref(fieldData, 'C');
                                 }
                             }
                         } else if (fieldName.equalsIgnoreCase("credit")) {

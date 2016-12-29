@@ -7,6 +7,8 @@ package com.webfront.app;
 
 import com.webfront.controller.BankController;
 import com.webfront.model.Config;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.Event;
@@ -24,15 +26,20 @@ import javafx.stage.WindowEvent;
 public class Bank extends Application {
 
     private final String location = "/com/webfront/app/fxml/Bank.fxml";
+    private final String propertyString = "com.webfront.app.bank";
     private final Config config = Config.getInstance();
+    ResourceBundle rb;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         config.getConfig();
+        rb = ResourceBundle.getBundle(propertyString,Locale.getDefault());
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(BankController.class.getResource(location));
+        loader.setResources(rb);
         AnchorPane root = loader.<AnchorPane>load();
         BankController controller = loader.getController();
+        controller.setStage(primaryStage);
         Scene scene = new Scene(root);
         controller.getFileExit().setOnAction(new EventHandler() {
             @Override

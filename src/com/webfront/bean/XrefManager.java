@@ -43,14 +43,20 @@ public class XrefManager extends DBManager<Xref> implements Serializable {
         }
         return null;
     }
+    
+    public void addXref(String n, Character t) {
+        Xref xref = new Xref(n,t);
+        create(xref);
+        list.add(xref);
+    }
 
     @Override
-    public List<Xref> getList(String s) {
+    public ObservableList<Xref> getList(String s) {
         Query query = em.createNamedQuery(s);
         list = FXCollections.observableList(query.getResultList());
         return list;
     }
-
+    
     @Override
     public ObservableList<Xref> doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
