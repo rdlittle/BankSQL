@@ -194,7 +194,7 @@ public class SetupForm extends AnchorPane {
         rbInactive = new RadioButton();
         rbClosed = new RadioButton();
 
-        acctMgr = new AccountManager();
+        acctMgr = AccountManager.getInstance();
         chkXlateCat = new CheckBox();
         chkXlateStore = new CheckBox();
         

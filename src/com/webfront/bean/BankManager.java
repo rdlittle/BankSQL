@@ -6,48 +6,51 @@
 package com.webfront.bean;
 
 import com.webfront.model.Account;
+import com.webfront.model.ExportFormat;
+import java.io.Serializable;
 import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.util.StringConverter;
 import javax.persistence.Query;
 
 /**
  *
  * @author rlittle
  */
-public class BankManager extends DBManager {
+public class BankManager extends DBManager<Account> implements Serializable {
     
-    private static BankManager instance;
+    private static BankManager instance = null;
     
     private final ObservableList<Account> accountList;
     
     protected BankManager() {
-        BankManager.instance = null;
-        this.accountList = FXCollections.<Account>observableArrayList();
+        super();
+        accountList = FXCollections.<Account>observableArrayList();
     }
     
-    public static synchronized BankManager getInstance() {
+    public static BankManager getInstance() {
         if(instance==null) {
             instance = new BankManager();
         }
         return instance;
     }
     
-    public synchronized void addListener(ListChangeListener lcl) {
+    public void addListener(ListChangeListener lcl) {
         accountList.addListener(lcl);
     }
     
-    public synchronized void removeListener(ListChangeListener lcl) {
+    public void removeListener(ListChangeListener lcl) {
         accountList.removeListener(lcl);
     }    
     
-    public synchronized void addListener(InvalidationListener il) {
+    public void addListener(InvalidationListener il) {
         accountList.addListener(il);
     }
     
-    public synchronized void removeListener(InvalidationListener il) {
+    public void removeListener(InvalidationListener il) {
         accountList.removeListener(il);
     }    
 
@@ -58,10 +61,28 @@ public class BankManager extends DBManager {
         accountList.setAll(list);
         return accountList;
     }
-
+    
     @Override
     public ObservableList doSqlQuery(String q) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
+    
+    public static class AccountConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            Account acct = (Account) object;
+            if(object==null) {
+                acct = new Account();
+            }
+            return acct.getAccountName();
+        }
+
+        @Override
+        public Object fromString(String string) {
+            return string;
+        }
+        
+    }
 }

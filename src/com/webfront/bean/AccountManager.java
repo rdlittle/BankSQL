@@ -23,10 +23,11 @@ public class AccountManager extends DBManager<Account> implements Serializable {
     private static ObservableList<Account> list;
     private static AccountManager manager=null;
     
-    public AccountManager() {
+    protected AccountManager() {
         super();
         list = FXCollections.emptyObservableList();
     }
+    
     @Override
     public List<Account> getList(String s) {
         Query query = em.createNamedQuery(s);
