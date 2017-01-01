@@ -11,7 +11,9 @@ import com.webfront.model.Ledger;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,6 +30,7 @@ public abstract class Exporter extends Task<Void> {
     private LocalDate endDate;
     private Account account;
     DoubleProperty progressProperty;
+    public BooleanProperty isDoneProperty = new SimpleBooleanProperty(false);
     
     public Exporter(File f) {
         outputFile = f;

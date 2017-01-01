@@ -15,6 +15,8 @@ import com.webfront.model.ExportFormat;
 import java.io.File;
 import java.time.LocalDate;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -116,11 +118,18 @@ public class ExportFormController {
         LocalDate endDate = dpEnd.valueProperty().get();
         Account acct = cbAccount.getValue();
         ExportFormat format = cbExportType.getValue();
-        if (format.getExtension().equalsIgnoreCase("qif")) {
+        if (format.getExtension().equalsIgnoreCase("*.qif")) {
             exporter = new QifExporter(outputFile);
             exporter.setAccount(acct);
             exporter.setStartDate(startDate);
             exporter.setEndDate(endDate);
+            exporter.isDoneProperty.addListener(new InvalidationListener() {
+                @Override
+                public void invalidated(Observable observable) {
+                    stage.close();
+                }
+            });
+            
             progressBar.progressProperty().bind(exporter.progressProperty());
             progressBar.setVisible(true);
             if (Platform.isFxApplicationThread()) {

@@ -7,6 +7,7 @@ package com.webfront.bean;
 
 import com.webfront.model.Xref;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -55,6 +56,14 @@ public class XrefManager extends DBManager<Xref> implements Serializable {
         Query query = em.createNamedQuery(s);
         list = FXCollections.observableList(query.getResultList());
         return list;
+    }
+    
+    public ObservableList<Xref> getList(HashMap<String,String> map) {
+        Query query = em.createNamedQuery("Xref.findAllByType");
+        String s = map.get("type");
+        query.setParameter("type", s.charAt(0));
+        List<Xref> l = query.getResultList();
+        return FXCollections.observableArrayList(l);
     }
     
     @Override
