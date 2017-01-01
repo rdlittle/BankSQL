@@ -10,11 +10,8 @@ import com.webfront.model.Payment;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -34,26 +31,24 @@ public class QifExporter extends Exporter {
     }
 
     @Override
-    public void run() {
-        try {
-            doSelect();
-            double itemsDone = 0D;
-            Double itemCount = (double) getList().size();
-            progressProperty.set(itemsDone);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(super.outputFile));
-            String text = "";
-            text = "!Type:cash\n";
-            writer.write(text);
-            for (Ledger item : getList()) {
-                String trans = createTransaction(item);
-                writer.write(trans);
-                progressProperty.set(itemsDone / itemCount);
-            }
-            writer.flush();
-            writer.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Exporter.class.getName()).log(Level.SEVERE, null, ex);
+    protected Void call() throws Exception {
+        doSelect();
+        Double itemCount = (double) getList().size();
+        Double progress = (double) 0;
+        Double itemsCreated = (double) 0;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(super.outputFile));
+        String text = "!Type:cash\n";
+        writer.write(text);
+        for (Ledger l : getList()) {
+            String trans = createTransaction(l);
+            writer.write(trans);
+            itemsCreated += 1;
+            progress = itemsCreated / itemCount;
+            updateProgress(progress, 1);
         }
+        writer.flush();
+        writer.close();
+        return null;
     }
 
     private void setMap() {

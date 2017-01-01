@@ -51,13 +51,13 @@ public class FormatManager extends DBManager<ExportFormat> implements Serializab
         @Override
         public String toString(Object object) {
             ExportFormat ef = (ExportFormat) object;
-            return ef.getDescription()+" (*."+ef.getExtension()+")";
+            return ef.getDescription()+" ("+ef.getExtension()+")";
         }
 
         @Override
         public Object fromString(String string) {
             for (ExportFormat ef : formatList) {
-                String s = ef.getDescription()+" (*."+ef.getExtension()+")";
+                String s = ef.getDescription()+" ("+ef.getExtension()+")";
                 if (s.equalsIgnoreCase(string)) {
                     return ef;
                 }

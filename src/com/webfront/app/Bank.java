@@ -33,7 +33,7 @@ public class Bank extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         config.getConfig();
-        rb = ResourceBundle.getBundle(propertyString,Locale.getDefault());
+        rb = ResourceBundle.getBundle(propertyString, Locale.getDefault());
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(BankController.class.getResource(location));
         loader.setResources(rb);
@@ -63,7 +63,6 @@ public class Bank extends Application {
                 Platform.exit();
             }
         });
-
         primaryStage.show();
     }
 

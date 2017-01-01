@@ -5,7 +5,6 @@
  */
 package com.webfront.controller;
 
-import com.webfront.app.Bank;
 import com.webfront.app.utils.Exporter;
 import com.webfront.app.utils.QifExporter;
 import com.webfront.bean.AccountManager;
@@ -13,13 +12,9 @@ import com.webfront.bean.FormatManager;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
 import com.webfront.model.ExportFormat;
-import com.webfront.model.Ledger;
 import java.io.File;
 import java.time.LocalDate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -28,6 +23,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 /**
@@ -88,9 +84,20 @@ public class ExportFormController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        File selectedFile = fileChooser.showOpenDialog(stage);
+        ExportFormat sf = cbExportType.getValue();
+        ExtensionFilter ext = new ExtensionFilter(sf.getDescription(), sf.getExtension());
+        fileChooser.getExtensionFilters().add(ext);
+        for (ExportFormat ef : cbExportType.getItems()) {
+            if (ef != sf) {
+                fileChooser.getExtensionFilters().add(new ExtensionFilter(ef.getDescription(), ef.getExtension()));
+            }
+        }
+        fileChooser.setSelectedExtensionFilter(ext);
+        File selectedFile = fileChooser.showSaveDialog(stage);
+
         if (selectedFile != null) {
             outputFile = selectedFile;
+            txtPath.setText(outputFile.getPath());
         }
     }
 
@@ -114,49 +121,16 @@ public class ExportFormController {
             exporter.setAccount(acct);
             exporter.setStartDate(startDate);
             exporter.setEndDate(endDate);
-            doExport();
+            progressBar.progressProperty().bind(exporter.progressProperty());
+            progressBar.setVisible(true);
+            if (Platform.isFxApplicationThread()) {
+                new Thread((Runnable) exporter).start();
+            } else {
+                Platform.runLater(exporter);
+            }
         } else {
 
         }
-    }
-
-    private void doExport() {
-        Thread t = new Thread(exporter);
-        t.start();
-        while (t.isAlive()) {
-            try {
-                t.join(1000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        Task<Void> exportTask;
-        exportTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                Double itemCount = (double) exporter.getList().size();
-                Double progress = (double) 0;
-                Double itemsCreated = (double) 0;
-                for (Ledger l : exporter.getList()) {
-                    itemsCreated += 1;
-                    progress = itemsCreated / itemCount;
-                    updateProgress(progress, 1);
-                }
-                return null;
-            }
-            @Override
-            protected void succeeded() {
-                super.succeeded();
-                stage.close();
-            }
-        };
-        progressBar.progressProperty().bind(exportTask.progressProperty());
-        progressBar.setVisible(true);
-        if (Platform.isFxApplicationThread()) {
-            new Thread((Runnable) exportTask).start();
-        } else {
-            Platform.runLater(exportTask);
-        }        
     }
 
     /**

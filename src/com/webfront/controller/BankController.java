@@ -25,7 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -147,13 +149,13 @@ public class BankController implements Initializable {
     private final StoresView stores;
     private final CategoryView categories;
 
+    public final SimpleBooleanProperty ready;
     public final SimpleBooleanProperty importDone;
     public final SimpleIntegerProperty accountNum;
     private final SimpleObjectProperty<LedgerView> selectedAccount;
 
     private ImportForm importForm;
     private final PaymentListListener paymentListener;
-
     private ResourceBundle res;
 
     public BankController() {
@@ -162,6 +164,7 @@ public class BankController implements Initializable {
         this.ledgerTabs = FXCollections.<Tab>observableArrayList();
         this.isRebalance = new SimpleBooleanProperty(false);
         this.isLedgerTab = new SimpleBooleanProperty(false);
+        this.ready = new SimpleBooleanProperty(false);
         this.viewMap = FXCollections.<Integer, LedgerView>observableHashMap();
         this.stores = StoresView.getInstance();
         this.categories = CategoryView.getInstance();
@@ -182,10 +185,11 @@ public class BankController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         this.res = resources;
-        accountList.setAll(bankManager.getList(""));
-        accountList.stream().filter((acct) -> (acct.getAccountStatus() != Account.AccountStatus.CLOSED)).forEachOrdered((acct) -> {
-            addLedger(acct);
-        });
+        for(Account acct : accountList) {
+            if(acct.getAccountStatus() != Account.AccountStatus.CLOSED) {
+                addLedger(acct);
+            }
+        }
 
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
@@ -204,11 +208,9 @@ public class BankController implements Initializable {
                 } else if (newTab.getText().equals("Payments")) {
                     isLedgerTab.set(false);
                     PaymentView.getInstance().getList().addListener(paymentListener);
-//                    detailViewController.addListener(paymentListener);
                 } else {
                     isLedgerTab.set(newTab instanceof LedgerTab);
                     PaymentView.getInstance().getList().removeListener(paymentListener);
-//                    detailViewController.removeListener(paymentListener);
                 }
             }
         });
@@ -485,7 +487,6 @@ public class BankController implements Initializable {
 
                 }
             }
-//            detailViewController.table.refresh();
         }
     }
 

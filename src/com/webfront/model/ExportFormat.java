@@ -59,7 +59,7 @@ public class ExportFormat implements Serializable {
      * @return the extension
      */
     public String getExtension() {
-        return extension;
+        return "*."+extension;
     }
 
     /**
