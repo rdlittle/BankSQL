@@ -6,11 +6,15 @@
 package com.webfront.app.utils;
 
 import com.webfront.bean.LedgerManager;
+import com.webfront.bean.PaymentManager;
 import com.webfront.model.Account;
 import com.webfront.model.Ledger;
+import com.webfront.model.LedgerItem;
+import com.webfront.model.Payment;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -25,6 +29,7 @@ import javafx.concurrent.Task;
  */
 public abstract class Exporter extends Task<Void> {
     private final ObservableList<Ledger> list;
+    private final ObservableList<LedgerItem> itemsList;
     public final File outputFile;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -36,6 +41,7 @@ public abstract class Exporter extends Task<Void> {
         outputFile = f;
         progressProperty = new SimpleDoubleProperty();
         list = FXCollections.<Ledger>observableArrayList();
+        itemsList = FXCollections.<LedgerItem>observableArrayList();
     }
     
     public abstract void doExport();
@@ -52,6 +58,26 @@ public abstract class Exporter extends Task<Void> {
         }
         stmt += " ORDER BY transDate";
         getList().setAll(LedgerManager.getInstance().doSqlQuery(stmt));
+        for (Ledger l : list) {
+            if(l.getPayment().size() > 0) {
+                for(Payment p : l.getPayment()) {
+                    LedgerItem item = new LedgerItem(p);
+                    getItemsList().add(item);
+                }
+            } else {
+                getItemsList().add(new LedgerItem(l));
+            }
+        }
+        stmt = "SELECT * from payment WHERE transId IS NULL";
+        stmt += " AND transDate BETWEEN '"+sDate+"' AND '"+eDate+"'";
+        if(account != null) {
+            stmt += " AND accountNum = "+Integer.toString(account.getId());
+        }
+        stmt += " ORDER BY transDate";
+        List<Payment> ilist = PaymentManager.getInstance().doSqlQuery(stmt);
+        ilist.forEach((p) -> {
+            getItemsList().add(new LedgerItem(p));
+        });
     }
 
     public DoubleProperty getProgressProperty() {
@@ -105,6 +131,13 @@ public abstract class Exporter extends Task<Void> {
      */
     public ObservableList<Ledger> getList() {
         return list;
+    }
+
+    /**
+     * @return the itemsList
+     */
+    public ObservableList<LedgerItem> getItemsList() {
+        return itemsList;
     }
     
 }

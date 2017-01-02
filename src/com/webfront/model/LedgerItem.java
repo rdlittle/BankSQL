@@ -7,8 +7,10 @@ package com.webfront.model;
 
 import com.webfront.app.utils.DateConvertor;
 import java.text.ParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,6 +50,27 @@ public class LedgerItem {
         transType = "";
     }
 
+    public LedgerItem(Ledger l) {
+        this();
+        Date d = l.getTransDate();
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        description = l.getTransDesc();
+        amount = Float.toString(l.getTransAmt());
+        checkNumber = l.getCheckNum();
+        primaryCat = l.getPrimaryCat().getId();
+        subCat = l.getSubCat().getId();
+    }
+    
+    public LedgerItem(Payment p) {
+        this();
+        Date d = p.getTransDate();
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        description = p.getTransDesc();
+        amount = Float.toString(p.getTransAmt());
+        primaryCat = p.getPrimaryCat().getId();
+        subCat = p.getSubCat().getId();    
+    }
+    
     public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
         @Override
         public int compare(LedgerItem ledger1, LedgerItem ledger2) {

@@ -6,13 +6,11 @@
 package com.webfront.app.utils;
 
 import com.webfront.bean.XrefManager;
-import com.webfront.model.Ledger;
-import com.webfront.model.Payment;
+import com.webfront.model.LedgerItem;
 import com.webfront.model.Xref;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,7 +46,7 @@ public class QifExporter extends Exporter {
         BufferedWriter writer = new BufferedWriter(new FileWriter(super.outputFile));
         String text = "!Type:cash\n";
         writer.write(text);
-        for (Ledger l : getList()) {
+        for (LedgerItem l : getItemsList()) {
             String trans = createTransaction(l);
             writer.write(trans);
             itemsCreated += 1;
@@ -57,6 +55,7 @@ public class QifExporter extends Exporter {
         }
         writer.flush();
         writer.close();
+        isDoneProperty.set(true);
         return null;
     }
 
@@ -77,63 +76,38 @@ public class QifExporter extends Exporter {
 
     }
 
-    private String createTransaction(Ledger l) {
-        String transDate = DateConvertor.toLocalDate(l.getTransDate()).format(DateTimeFormatter.ISO_LOCAL_DATE);
+    private String createTransaction(LedgerItem l) {
         StringBuilder buffer = new StringBuilder();
-        if (l.getPayment() != null && l.getPayment().size() > 0) {
-            for (Payment p : l.getPayment()) {
-                String c1 = catXref(p.getPrimaryCat().getId().toString());
-                String c2 = catXref(p.getStore().getId().toString());
-                String desc = p.getTransDesc();
-                String amt = Float.toString(p.getTransAmt());
-                buffer.append(map.get("transDate"));
-                buffer.append(transDate);
-                buffer.append("\n");
-                buffer.append(map.get("transDesc"));
-                buffer.append(desc);
-                buffer.append("\n");
-                buffer.append(map.get("primaryCat"));
-                buffer.append(c1);
-                buffer.append("\n");
-                buffer.append(map.get("subCat"));
-                buffer.append(c2);
-                buffer.append("\n");
-                buffer.append(map.get("transAmt"));
-                buffer.append(amt);
-                buffer.append("\n");
-                buffer.append("^");
-                buffer.append("\n");
-            }
-        } else {
-            buffer.append(map.get("transDate"));
-            buffer.append(transDate);
-            buffer.append("\n");
-            buffer.append(map.get("transDesc"));
-            buffer.append(l.getTransDesc());
-            buffer.append("\n");
-            if (l.getCheckNum() != null) {
-                buffer.append(map.get("checkNum"));
-                buffer.append(l.getCheckNum());
-                buffer.append("\n");
-            }
-            buffer.append(map.get("transAmt"));
-            buffer.append(Float.toString(l.getTransAmt()));
-            buffer.append("\n");
-            if (l.getPrimaryCat() != null) {
-                String c1 = catXref(l.getPrimaryCat().getId().toString());
-                buffer.append(map.get("primaryCat"));
-                buffer.append(c1);
-                buffer.append("\n");
-            }
-            if (l.getSubCat() != null) {
-                buffer.append(map.get("subCat"));
-                String c2 = catXref(l.getSubCat().getId().toString());
-                buffer.append(c2);
-                buffer.append("\n");
-            }
-            buffer.append("^");
+        buffer.append(map.get("transDate"));
+        buffer.append(l.getDate());
+        buffer.append("\n");
+        buffer.append(map.get("transDesc"));
+        buffer.append(l.getDescription());
+        buffer.append("\n");
+        if (l.getCheckNumber() != null) {
+            buffer.append(map.get("checkNum"));
+            buffer.append(l.getCheckNumber());
             buffer.append("\n");
         }
+        buffer.append(map.get("transAmt"));
+        buffer.append(l.getAmount());
+        buffer.append("\n");
+        String c1 = Integer.toString(l.getPrimaryCat());
+        String c2 = Integer.toString(l.getSubCat());
+        if (Integer.toString(l.getPrimaryCat()) != null) {
+            c1 = catXref(c1);
+            buffer.append(map.get("primaryCat"));
+            buffer.append(c1);
+            buffer.append("\n");
+        }
+        if (c2 != null) {
+            buffer.append(map.get("subCat"));
+            c2 = catXref(c2);
+            buffer.append(c2);
+            buffer.append("\n");
+        }
+        buffer.append("^");
+        buffer.append("\n");
 
         return buffer.toString();
     }
