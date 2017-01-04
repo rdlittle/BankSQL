@@ -5,6 +5,7 @@
  */
 package com.webfront.controller;
 
+import com.webfront.bean.AccountManager;
 import com.webfront.bean.BankManager;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
@@ -185,6 +186,7 @@ public class BankController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         this.res = resources;
+        accountList.setAll(AccountManager.getInstance().getAccounts());
         for(Account acct : accountList) {
             if(acct.getAccountStatus() != Account.AccountStatus.CLOSED) {
                 addLedger(acct);

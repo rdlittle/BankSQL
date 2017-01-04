@@ -33,18 +33,14 @@ public class QifExporter extends Exporter {
         xrefList = FXCollections.observableArrayList(XrefManager.getInstance().getList(argMap));
     }
 
-    public String toTrans(String key, String value) {
-        return "";
-    }
-
     @Override
     protected Void call() throws Exception {
         doSelect();
-        Double itemCount = (double) getList().size();
+        Double itemCount = (double) getItemsList().size();
         Double progress = (double) 0;
         Double itemsCreated = (double) 0;
         BufferedWriter writer = new BufferedWriter(new FileWriter(super.outputFile));
-        String text = "!Type:cash\n";
+        String text = "!Type:Cash\n\n";
         writer.write(text);
         for (LedgerItem l : getItemsList()) {
             String trans = createTransaction(l);
@@ -65,6 +61,7 @@ public class QifExporter extends Exporter {
         map.put("transAmt", "T");
         map.put("checkNum", "N");
         map.put("transDesc", "P");
+        map.put("payee","P");
         map.put("primaryCat", "L");
         map.put("subCat", "S");
         map.put("businessExpense", "F");
@@ -84,7 +81,7 @@ public class QifExporter extends Exporter {
         buffer.append(map.get("transDesc"));
         buffer.append(l.getDescription());
         buffer.append("\n");
-        if (l.getCheckNumber() != null) {
+        if (l.getCheckNumber() != null && !l.getCheckNumber().isEmpty()) {
             buffer.append(map.get("checkNum"));
             buffer.append(l.getCheckNumber());
             buffer.append("\n");
@@ -94,21 +91,17 @@ public class QifExporter extends Exporter {
         buffer.append("\n");
         String c1 = Integer.toString(l.getPrimaryCat());
         String c2 = Integer.toString(l.getSubCat());
-        if (Integer.toString(l.getPrimaryCat()) != null) {
-            c1 = catXref(c1);
-            buffer.append(map.get("primaryCat"));
-            buffer.append(c1);
-            buffer.append("\n");
-        }
-        if (c2 != null) {
-            buffer.append(map.get("subCat"));
-            c2 = catXref(c2);
-            buffer.append(c2);
-            buffer.append("\n");
-        }
+        c1 = catXref(c1);
+        buffer.append(map.get("primaryCat"));
+        buffer.append(c1);
+        buffer.append("\n");
+        buffer.append(map.get("subCat"));
+        c2 = catXref(c2);
+        buffer.append(c2);
+        buffer.append("\n");
         buffer.append("^");
         buffer.append("\n");
-
+        buffer.append("\n");
         return buffer.toString();
     }
 

@@ -40,6 +40,8 @@ public class LedgerItem {
         amount = "";
         balance = 0;
         checkNumber = "";
+        primaryCat = -1;
+        subCat = -1;
     }
 
     public LedgerItem(String d, String desc, String amt) {
@@ -53,24 +55,36 @@ public class LedgerItem {
     public LedgerItem(Ledger l) {
         this();
         Date d = l.getTransDate();
-        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ofPattern(dateFormat));
         description = l.getTransDesc();
-        amount = Float.toString(l.getTransAmt());
         checkNumber = l.getCheckNum();
-        primaryCat = l.getPrimaryCat().getId();
-        subCat = l.getSubCat().getId();
+        Float amt = l.getTransAmt();
+        
+        if (l.getPrimaryCat() != null) {
+            primaryCat = l.getPrimaryCat().getId();
+        }
+        if (l.getSubCat() != null) {
+            subCat = l.getSubCat().getId();
+        }
+        amount = Float.toString(amt);
     }
-    
+
     public LedgerItem(Payment p) {
         this();
         Date d = p.getTransDate();
-        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ofPattern(dateFormat));
         description = p.getTransDesc();
-        amount = Float.toString(p.getTransAmt());
-        primaryCat = p.getPrimaryCat().getId();
-        subCat = p.getSubCat().getId();    
+        Float amt;
+        amt = p.getTransAmt() * -1;
+        amount = Float.toString(amt);
+        if (p.getPrimaryCat() != null) {
+            primaryCat = p.getPrimaryCat().getId();
+        }
+        if (p.getSubCat() != null) {
+            subCat = p.getSubCat().getId();
+        }
     }
-    
+
     public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
         @Override
         public int compare(LedgerItem ledger1, LedgerItem ledger2) {

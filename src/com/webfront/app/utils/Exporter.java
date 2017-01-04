@@ -14,7 +14,9 @@ import com.webfront.model.Payment;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,62 +30,80 @@ import javafx.concurrent.Task;
  * @author rlittle
  */
 public abstract class Exporter extends Task<Void> {
-    private final ObservableList<Ledger> list;
-    private final ObservableList<LedgerItem> itemsList;
+
+    public final ObservableList<Ledger> list;
+    public final ObservableList<LedgerItem> itemsList;
     public final File outputFile;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private Account account;
+    public LocalDate startDate;
+    public LocalDate endDate;
+    public Account account;
     DoubleProperty progressProperty;
     public BooleanProperty isDoneProperty = new SimpleBooleanProperty(false);
-    
+
     public Exporter(File f) {
         outputFile = f;
         progressProperty = new SimpleDoubleProperty();
         list = FXCollections.<Ledger>observableArrayList();
         itemsList = FXCollections.<LedgerItem>observableArrayList();
     }
-    
+
     public abstract void doExport();
-    
 
     public void doSelect() {
         getList().clear();
-        String stmt = "SELECT * FROM ledger ";
+        getItemsList().clear();
+
         String sDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
         String eDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        stmt += "WHERE transDate BETWEEN '"+sDate+"' AND '"+eDate+"'";
-        if(account != null) {
-            stmt += " AND accountNum = "+Integer.toString(account.getId());
-        }
-        stmt += " ORDER BY transDate";
-        getList().setAll(LedgerManager.getInstance().doSqlQuery(stmt));
-        for (Ledger l : list) {
-            if(l.getPayment().size() > 0) {
-                for(Payment p : l.getPayment()) {
-                    LedgerItem item = new LedgerItem(p);
-                    getItemsList().add(item);
+
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String stmt = "SELECT * FROM ledger ";
+                stmt += "WHERE transDate BETWEEN '" + sDate + "' AND '" + eDate + "'";
+                if (account != null) {
+                    stmt += " AND accountNum = " + Integer.toString(account.getId());
                 }
-            } else {
-                getItemsList().add(new LedgerItem(l));
+                stmt += " ORDER BY transDate";
+                getList().setAll(LedgerManager.getInstance().doSqlQuery(stmt));
             }
-        }
-        stmt = "SELECT * from payment WHERE transId IS NULL";
-        stmt += " AND transDate BETWEEN '"+sDate+"' AND '"+eDate+"'";
-        if(account != null) {
-            stmt += " AND accountNum = "+Integer.toString(account.getId());
-        }
-        stmt += " ORDER BY transDate";
-        List<Payment> ilist = PaymentManager.getInstance().doSqlQuery(stmt);
-        ilist.forEach((p) -> {
-            getItemsList().add(new LedgerItem(p));
         });
+        t.start();
+        while (t.isAlive()) {
+
+        }
+        String stmt = "SELECT * FROM ledger ";
+
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String stmt = "SELECT * from payment WHERE transId IS NULL";
+                stmt += " AND transDate BETWEEN '" + sDate + "' AND '" + eDate + "'";
+                if (account != null) {
+                    stmt += " AND accountNum = " + Integer.toString(account.getId());
+                }
+                stmt += " ORDER BY transDate";
+                Map<String, Object> map = new HashMap<>();
+                map.put("accountNum", account.getId());
+                map.put("startDate", DateConvertor.fromLocalDate(startDate));
+                map.put("endDate", DateConvertor.fromLocalDate(endDate));
+                ObservableList<Payment> ilist = PaymentManager.getInstance().doNamedQuery("Payment.findOrphansRange", map);
+                for (Payment p : ilist) {
+                    getItemsList().add(new LedgerItem(p));
+                }
+            }
+        });
+        t2.start();
+        while (t2.isAlive()) {
+
+        }
+        
     }
 
     public DoubleProperty getProgressProperty() {
         return progressProperty;
     }
-        
+
     /**
      * @return the startDate
      */
@@ -139,5 +159,5 @@ public abstract class Exporter extends Task<Void> {
     public ObservableList<LedgerItem> getItemsList() {
         return itemsList;
     }
-    
+
 }

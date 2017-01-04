@@ -8,6 +8,7 @@ package com.webfront.bean;
 import com.webfront.model.Payment;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -61,11 +62,32 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
     }
     
     @Override
-    public ObservableList<Payment> doSqlQuery(String q) {
+    public synchronized ObservableList<Payment> doSqlQuery(String q) {
         if(q.isEmpty()) {
             return FXCollections.observableArrayList();
         }
-        Query query = em.createNamedQuery(q);
+        Query query = em.createNativeQuery(q);
+        List<Payment> l = query.getResultList();
+        return FXCollections.observableArrayList(l);
+    }
+    
+    public synchronized List<Payment> getPayments(String s) {
+        Query query = em.createNativeQuery(s);
+        List<Payment> l = query.getResultList();
+        return l;
+    }
+    
+    public synchronized ObservableList<Payment> doNamedQuery(String nq) {
+        Query query = em.createNamedQuery(nq);
+        List<Payment> l = query.getResultList();
+        return FXCollections.observableArrayList(l);
+    }
+    
+        public synchronized ObservableList<Payment> doNamedQuery(String nq, Map<String,Object> map) {
+        Query query = em.createNamedQuery(nq);
+        query.setParameter("acctNum",map.get("accountNum"));
+        query.setParameter("startDate", map.get("startDate"));
+        query.setParameter("endDate", map.get("endDate"));
         List<Payment> l = query.getResultList();
         return FXCollections.observableArrayList(l);
     }

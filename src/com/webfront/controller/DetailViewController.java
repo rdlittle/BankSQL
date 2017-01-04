@@ -332,7 +332,7 @@ public class DetailViewController implements Initializable, ViewInterface {
         unAssignedPayments.setTransDesc("Unassigned");
         unAssignedPayments.setTransAmt(0);
         TreeItem orphans = new TreeItem<>(unAssignedPayments);
-        ObservableList<Payment> pList = PaymentManager.getInstance().doSqlQuery("Payment.findOrphans");
+        ObservableList<Payment> pList = PaymentManager.getInstance().doNamedQuery("Payment.findOrphans");
         Float amt = new Float(0.0);
         for (Payment p : pList) {
             unAssignedPayments.getPayment().add(p);

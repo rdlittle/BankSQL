@@ -14,6 +14,7 @@ import com.webfront.model.Config;
 import com.webfront.model.ExportFormat;
 import java.io.File;
 import java.time.LocalDate;
+import java.util.List;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -86,20 +87,21 @@ public class ExportFormController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        ExportFormat sf = cbExportType.getValue();
-        ExtensionFilter ext = new ExtensionFilter(sf.getDescription(), sf.getExtension());
-        fileChooser.getExtensionFilters().add(ext);
         for (ExportFormat ef : cbExportType.getItems()) {
-            if (ef != sf) {
-                fileChooser.getExtensionFilters().add(new ExtensionFilter(ef.getDescription(), ef.getExtension()));
-            }
+            fileChooser.getExtensionFilters().add(new ExtensionFilter(ef.getDescription(), ef.getExtension()));
         }
-        fileChooser.setSelectedExtensionFilter(ext);
         File selectedFile = fileChooser.showSaveDialog(stage);
 
         if (selectedFile != null) {
             outputFile = selectedFile;
             txtPath.setText(outputFile.getPath());
+            List<String> l = fileChooser.getSelectedExtensionFilter().getExtensions();
+            for(ExportFormat ef : cbExportType.getItems()) {
+                if(l.get(0).toString().contains(ef.getExtension())) {
+                    cbExportType.valueProperty().set(ef);
+                    break;
+                }
+            }
         }
     }
 
@@ -126,10 +128,15 @@ public class ExportFormController {
             exporter.isDoneProperty.addListener(new InvalidationListener() {
                 @Override
                 public void invalidated(Observable observable) {
-                    stage.close();
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            stage.close();
+                        }
+                    });
                 }
             });
-            
+
             progressBar.progressProperty().bind(exporter.progressProperty());
             progressBar.setVisible(true);
             if (Platform.isFxApplicationThread()) {
