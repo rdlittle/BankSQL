@@ -70,12 +70,6 @@ public class LedgerView extends AnchorPane {
         super();
         this.setStyle("-fx-background-color: #336699;");
         isRebalance = new SimpleBooleanProperty(false);
-
-//        HBox buttonBox = new HBox();
-//        buttonBox.getStyleClass().add("panel");
-//        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
-//        buttonBox.setPadding(new Insets(8));
-//        buttonBox.setSpacing(10);
         accountNumber = acctNum;
         ledgerManager = LedgerManager.getInstance();
         categoryManager = CategoryManager.getInstance();
@@ -181,51 +175,13 @@ public class LedgerView extends AnchorPane {
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
-//        list.addListener(new ListChangeListener() {
-//            @Override
-//            public void onChanged(ListChangeListener.Change c) {
-//                table.getItems().setAll(list);
-//                isLoading.set(false);
-//            }
-//        });
-//
-//        table.getItems().addAll(list);
-        
-
         table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
 
-//        btnSearch = new Button("Search");
-//        btnSearch.setOnAction(new EventHandler() {
-//            @Override
-//            public void handle(Event event) {
-//                doSearch("");
-//            }
-//        });
-//
-//        btnReset = new Button("Reset");
-//        btnReset.setOnAction(new EventHandler() {
-//            @Override
-//            public void handle(Event event) {
-//                ObservableList<Ledger> copyOfList;
-//                copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
-//                list.clear();
-//                list.addAll(copyOfList);
-//                table.getItems().clear();
-//                table.setItems(list);
-//            }
-//        });
-//
-//        buttonBox.getChildren().addAll(btnSearch, btnReset);
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);
         AnchorPane.setBottomAnchor(table, 0.0);
 
-//        AnchorPane.setBottomAnchor(buttonBox, 0.0);
-//        AnchorPane.setLeftAnchor(buttonBox, 0.0);
-//        AnchorPane.setRightAnchor(buttonBox, 0.0);
-//
-//        getChildren().addAll(table, buttonBox);
         getChildren().add(table);
     }
 

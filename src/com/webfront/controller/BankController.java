@@ -187,11 +187,9 @@ public class BankController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         this.res = resources;
         accountList.setAll(AccountManager.getInstance().getAccounts());
-        for(Account acct : accountList) {
-            if(acct.getAccountStatus() != Account.AccountStatus.CLOSED) {
-                addLedger(acct);
-            }
-        }
+        accountList.stream().filter((acct) -> (acct.getAccountStatus() != Account.AccountStatus.CLOSED)).forEachOrdered((acct) -> {
+            addLedger(acct);
+        });
 
         summaryTab.setContent(SummaryView.getInstance());
         tabPane.getTabs().addAll(ledgerTabs);
@@ -201,19 +199,16 @@ public class BankController implements Initializable {
         t.setText("Payments");
         tabPane.getTabs().add(t);
 
-        tabPane.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
-            @Override
-            public void changed(ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) {
-                Node n = newTab.getContent();
-                if (n == null) {
-                    isLedgerTab.set(false);
-                } else if (newTab.getText().equals("Payments")) {
-                    isLedgerTab.set(false);
-                    PaymentView.getInstance().getList().addListener(paymentListener);
-                } else {
-                    isLedgerTab.set(newTab instanceof LedgerTab);
-                    PaymentView.getInstance().getList().removeListener(paymentListener);
-                }
+        tabPane.getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends Tab> observable, Tab oldTab, Tab newTab) -> {
+            Node n = newTab.getContent();
+            if (n == null) {
+                isLedgerTab.set(false);
+            } else if (newTab.getText().equals("Payments")) {
+                isLedgerTab.set(false);
+                PaymentView.getInstance().getList().addListener(paymentListener);
+            } else {
+                isLedgerTab.set(newTab instanceof LedgerTab);
+                PaymentView.getInstance().getList().removeListener(paymentListener);
             }
         });
 

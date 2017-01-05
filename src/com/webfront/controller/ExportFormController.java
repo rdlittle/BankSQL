@@ -87,9 +87,9 @@ public class ExportFormController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        for (ExportFormat ef : cbExportType.getItems()) {
+        cbExportType.getItems().forEach((ef) -> {
             fileChooser.getExtensionFilters().add(new ExtensionFilter(ef.getDescription(), ef.getExtension()));
-        }
+        });
         File selectedFile = fileChooser.showSaveDialog(stage);
 
         if (selectedFile != null) {
@@ -97,7 +97,7 @@ public class ExportFormController {
             txtPath.setText(outputFile.getPath());
             List<String> l = fileChooser.getSelectedExtensionFilter().getExtensions();
             for(ExportFormat ef : cbExportType.getItems()) {
-                if(l.get(0).toString().contains(ef.getExtension())) {
+                if(l.get(0).contains(ef.getExtension())) {
                     cbExportType.valueProperty().set(ef);
                     break;
                 }
