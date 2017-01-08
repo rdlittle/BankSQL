@@ -171,18 +171,21 @@ public class LedgerView extends AnchorPane {
             }
         };
 
-        Platform.runLater(() -> loadData());
-
-        table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-
-        table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
-
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);
         AnchorPane.setBottomAnchor(table, 0.0);
 
-        getChildren().add(table);
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+                table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+                table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
+                getChildren().add(table);
+            }
+        };
+        Platform.runLater(r);
     }
 
     public void loadData() {
