@@ -62,6 +62,7 @@ public class QifExporter extends Exporter {
         map.put("checkNum", "N");
         map.put("transDesc", "P");
         map.put("payee","P");
+        map.put("address","A");
         map.put("primaryCat", "L");
         map.put("subCat", "S");
         map.put("businessExpense", "F");
