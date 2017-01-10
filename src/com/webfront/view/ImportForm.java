@@ -9,6 +9,7 @@ import com.webfront.app.Bank;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
+import com.webfront.app.utils.QifImporter;
 import com.webfront.bean.AccountManager;
 import com.webfront.model.Account;
 import com.webfront.model.Account.StatementFormat;
@@ -142,10 +143,12 @@ public class ImportForm extends AnchorPane {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-
+        
         StatementFormat sf = form.cbAccount.getValue().getStatementFormat();
         if (sf.equals(StatementFormat.PDF)) {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
+        } else if(sf.equals(StatementFormat.QIF)) {
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("QIF Files (*.qif)", "*.qif"));
         } else {
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
         }
@@ -168,6 +171,8 @@ public class ImportForm extends AnchorPane {
         Importer importer;
         if (fileName.contains("pdf")) {
             importer = new PDFImporter(fileName, form.cbAccount.getValue());
+        } else if (fileName.contains("qif")) {
+            importer = new QifImporter(fileName,form.cbAccount.getValue());
         } else {
             importer = new CSVImporter(fileName, form.cbAccount.getValue());
         }

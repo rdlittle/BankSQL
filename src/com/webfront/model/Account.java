@@ -86,7 +86,7 @@ public class Account implements Serializable {
     }
 
     public static enum StatementFormat {
-        CSV, TAB, FIXED, PDF;
+        CSV, TAB, FIXED, PDF, QIF;
     }
     
     public static enum AccountStatus {
