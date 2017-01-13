@@ -15,7 +15,7 @@
     <children>
         <MenuBar layoutX="14.0" layoutY="14.0" AnchorPane.leftAnchor="0.0">
             <menus>
-                <Menu text="_File">
+                <Menu fx:id="fileMenu" text="_File">
                     <items>
                         <Menu fx:id="fileNewMenu" text="_New">
                             <items>
@@ -48,7 +48,12 @@
                         <MenuItem fx:id="editPreferences" onAction="#onEditPreferences" text="_Preferences" />
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="Help">
+            <Menu fx:id="reportMenu" mnemonicParsing="false" text="Reports">
+              <items>
+                <MenuItem fx:id="onReportsSummary" mnemonicParsing="false" text="Summary" />
+              </items>
+            </Menu>
+                <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
                     <items>
                         <MenuItem mnemonicParsing="false" text="About" />
                     </items>
