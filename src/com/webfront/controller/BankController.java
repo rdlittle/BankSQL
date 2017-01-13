@@ -26,9 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -75,6 +73,8 @@ public class BankController implements Initializable {
     Menu fileNewMenu;
     @FXML
     Menu editMenu;
+    @FXML
+    Menu reportsMenu;
 
     @FXML
     MenuItem fileNewAccount;
@@ -103,6 +103,9 @@ public class BankController implements Initializable {
     MenuItem editStores;
     @FXML
     MenuItem editPreferences;
+    
+    @FXML
+    MenuItem reportsSummary;
 
     @FXML
     Pane statusPanel;
@@ -437,6 +440,23 @@ public class BankController implements Initializable {
         int idx = prefs.getTabPane().getTabs().indexOf(prefs.getGeneralTab());
         prefs.getTabPane().getSelectionModel().select(idx);
         prefs.showForm();
+    }
+    
+    @FXML
+    public void onReportsSummary() {
+        FXMLLoader loader = new FXMLLoader();
+        URL url = getClass().getResource("/com/webfront/app/fxml/ReportCriteria.fxml");
+        loader.setLocation(url);
+        try {
+            loader.load();
+            ReportCriteriaController controller = loader.getController();
+            Stage s = new Stage();
+            s.setScene(new Scene(loader.getRoot()));
+            controller.setStage(s);
+            s.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(ExportFormController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void setStage(Stage s) {
