@@ -341,7 +341,6 @@ public class BankController implements Initializable {
                             break;
                         }
                     }
-
                 }
             }
         }
