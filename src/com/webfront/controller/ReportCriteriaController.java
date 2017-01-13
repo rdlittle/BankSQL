@@ -7,13 +7,9 @@ package com.webfront.controller;
 
 import com.webfront.bean.AccountManager;
 import com.webfront.model.Account;
-import com.webfront.model.Ledger;
-import com.webfront.model.LedgerItem;
-import com.webfront.model.Payment;
 import com.webfront.model.SearchCriteria;
 import java.net.URL;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
