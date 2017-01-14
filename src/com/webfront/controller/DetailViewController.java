@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -35,6 +36,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -106,7 +108,7 @@ public class DetailViewController implements Initializable, ViewInterface {
 
     private TreeItem<Ledger> root;
     private SortedList<Ledger> sortedList;
-    private ObservableList<Category> parentList;
+    private FilteredList<Category> parentList;
     private ObservableList<Category> childList;
 
     private Ledger selectedLedgerItem;
@@ -226,7 +228,10 @@ public class DetailViewController implements Initializable, ViewInterface {
         selectedLedgerItem = new Ledger();
         setRoot(new TreeItem<>());
         table.showRootProperty().set(false);
-        parentList = FXCollections.<Category>observableArrayList(CategoryManager.getInstance().getList("Category.findAllParent"));
+        
+        parentList = new FilteredList<>(FXCollections.<Category>observableArrayList(CategoryManager.getInstance().getList("Category.findAll")));
+        parentList.setPredicate((p)->p.getParent()==0);
+        
         sortedList = new SortedList(parentList);
         childList = FXCollections.<Category>observableArrayList();
 
@@ -324,7 +329,7 @@ public class DetailViewController implements Initializable, ViewInterface {
     }
 
     public void loadData() {
-        HashMap<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         map.put("accountType", Account.AccountType.CHECKING);
         map.put("accountStatus", Account.AccountStatus.ACTIVE);
         list.setAll(ledgerManager.doNamedQuery("Ledger.findAllByType", map));

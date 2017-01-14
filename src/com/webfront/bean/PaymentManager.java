@@ -85,9 +85,12 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
 
     public synchronized ObservableList<Payment> doNamedQuery(String nq, Map<String, Object> map) {
         Query query = em.createNamedQuery(nq);
-        query.setParameter("acctNum", map.get("accountNum"));
-        query.setParameter("startDate", map.get("startDate"));
-        query.setParameter("endDate", map.get("endDate"));
+        for(String key : map.keySet()) {
+            query = query.setParameter(key, map.get(key));
+        }
+//        query.setParameter("acctNum", map.get("accountNum"));
+//        query.setParameter("startDate", map.get("startDate"));
+//        query.setParameter("endDate", map.get("endDate"));
         List<Payment> l = query.getResultList();
         return FXCollections.observableArrayList(l);
     }

@@ -71,6 +71,7 @@ public class ReportCriteriaController implements Initializable {
 
     @FXML
     public void onCancel() {
+        criteria = null;
         stage.close();
     }
 
@@ -81,6 +82,11 @@ public class ReportCriteriaController implements Initializable {
         }
         criteria.getStartDateProperty().set(dpStart.getValue());
         criteria.getEndDateProperty().set(dpEnd.getValue());
+        stage.close();
+    }
+    
+    public SearchCriteria getCriteria() {
+        return criteria;
     }
 
 }

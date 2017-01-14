@@ -7,9 +7,11 @@ package com.webfront.controller;
 
 import com.webfront.bean.AccountManager;
 import com.webfront.bean.BankManager;
+import com.webfront.bean.ReportBean;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
 import com.webfront.model.Payment;
+import com.webfront.model.SearchCriteria;
 import com.webfront.view.AccountPickerForm;
 import com.webfront.view.CategoryView;
 import com.webfront.view.ImportForm;
@@ -454,6 +456,11 @@ public class BankController implements Initializable {
             s.setScene(new Scene(loader.getRoot()));
             controller.setStage(s);
             s.showAndWait();
+            SearchCriteria sc = controller.getCriteria();
+            if(sc!=null) {
+                ReportBean rb = new ReportBean(sc);
+                rb.doSearch();
+            }
         } catch (IOException ex) {
             Logger.getLogger(ExportFormController.class.getName()).log(Level.SEVERE, null, ex);
         }

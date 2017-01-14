@@ -47,6 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByCheckNum", query = "SELECT l FROM Ledger l WHERE l.checkNum = :checkNum"),
     @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.account.id = :accountNum order by l.transDate desc,l.id desc"),
     @NamedQuery(name = "Ledger.findAllByDate", query = "SELECT l FROM Ledger l WHERE l.transDate BETWEEN :startDate AND :endDate"),
+    @NamedQuery(name = "Ledger.findRangeByAccountNum", query = "SELECT l FROM Ledger l WHERE l.account.id = :accountNum AND l.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger l WHERE l.account = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger l WHERE l.account = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger l WHERE l.account = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})

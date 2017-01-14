@@ -53,6 +53,9 @@ public class Category implements Serializable {
     @Column()
     private Integer parent;
     
+    @Column
+    private Character type;    
+    
     public Category() {
     }
 
@@ -109,6 +112,20 @@ public class Category implements Serializable {
     @Override
     public String toString() {
         return description;
+    }
+
+    /**
+     * @return the type
+     */
+    public Character getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(Character type) {
+        this.type = type;
     }
 
 }

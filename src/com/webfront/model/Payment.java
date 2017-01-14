@@ -44,6 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Payment.findByTransDesc", query = "SELECT r FROM Payment r WHERE r.transDesc = :transDesc"),
     @NamedQuery(name = "Payment.findBySubCat", query = "SELECT r FROM Payment r WHERE r.subCat = :subCat"),
     @NamedQuery(name = "Payment.findByAccountNum", query = "SELECT r FROM Payment r WHERE r.accountNum = :accountNum"),
+    @NamedQuery(name = "Payment.findRangeByAccountNum", query = "SELECT r FROM Payment r WHERE r.accountNum = :accountNum AND r.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Payment.findByTransAmt", query = "SELECT r FROM Payment r WHERE r.transAmt = :transAmt")})
 public class Payment implements Serializable {
 

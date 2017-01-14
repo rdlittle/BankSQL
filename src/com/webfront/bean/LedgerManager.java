@@ -12,9 +12,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.persistence.NoResultException;
@@ -84,7 +84,7 @@ public class LedgerManager extends DBManager {
      * @param qName
      * @return
      */
-    public synchronized ObservableList<Ledger> doNamedQuery(String qName, HashMap<String, Object> args) {
+    public synchronized ObservableList<Ledger> doNamedQuery(String qName, Map<String, Object> args) {
         Query query = em.createNamedQuery(qName, Ledger.class);
         for (String key : args.keySet()) {
             query.setParameter(key, args.get(key));

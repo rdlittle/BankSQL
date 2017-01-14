@@ -43,7 +43,6 @@ public class CategoryManager extends DBManager<Category> {
         super();
         categories = FXCollections.emptyObservableList();
         sortedCategories = new SortedList<>(categories);
-        
     }
 
     public synchronized static CategoryManager getInstance() {
@@ -63,7 +62,8 @@ public class CategoryManager extends DBManager<Category> {
 
     public ObservableList<Category> getCategories() {
         if (categories.isEmpty()) {
-            Query query = em.createNativeQuery("Select * from categories c order by c.description", Category.class);
+//            Query query = em.createNativeQuery("Select * from categories c order by c.description", Category.class);
+            Query query = em.createNamedQuery("Category.findAll");
             List<Category> list = query.getResultList();
             categories = (ObservableList<Category>) FXCollections.observableList(list);
         }
