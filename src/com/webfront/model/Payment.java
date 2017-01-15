@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC, r.id DESC"),
-    @NamedQuery(name = "Payment.findAllByDate", query = "SELECT p FROM Payment p WHERE p.transDate BETWEEN :startDate AND :endDate"),
+    @NamedQuery(name = "Payment.findAllByDate", query = "SELECT p FROM Payment p WHERE p.transDate BETWEEN :startDate AND :endDate ORDER BY p.transDate, p.id"),
     @NamedQuery(name = "Payment.findOrphans", query = "SELECT r FROM Payment r WHERE r.ledgerEntry IS NULL ORDER BY r.transDate DESC, r.id DESC"),
     @NamedQuery(name = "Payment.findOrphansRange", query = "SELECT p FROM Payment p WHERE p.ledgerEntry IS NULL AND p.accountNum = :acctNum AND p.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Payment.findById", query = "SELECT r FROM Payment r WHERE r.id = :id"),

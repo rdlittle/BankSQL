@@ -12,9 +12,11 @@ import com.webfront.model.Payment;
 import com.webfront.model.SearchCriteria;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 import javax.persistence.Query;
 
 /**
@@ -50,6 +52,7 @@ public class ReportBean {
         String stmt;
         Query query;
         Map<String, Object> map = new HashMap<>();
+
         if (searchCriteria.getAccountProperty().get() != null) {
             stmt = "Payment.findRangeByAccountNum";
             map.put("accountNum", searchCriteria.getAccountProperty().get().getId());
@@ -70,53 +73,42 @@ public class ReportBean {
         ledgerList.addAll(LedgerManager.getInstance().doNamedQuery(stmt, map));
 
         for (Payment p : paymentList) {
+            itemList.add(new LedgerItem(p));
             if (p.getLedgerEntry() != null) {
                 if (ledgerList.contains(p.getLedgerEntry())) {
                     ledgerList.remove(p.getLedgerEntry());
                 }
             }
-            float amt = Math.abs(p.getTransAmt());
-            float bal = 0F;
-            String cat1 = "Unassigned";
-            String cat2 = "Unassigned";
-            if (p.getPrimaryCat() != null) {
-                cat1 = p.getPrimaryCat().getId().toString();
-            }
-            if (p.getSubCat() != null) {
-                cat2 = p.getSubCat().getId().toString();
-            }
-            
-            if (totals.containsKey(cat1)) {
-                bal = totals.get(cat1);
-            }
-            bal += amt;
-            totals.put(cat1, bal);
-            
-            bal = 0;
-            if (totals.containsKey(cat2)) {
-                bal = totals.get(cat2);
-            }
-            bal += amt;
-            totals.put(cat2, bal);
+
         }
 
         for (Ledger l : ledgerList) {
-            String cat1 = "Unassigned";
-            String cat2 = "Unassigned";
-            float amt = Math.abs(l.getTransAmt());
+            itemList.add(new LedgerItem(l));
+        }
+        
+        paymentList.clear();
+        ledgerList.clear();
+        
+        ArrayList<Comparator<LedgerItem>> compList = new ArrayList<>();
+        compList.add(TypeComparator);
+        compList.add(Cat1Comparator);
+        compList.add(Cat2Comparator);
+        MultiComparator<LedgerItem> comparator = new MultiComparator<>(compList);
+        itemList.sort(comparator);
+        
+        for (LedgerItem li : itemList) {
+            float amt = Math.abs(Float.parseFloat(li.getAmount()));
             float bal = 0F;
-            if (l.getPrimaryCat() != null) {
-                cat1 = l.getPrimaryCat().getId().toString();
-            }
-            if (l.getSubCat() != null) {
-                cat2 = l.getSubCat().getId().toString();
-            }
+
+            String cat1 = Integer.toString(li.getPrimaryCat());
+            String cat2 = Integer.toString(li.getSubCat());
+
             if (totals.containsKey(cat1)) {
                 bal = totals.get(cat1);
             }
             bal += amt;
             totals.put(cat1, bal);
-            
+
             bal = 0;
             if (totals.containsKey(cat2)) {
                 bal = totals.get(cat2);
@@ -125,12 +117,11 @@ public class ReportBean {
             totals.put(cat2, bal);
         }
 
-        paymentList.clear();
-        ledgerList.clear();
         ArrayList<Category> catList = new ArrayList<>();
         catList.addAll(CategoryManager.getInstance().getCategories());
         NumberFormat format = NumberFormat.getCurrencyInstance();
         format.setMinimumFractionDigits(2);
+
         for (String k : totals.keySet()) {
             String desc = k;
             Float amt = totals.get(k);
@@ -145,6 +136,51 @@ public class ReportBean {
             System.out.println(format.format(amt));
         }
 
+    }
+    
+    private static Comparator<LedgerItem> Cat1Comparator = new Comparator<LedgerItem>() {
+        @Override
+        public int compare(LedgerItem item1, LedgerItem item2) {
+            Integer c1 = item1.getPrimaryCat();
+            Integer c2 = item2.getPrimaryCat();
+            return c1.compareTo(c2);
+        }
+    };
+    
+    private static Comparator<LedgerItem> Cat2Comparator = new Comparator<LedgerItem>() {
+        @Override
+        public int compare(LedgerItem item1, LedgerItem item2) {
+            Integer c1 = item1.getSubCat();
+            Integer c2 = item2.getSubCat();
+            return c1.compareTo(c2);
+        }
+    };
+    
+    private static Comparator<LedgerItem> TypeComparator = new Comparator<LedgerItem>() {
+        @Override
+        public int compare(LedgerItem item1, LedgerItem item2) {
+            return Character.compare(item1.getTransType(), item2.getTransType());
+        }
+    };
+
+    public class MultiComparator<T> implements Comparator<T> {
+
+        private final List<Comparator<T>> comparators;
+
+        public MultiComparator(List<Comparator<T>> comparators) {
+            this.comparators = comparators;
+        }
+
+        @Override
+        public int compare(T o1, T o2) {
+            for (Comparator<T> comparator : comparators) {
+                int comparison = comparator.compare(o1, o2);
+                if (comparison != 0) {
+                    return comparison;
+                }
+            }
+            return 0;
+        }
     }
 
 }

@@ -28,7 +28,7 @@ public class LedgerItem {
     private String amount;
     private float balance;
     private final String dateFormat = "MM/dd/yyyy";
-    private String transType;
+    private char transType;
     private int primaryCat;
     private int subCat;
     private int storeId;
@@ -42,14 +42,16 @@ public class LedgerItem {
         checkNumber = "";
         primaryCat = -1;
         subCat = -1;
+        transType = 'U';
     }
 
     public LedgerItem(String d, String desc, String amt) {
+        this();
         date = d;
         description = desc;
         amount = amt;
         balance = 0;
-        transType = "";
+        transType = 'U';
     }
 
     public LedgerItem(Ledger l) {
@@ -65,8 +67,10 @@ public class LedgerItem {
         }
         if (l.getSubCat() != null) {
             subCat = l.getSubCat().getId();
+            transType = l.getSubCat().getType();
         }
         amount = Float.toString(amt);
+        
     }
 
     public LedgerItem(Payment p) {
@@ -82,17 +86,14 @@ public class LedgerItem {
         }
         if (p.getSubCat() != null) {
             subCat = p.getSubCat().getId();
+            transType = p.getSubCat().getType();
         }
     }
 
-    public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
-        @Override
-        public int compare(LedgerItem ledger1, LedgerItem ledger2) {
-            Long d1 = ledger1.getDateValue();
-            Long d2 = ledger2.getDateValue();
-            return d1.compareTo(d2);
-        }
-
+    public static Comparator<LedgerItem> LedgerComparator = (LedgerItem ledger1, LedgerItem ledger2) -> {
+        Long d1 = ledger1.getDateValue();
+        Long d2 = ledger2.getDateValue();
+        return d1.compareTo(d2);
     };
 
     /**
@@ -248,14 +249,14 @@ public class LedgerItem {
     /**
      * @return the transType
      */
-    public String getTransType() {
+    public char getTransType() {
         return transType;
     }
 
     /**
      * @param transType the transType to set
      */
-    public void setTransType(String transType) {
+    public void setTransType(char transType) {
         this.transType = transType;
 
     }

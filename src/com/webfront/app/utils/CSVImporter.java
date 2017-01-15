@@ -131,9 +131,9 @@ public class CSVImporter extends Importer {
                             }
                         } else if (fieldName.equalsIgnoreCase("category")) {
                             if (fieldData.startsWith("Payment")) {
-                                item.setTransType("C");
+                                item.setTransType('I');
                             } else {
-                                item.setTransType("D");
+                                item.setTransType('E');
                             }
                             if(account.isXlateCat()) {
                                 Xref xref = xrefManager.lookup(fieldData,'C');
@@ -148,7 +148,7 @@ public class CSVImporter extends Importer {
                                 item.setAmount(fieldData);
                             }
                         } else if (fieldName.equalsIgnoreCase("debit")) {
-                            if (item.getTransType().equalsIgnoreCase("D")) {
+                            if (item.getTransType()=='D') {
                                 fieldData = "-" + fieldData;
                             }
                             if (fieldData != null) {
@@ -167,7 +167,7 @@ public class CSVImporter extends Importer {
             java.util.Date date = new java.util.Date(DateConvertor.toLong(item.getDate(), "MM/dd/yyyy"));
             String amountString = item.getAmount();
             boolean isCredit = false;
-            if (item.getAmount().startsWith("-") || item.getTransType().equalsIgnoreCase("C")) {
+            if (item.getAmount().startsWith("-") || item.getTransType()=='I') {
                 isCredit = true;
                 String amt = item.getAmount().replaceFirst("-", "");
                 item.setAmount(amt);
