@@ -23,6 +23,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
@@ -45,10 +46,10 @@ public class ExportFormController {
     private ComboBox<Account> cbAccount;
 
     @FXML
-    private ComboBox<ExportFormat> cbExportType;
+    private ComboBox<String> cbFieldSep;
 
     @FXML
-    private TextField txtPath;
+    private ComboBox<ExportFormat> cbExportType;
 
     @FXML
     private Button btnBrowse;
@@ -58,9 +59,15 @@ public class ExportFormController {
 
     @FXML
     private Button btnCancel;
+    
+    @FXML
+    Label lblFieldSep;
 
     @FXML
     private ProgressBar progressBar;
+
+    @FXML
+    private TextField txtPath;
 
     private Stage stage;
 
@@ -80,6 +87,9 @@ public class ExportFormController {
 
         cbExportType.converterProperty().set(new FormatManager.ExportFormatConverter());
         cbExportType.itemsProperty().set(FormatManager.getInstance().getFormatList());
+
+        cbFieldSep.getItems().addAll("Comma", "Pipe", "Semi-colon", "Tab");
+        lblFieldSep.disableProperty().bind(cbFieldSep.disabledProperty());
     }
 
     @FXML
@@ -96,9 +106,10 @@ public class ExportFormController {
             outputFile = selectedFile;
             txtPath.setText(outputFile.getPath());
             List<String> l = fileChooser.getSelectedExtensionFilter().getExtensions();
-            for(ExportFormat ef : cbExportType.getItems()) {
-                if(l.get(0).contains(ef.getExtension())) {
+            for (ExportFormat ef : cbExportType.getItems()) {
+                if (l.get(0).contains(ef.getExtension())) {
                     cbExportType.valueProperty().set(ef);
+                    onChangeFormat();
                     break;
                 }
             }
@@ -146,6 +157,18 @@ public class ExportFormController {
             }
         } else {
 
+        }
+    }
+
+    @FXML
+    public void onChangeFormat() {
+        String fmt = cbExportType.getValue().getExtension();
+        if (fmt.equalsIgnoreCase("*.csv")) {
+            cbFieldSep.disableProperty().set(false);
+            cbFieldSep.setValue("Tab");
+        } else {
+            cbFieldSep.disableProperty().set(true);
+            cbFieldSep.setValue("");
         }
     }
 

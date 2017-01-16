@@ -16,7 +16,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javafx.scene.control.TreeItem;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javax.persistence.Query;
 
 /**
@@ -30,6 +32,7 @@ public class ReportBean {
     ArrayList<Ledger> ledgerList;
     SearchCriteria searchCriteria;
     HashMap<String, Float> totals;
+    ObservableMap<Integer,String> index;
 
     public ReportBean() {
         itemList = new ArrayList<>();
@@ -37,6 +40,7 @@ public class ReportBean {
         ledgerList = new ArrayList<>();
         searchCriteria = new SearchCriteria();
         totals = new HashMap<>();
+        index = FXCollections.<Integer,String>observableHashMap();
     }
 
     public ReportBean(SearchCriteria sc) {
@@ -95,6 +99,7 @@ public class ReportBean {
         compList.add(Cat2Comparator);
         MultiComparator<LedgerItem> comparator = new MultiComparator<>(compList);
         itemList.sort(comparator);
+        Integer ptr = 0;
         
         for (LedgerItem li : itemList) {
             float amt = Math.abs(Float.parseFloat(li.getAmount()));
@@ -115,14 +120,26 @@ public class ReportBean {
             }
             bal += amt;
             totals.put(cat2, bal);
+            index.put(ptr, cat2);
+            ptr += 1;
         }
-
+        
+        ObservableList<Integer> idx = FXCollections.observableArrayList(index.keySet());
+        idx.sort(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return(o1.compareTo(o2));
+            }
+        });
+        
         ArrayList<Category> catList = new ArrayList<>();
         catList.addAll(CategoryManager.getInstance().getCategories());
         NumberFormat format = NumberFormat.getCurrencyInstance();
         format.setMinimumFractionDigits(2);
 
-        for (String k : totals.keySet()) {
+        //for (String k : totals.keySet()) {
+        for(Integer seq : idx) {
+            String k = index.get(seq);
             String desc = k;
             Float amt = totals.get(k);
             for (Category c : catList) {
