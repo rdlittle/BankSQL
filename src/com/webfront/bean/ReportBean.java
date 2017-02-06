@@ -32,7 +32,7 @@ public class ReportBean {
     ArrayList<Ledger> ledgerList;
     SearchCriteria searchCriteria;
     HashMap<String, Float> totals;
-    ObservableMap<Integer,String> index;
+    ObservableMap<Integer, String> index;
 
     public ReportBean() {
         itemList = new ArrayList<>();
@@ -40,7 +40,7 @@ public class ReportBean {
         ledgerList = new ArrayList<>();
         searchCriteria = new SearchCriteria();
         totals = new HashMap<>();
-        index = FXCollections.<Integer,String>observableHashMap();
+        index = FXCollections.<Integer, String>observableHashMap();
     }
 
     public ReportBean(SearchCriteria sc) {
@@ -54,6 +54,23 @@ public class ReportBean {
 
     public void doSearch() {
         String stmt;
+        /*
+        select 
+        c2.type "Code" ,
+        t.name "Type" ,
+        x.cat2 "GL Group",
+        x.name "Group Desc",
+        x2.cat2 "GL Acct",
+        c2.description "Acct Description", 
+        lpad(format(sum(p.transAmt),2),9,' ') "Total"
+        from payment p 
+        join xref x on x.cat1 = p.primaryCat 
+        join xref x2 on x2.cat1 = p.subCat 
+        join categories c1 on c1.id = p.primaryCat 
+        join categories c2 on c2.id = p.subCat 
+        join types t on t.code = c2.type 
+        where p.transDate between "2016-01-01" and "2016-12-31"  group by x2.cat2;
+         */
         Query query;
         Map<String, Object> map = new HashMap<>();
 
@@ -89,10 +106,10 @@ public class ReportBean {
         for (Ledger l : ledgerList) {
             itemList.add(new LedgerItem(l));
         }
-        
+
         paymentList.clear();
         ledgerList.clear();
-        
+
         ArrayList<Comparator<LedgerItem>> compList = new ArrayList<>();
         compList.add(TypeComparator);
         compList.add(Cat1Comparator);
@@ -100,7 +117,7 @@ public class ReportBean {
         MultiComparator<LedgerItem> comparator = new MultiComparator<>(compList);
         itemList.sort(comparator);
         Integer ptr = 0;
-        
+
         for (LedgerItem li : itemList) {
             float amt = Math.abs(Float.parseFloat(li.getAmount()));
             float bal = 0F;
@@ -110,6 +127,8 @@ public class ReportBean {
 
             if (totals.containsKey(cat1)) {
                 bal = totals.get(cat1);
+            } else {
+                ptr++;
             }
             bal += amt;
             totals.put(cat1, bal);
@@ -117,28 +136,28 @@ public class ReportBean {
             bal = 0;
             if (totals.containsKey(cat2)) {
                 bal = totals.get(cat2);
+            } else {
+                ptr++;
             }
             bal += amt;
             totals.put(cat2, bal);
             index.put(ptr, cat2);
-            ptr += 1;
         }
-        
+
         ObservableList<Integer> idx = FXCollections.observableArrayList(index.keySet());
         idx.sort(new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
-                return(o1.compareTo(o2));
+                return (o1.compareTo(o2));
             }
         });
-        
+
         ArrayList<Category> catList = new ArrayList<>();
         catList.addAll(CategoryManager.getInstance().getCategories());
         NumberFormat format = NumberFormat.getCurrencyInstance();
         format.setMinimumFractionDigits(2);
 
-        //for (String k : totals.keySet()) {
-        for(Integer seq : idx) {
+        for (Integer seq : idx) {
             String k = index.get(seq);
             String desc = k;
             Float amt = totals.get(k);
@@ -154,7 +173,7 @@ public class ReportBean {
         }
 
     }
-    
+
     private static Comparator<LedgerItem> Cat1Comparator = new Comparator<LedgerItem>() {
         @Override
         public int compare(LedgerItem item1, LedgerItem item2) {
@@ -163,7 +182,7 @@ public class ReportBean {
             return c1.compareTo(c2);
         }
     };
-    
+
     private static Comparator<LedgerItem> Cat2Comparator = new Comparator<LedgerItem>() {
         @Override
         public int compare(LedgerItem item1, LedgerItem item2) {
@@ -172,7 +191,7 @@ public class ReportBean {
             return c1.compareTo(c2);
         }
     };
-    
+
     private static Comparator<LedgerItem> TypeComparator = new Comparator<LedgerItem>() {
         @Override
         public int compare(LedgerItem item1, LedgerItem item2) {

@@ -3,16 +3,20 @@
   <persistence-unit name="BankPU" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>com.webfront.model.Ledger</class>
-    <class>com.webfront.model.Distribution</class>
     <class>com.webfront.model.Credit</class>
     <class>com.webfront.model.Category</class>
     <class>com.webfront.model.Stores</class>
     <class>com.webfront.model.Receipts</class>
+    <class>com.webfront.model.Account</class>
+    <class>com.webfront.model.Payment</class>
+    <class>com.webfront.model.Xref</class>
+    <class>com.webfront.model.ExportFormat</class>
+    <class>com.webfront.model.Types</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/dev_bank?zeroDateTimeBehavior=convertToNull"/>
-      <property name="javax.persistence.jdbc.user" value="user"/>
+      <property name="javax.persistence.jdbc.user" value="rlittle"/>
       <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
-      <property name="javax.persistence.jdbc.password" value="password"/>
+      <property name="javax.persistence.jdbc.password" value=""/>
     </properties>
   </persistence-unit>
 </persistence>
