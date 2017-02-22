@@ -27,12 +27,27 @@ import javax.persistence.Query;
  */
 public class ReportBean {
 
+    /**
+     * @return the document
+     */
+    public String getDocument() {
+        return document;
+    }
+
+    /**
+     * @param document the document to set
+     */
+    public void setDocument(String document) {
+        this.document = document;
+    }
+
     ArrayList<LedgerItem> itemList;
     ArrayList<Payment> paymentList;
     ArrayList<Ledger> ledgerList;
     SearchCriteria searchCriteria;
     HashMap<String, Float> totals;
     ObservableMap<Integer, String> index;
+    private String document;
 
     public ReportBean() {
         itemList = new ArrayList<>();
@@ -41,6 +56,7 @@ public class ReportBean {
         searchCriteria = new SearchCriteria();
         totals = new HashMap<>();
         index = FXCollections.<Integer, String>observableHashMap();
+        document = "";
     }
 
     public ReportBean(SearchCriteria sc) {
@@ -157,6 +173,14 @@ public class ReportBean {
         NumberFormat format = NumberFormat.getCurrencyInstance();
         format.setMinimumFractionDigits(2);
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html>\n");
+        sb.append("<head>\n");
+        sb.append("\t<title>Report</title>\n");
+        sb.append("</head>\n\n");
+        sb.append("<body>\n");
+        sb.append("\t<table width=100%>\n");
+        sb.append("\t\t<th>Category</th><th>Description</th><th>Amount</th>\n");
         for (Integer seq : idx) {
             String k = index.get(seq);
             String desc = k;
@@ -168,10 +192,22 @@ public class ReportBean {
                     break;
                 }
             }
-            System.out.print(k + " " + desc + " ");
-            System.out.println(format.format(amt));
+            sb.append("\t\t<tr>\n");
+            sb.append("\t\t\t<td width=10%>");
+            sb.append(k);
+            sb.append("</td>");
+            sb.append("<td width=70%>");
+            sb.append(desc);
+            sb.append("</td>");
+            sb.append("<td>");
+            sb.append(format.format(amt));
+            sb.append("</td width=20%>\n");
+            sb.append("\t\t</tr>\n");
         }
-
+        sb.append("\t</table>\n");
+        sb.append("</body>\n");
+        sb.append("</html>");
+        document = sb.toString();
     }
 
     private static Comparator<LedgerItem> Cat1Comparator = new Comparator<LedgerItem>() {

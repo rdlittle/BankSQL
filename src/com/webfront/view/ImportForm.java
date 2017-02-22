@@ -194,8 +194,8 @@ public class ImportForm extends AnchorPane {
                 Double itemCount = (double) newItems.size();
                 Double progress = (double) 0;
                 Double itemsCreated = (double) 0;
+                LedgerView view = ledgerViewProperty.getValue();
                 for (Ledger item : newItems) {
-                    LedgerView view = ledgerViewProperty.getValue();
                     view.getLedgerManager().create(item);
                     itemsCreated += 1;
                     progress = itemsCreated / itemCount;

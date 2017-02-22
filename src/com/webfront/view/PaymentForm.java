@@ -106,7 +106,7 @@ public final class PaymentForm extends AnchorPane {
     public PaymentForm() {
         currPayment = new Payment();
         prevPayment = new Payment();
-        selectedPaymentProperty = new SimpleObjectProperty<>();
+        selectedPaymentProperty = new SimpleObjectProperty<>(this,"selectedPayment",null);
         selectedPaymentProperty.addListener(itemListener);
 
         transDate = new DatePicker();

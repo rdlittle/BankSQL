@@ -17,6 +17,7 @@ import com.webfront.view.CategoryView;
 import com.webfront.view.ImportForm;
 import com.webfront.view.LedgerView;
 import com.webfront.view.PaymentView;
+import com.webfront.view.ReportView;
 import com.webfront.view.SetupForm;
 import com.webfront.view.SearchForm;
 import com.webfront.view.StoresView;
@@ -26,6 +27,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -460,6 +462,9 @@ public class BankController implements Initializable {
             if(sc!=null) {
                 ReportBean rb = new ReportBean(sc);
                 rb.doSearch();
+                String doc = rb.getDocument();
+                ReportView reportView = new ReportView(doc);
+                Platform.runLater(()->{reportView.displayReport();});
             }
         } catch (IOException ex) {
             Logger.getLogger(ExportFormController.class.getName()).log(Level.SEVERE, null, ex);

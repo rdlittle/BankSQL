@@ -40,7 +40,7 @@ public class ReportCriteriaController implements Initializable {
     DatePicker dpStart;
     @FXML
     DatePicker dpEnd;
-
+    
     private SearchCriteria criteria;
     String stmt;
     private Stage stage;
