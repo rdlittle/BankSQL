@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "ledger")
 @XmlRootElement
 @NamedQueries({
+    @NamedQuery(name = "Ledger.findBalance", query = "SELECT l FROM Ledger l where l.account = :account order by l.transDate desc,l.id desc"),
     @NamedQuery(name = "Ledger.findAll", query = "SELECT l FROM Ledger l order by l.id desc"),
     @NamedQuery(name = "Ledger.findAllByType", query = "SELECT l FROM Ledger l WHERE l.account in (SELECT a FROM Account a where a.accountType = :accountType and a.accountStatus = :accountStatus) ORDER BY l.transDate DESC,l.id"),
     @NamedQuery(name = "Ledger.findById", query = "SELECT l FROM Ledger l WHERE l.id = :id"),

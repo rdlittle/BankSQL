@@ -147,6 +147,14 @@ public class LedgerManager extends DBManager {
     public Float getBalance(int accountNum) {
         return (getItem(getLastId(accountNum))).getTransBal();
     }
+    
+    public Float getOpeningBalance(Account acct) {
+        Query query = em.createNamedQuery("Ledger.findBalance");
+        query.setParameter("account", acct);
+        query.setMaxResults(1);
+        Ledger l = (Ledger) query.getSingleResult();
+        return l.getTransBal();
+    }
 
     public synchronized void rebalance(int acct, SearchCriteria criteria) {
         Query query = em.createNamedQuery("Account.findById");

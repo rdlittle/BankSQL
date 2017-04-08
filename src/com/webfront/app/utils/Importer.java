@@ -8,6 +8,7 @@ package com.webfront.app.utils;
 import com.webfront.model.Account;
 import com.webfront.model.Config;
 import com.webfront.model.Ledger;
+import com.webfront.model.LedgerItem;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -52,7 +53,8 @@ public abstract class Importer implements Runnable {
     public Float totalFees;
     public Float totalTransfers;
 
-    private ArrayList<Ledger> itemList;
+    public ArrayList<Ledger> itemList;
+    public ArrayList<LedgerItem> ledgerItemList;
 
     String fileName;
     public Account account;
@@ -111,6 +113,7 @@ public abstract class Importer implements Runnable {
     public abstract void doImport(BufferedReader reader) throws IOException, ParseException;
 
     public void doSort() {
+        boolean isEmpty = itemList.isEmpty();
         if (!itemList.isEmpty()) {
             getItemList().sort(ledgerComparator);
         }

@@ -5,12 +5,15 @@
  */
 package com.webfront.app.utils;
 
+import com.webfront.bean.LedgerManager;
 import com.webfront.model.Account;
+import com.webfront.model.Ledger;
 import com.webfront.model.LedgerItem;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
@@ -29,6 +32,7 @@ public class QifImporter extends Importer {
         map = ResourceBundle.getBundle("com.webfront.app.bank");
         buffer = new HashMap<>();
         itemsList = new ArrayList<>();
+        ledgerItemList = new ArrayList<>();
     }
 
     @Override
@@ -38,29 +42,62 @@ public class QifImporter extends Importer {
         StringBuilder sb = new StringBuilder();
         for (int lineNum = 0; lineNum <= bufferSize; lineNum++) {
             String text = buffer.get(lineNum);
-            if (text.startsWith("!") || text.isEmpty()) {
+            if (text.startsWith("!") || text.isEmpty() || text == null) {
             } else if (text.startsWith("^")) {
-                buffer.clear();
                 lineNum++;
+                text = sb.toString();
                 LedgerItem item = createItem(text);
-                if(item != null) {
-                    itemsList.add(item);
+                if (item != null) {
+                    ledgerItemList.add(item);
                 }
+                sb = new StringBuilder();
             } else {
                 sb.append(text);
                 sb.append("\n");
+            }
+        }
+        buffer.clear();
+        Float lastBalance = new Float(0.0);
+        if (!ledgerItemList.isEmpty()) {
+            ledgerItemList.sort(LedgerItem.LedgerComparator);
+            LedgerManager mgr = LedgerManager.getInstance();
+            lastBalance = mgr.getOpeningBalance(account);
+            for (LedgerItem li : ledgerItemList) {
+                Ledger l = new Ledger();
+                boolean isCredit = true;
+                if (li.getAmount().startsWith("-")) {
+                    isCredit = false;
+                }
+                float amount = Float.parseFloat(li.getAmount());
+                if (isCredit) {
+                    lastBalance += amount;
+                } else {
+                    lastBalance += amount;
+                }
+                li.setAmount(li.getAmount().replaceFirst("-", ""));
+                l.setAccount(account);
+                l.setTransDate(new Date(li.getDateValue()));
+                String desc = li.getDescription().toUpperCase();
+                if (desc.contains("SUBSTITUTE CHECK")) {
+                    l.setCheckNum(li.getCheckNumber());
+                }                
+                l.setTransDesc(li.getDescription());
+                l.setTransAmt(Float.parseFloat(li.getAmount()));
+                l.setTransBal(lastBalance);
+                itemList.add(l);
             }
         }
     }
 
     private LedgerItem createItem(String text) {
         String data[] = text.split("\n");
+        LedgerItem item = new LedgerItem();
         int sz = data.length;
-        for(int i=0;i<=sz;i++) {
-            LedgerItem item = new LedgerItem();
+        for (int i = 0; i < sz; i++) {
             String firstChar = data[i].substring(0, 1).toUpperCase();
-            String fieldData = data[i].substring(1,999);
-            switch(firstChar) {
+            int dataSize = data[i].length();
+            String fieldData = data[i].substring(1, dataSize);
+            switch (firstChar) {
                 case "D":
                     item.setDate(fieldData);
                     break;
@@ -68,7 +105,7 @@ public class QifImporter extends Importer {
                     item.setDescription(fieldData);
                     break;
                 case "M":
-                    item.setDescription(fieldData);
+                    item.setDescription(fieldData.trim());
                     break;
                 case "N":
                     item.setCheckNumber(fieldData);
@@ -77,9 +114,8 @@ public class QifImporter extends Importer {
                     item.setAmount(fieldData);
                     break;
             }
-            return item;
         }
-        return null;
+        return item;
     }
 
     private void loadImportFile(BufferedReader reader) throws IOException {
