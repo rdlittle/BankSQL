@@ -42,9 +42,8 @@ public class QifImporter extends Importer {
         StringBuilder sb = new StringBuilder();
         for (int lineNum = 0; lineNum <= bufferSize; lineNum++) {
             String text = buffer.get(lineNum);
-            if (text.startsWith("!") || text.isEmpty() || text == null) {
+            if (text == null || text.startsWith("!") || text.isEmpty() || text.matches("^\\n")) {
             } else if (text.startsWith("^")) {
-                lineNum++;
                 text = sb.toString();
                 LedgerItem item = createItem(text);
                 if (item != null) {
@@ -64,23 +63,32 @@ public class QifImporter extends Importer {
             lastBalance = mgr.getOpeningBalance(account);
             for (LedgerItem li : ledgerItemList) {
                 Ledger l = new Ledger();
-                boolean isCredit = true;
-                if (li.getAmount().startsWith("-")) {
-                    isCredit = false;
-                }
                 float amount = Float.parseFloat(li.getAmount());
-                if (isCredit) {
-                    lastBalance += amount;
+
+                if (account.getAccountType() == Account.AccountType.CREDIT) {
+                    if (amount < 0) {
+                        lastBalance -= amount;
+                        li.setAmount(li.getAmount().replaceFirst("-", ""));
+                    } else {
+                        lastBalance -= amount;
+                        li.setAmount("-"+li.getAmount());
+                    }
                 } else {
-                    lastBalance += amount;
+                    if (amount < 0) {
+                        lastBalance += amount;
+                        
+                    } else {
+//                        li.setAmount(li.getAmount().replaceFirst("-", ""));
+                        lastBalance += amount;
+                    }
                 }
-                li.setAmount(li.getAmount().replaceFirst("-", ""));
+                
                 l.setAccount(account);
                 l.setTransDate(new Date(li.getDateValue()));
                 String desc = li.getDescription().toUpperCase();
                 if (desc.contains("SUBSTITUTE CHECK")) {
                     l.setCheckNum(li.getCheckNumber());
-                }                
+                }
                 l.setTransDesc(li.getDescription());
                 l.setTransAmt(Float.parseFloat(li.getAmount()));
                 l.setTransBal(lastBalance);
