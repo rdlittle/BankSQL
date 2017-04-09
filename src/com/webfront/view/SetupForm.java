@@ -387,6 +387,9 @@ public class SetupForm extends AnchorPane {
                 if (form.account.getAccountName() == null || form.account.getAccountName().isEmpty()) {
                     form.account.setAccountName(form.account.getId().toString());
                 }
+                if(form.cbStatementFormat.getValue()!=null) {
+                    form.account.setStatementFormat(form.cbStatementFormat.getValue());
+                }
                 form.account.setXlateCat(form.chkXlateCat.isSelected());
                 form.account.setXlateStore(form.chkXlateStore.isSelected());
                 acctMgr.update(form.account);

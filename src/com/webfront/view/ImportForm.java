@@ -124,7 +124,7 @@ public class ImportForm extends AnchorPane {
                     ImportForm.accountNum.set(form.cbAccount.getValue().getId());
                 }
             });
-
+            form.btnBrowse.disableProperty().bind(form.cbAccount.valueProperty().isNull());
             form.btnOK.setDisable(true);
             form.stage.setScene(scene);
             form.stage.setTitle("Import Statement");
@@ -143,14 +143,18 @@ public class ImportForm extends AnchorPane {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        
+
         StatementFormat sf = form.cbAccount.getValue().getStatementFormat();
-        if (sf.equals(StatementFormat.PDF)) {
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
-        } else if(sf.equals(StatementFormat.QIF)) {
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("QIF Files (*.qif)", "*.qif"));
-        } else {
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
+        switch (sf) {
+            case PDF:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
+                break;
+            case QIF:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("QIF Files (*.qif)", "*.qif"));
+                break;
+            default:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
+                break;
         }
 
         File selectedFile = fileChooser.showOpenDialog(stage);
