@@ -107,7 +107,8 @@ public class SummaryController {
 
     public ObservableList<PieChart.Data> getPayments(int subCategory) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
         ObservableList<Category> catList = CategoryManager.getInstance().getCategories();
         for(Category c : catList) {
             if(c.getId()==subCategory) {
@@ -143,11 +144,12 @@ public class SummaryController {
     
     public ObservableList<PieChart.Data> getDetail(int subCategory) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
         String stmt;
         stmt = "SELECT p.transDesc, format(ABS(p.transAmt),2) ";
         stmt += "FROM payment p ";
-        stmt += "WHERE p.primaryCat = "+subCategory+" ";
+        stmt += "WHERE p.subCat = "+subCategory+" ";
         stmt += "AND p.transDate > \"" + sDate + "\" ";
         stmt += "GROUP BY p.transDesc";
         List<Object[]> objList = ledgerMgr.getResults(stmt);
