@@ -99,9 +99,9 @@ public class LedgerManager extends DBManager {
      * @param q
      * @return
      */
-    public List getResults(String q) {
+    public List<Object[]> getResults(String q) {
         Query query = em.createNativeQuery(q);
-        List list = query.getResultList();
+        List<Object[]> list = query.getResultList();
         return list;
     }
 

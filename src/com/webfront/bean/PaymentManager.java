@@ -45,6 +45,12 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
         return list;
     }
 
+    public List<Object[]> getResults(String q) {
+        Query query = em.createNativeQuery(q);
+        List<Object[]> list = query.getResultList();
+        return list;
+    }
+
     public void refresh() {
         Query query = em.createNamedQuery("Payment.findAll");
         List<Payment> l = query.getResultList();
@@ -85,7 +91,7 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
 
     public synchronized ObservableList<Payment> doNamedQuery(String nq, Map<String, Object> map) {
         Query query = em.createNamedQuery(nq);
-        for(String key : map.keySet()) {
+        for (String key : map.keySet()) {
             query = query.setParameter(key, map.get(key));
         }
 //        query.setParameter("acctNum", map.get("accountNum"));
