@@ -104,7 +104,6 @@ public class PaymentView extends Pane implements ViewInterface {
 
         table = new TableView<>();
         table.setMinWidth(1325.0);
-//        table.setMinHeight(640.0);
         table.minHeightProperty().bind(this.heightProperty().subtract(40D));
         table.setEditable(true);
 
@@ -130,7 +129,6 @@ public class PaymentView extends Pane implements ViewInterface {
                 if (param.getValue().getLedgerEntry() != null) {
                     // From this payment (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
-//                    List<Payment> tmpList = l.getPayment();
                     if (l.getPayment() != null && l.getPayment().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
@@ -237,14 +235,11 @@ public class PaymentView extends Pane implements ViewInterface {
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
-//        grid.setHgap(10.0);
-//        grid.add(table, 0, 0);
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
         buttons.setPadding(new Insets(10, 10, 10, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
-//        grid.add(buttons, 0, 1);
         vbox.getChildren().addAll(table, buttons);
         getChildren().add(vbox);
     }
@@ -277,8 +272,6 @@ public class PaymentView extends Pane implements ViewInterface {
         };
         list.addListener(listListener);
 
-//        prevPaymentCopy = Payment.copy(selectedPaymentProperty().get());
-//        selectedPaymentProperty().setValue(prevPaymentCopy);
         PaymentForm paymentForm = new PaymentForm(prevPayment);
         selectedPaymentProperty().bind(paymentForm.selectedPaymentProperty());
 
@@ -450,7 +443,6 @@ public class PaymentView extends Pane implements ViewInterface {
         @Override
         public void invalidated(Observable observable) {
             updateItem(prevPayment);
-//            selectedPaymentProperty().setValue(prevPayment);
         }
 
     }

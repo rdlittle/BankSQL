@@ -106,7 +106,7 @@ public final class PaymentForm extends AnchorPane {
     public PaymentForm() {
         currPayment = new Payment();
         prevPayment = new Payment();
-        selectedPaymentProperty = new SimpleObjectProperty<>(this,"selectedPayment",null);
+        selectedPaymentProperty = new SimpleObjectProperty<>(this, "selectedPayment",null);
         selectedPaymentProperty.addListener(itemListener);
 
         transDate = new DatePicker();
@@ -289,10 +289,12 @@ public final class PaymentForm extends AnchorPane {
             cbAccount.valueProperty().addListener(new ChangeListener<Account>() {
                 @Override
                 public void changed(ObservableValue<? extends Account> observable, Account oldValue, Account newValue) {
-                    selectedPaymentProperty.getValue().setAccountNum(newValue.getId());
+                    if (selectedPaymentProperty.get() != null) {
+                        selectedPaymentProperty.getValue().setAccountNum(newValue.getId());
+                    }
                 }
             });
-            
+
             searchLink = new Hyperlink();
             searchLink.setOnAction((ActionEvent e) -> {
                 System.out.println("This link is clicked");
@@ -374,7 +376,7 @@ public final class PaymentForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             prevPayment.setTransDate(Date.valueOf(dateStr));
             prevPayment.setTransDesc(transDescription.getText());
-            prevPayment.setAccountNum((Integer) cbAccount.getValue().getId());
+            prevPayment.setAccountNum(cbAccount.getValue().getId());
             prevPayment.setTransAmt(Float.parseFloat(transAmt.getText()));
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
@@ -388,7 +390,6 @@ public final class PaymentForm extends AnchorPane {
                 Boolean b = updatedProperty.get();
                 b = Boolean.logicalXor(b, true);
                 updatedProperty.set(b);
-//                getUpdatedProperty().set(!(getUpdatedProperty().getValue()));
             }
             closeForm();
         } else {
@@ -397,7 +398,7 @@ public final class PaymentForm extends AnchorPane {
             String dateStr = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
             payment.setTransDate(Date.valueOf(dateStr));
             payment.setTransDesc(transDescription.getText());
-            payment.setAccountNum((Integer) cbAccount.getValue().getId());
+            payment.setAccountNum(cbAccount.getValue().getId());
             payment.setTransAmt(Float.parseFloat(transAmt.getText()));
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
@@ -405,7 +406,6 @@ public final class PaymentForm extends AnchorPane {
             payment.setSubCat(cat2);
             payment.setStore(cbStores.getValue());
             selectedPaymentProperty().setValue(payment);
-//            currPayment = new Payment();
             getCreatedProperty().set(!(getCreatedProperty().getValue()));
             currPayment = Payment.copy(payment);
             currPayment.setId(null);
@@ -469,8 +469,6 @@ public final class PaymentForm extends AnchorPane {
         results = LedgerManager.getInstance().doSqlQuery(sql);
 
         SearchResults searchResults = new SearchResults();
-//        searchCriteria.setStartDate(startDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-//        searchCriteria.setEndDate(endDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
         searchCriteria.setAmount(Float.toString(prevPayment.getTransAmt()));
         if (prevPayment.getStore() != null) {
             searchCriteria.setStoreId(prevPayment.getStore().getId());
