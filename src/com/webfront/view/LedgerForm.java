@@ -98,9 +98,6 @@ public final class LedgerForm extends AnchorPane {
     HashMap<String, Category> categoryMap, subCatMap;
 
     @FXML
-<<<<<<< HEAD
-    LedgerItemDetail paymentDetail;
-=======
     TableView detailTable;
 
     @FXML
@@ -113,7 +110,6 @@ public final class LedgerForm extends AnchorPane {
     TableColumn detailCat2;
     @FXML
     TableColumn detailAmt;
->>>>>>> revision1
 
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
@@ -136,10 +132,6 @@ public final class LedgerForm extends AnchorPane {
         paymentView = new Pane();
         lblDescription = new Label();
         lblDescription.setLabelFor(transDescription);
-<<<<<<< HEAD
-        paymentDetail = new LedgerItemDetail(FXCollections.observableArrayList());
-=======
->>>>>>> revision1
         buildForm();
         setFormData();
     }
@@ -162,45 +154,8 @@ public final class LedgerForm extends AnchorPane {
             loader.setController(this);
             loader.load();
 
-<<<<<<< HEAD
-            ObservableList<Category> cList = view.getCategoryManager().getCategories();
-
-            ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(Bank.accountList);
-            accountList.stream().forEach((acct) -> {
-                accountNum.getItems().add(acct.getId());
-            });
-
-            for (Category c : cList) {
-                //Category parent = c.getParent();
-                Integer parent = c.getParent();
-                categoryMap.put(c.getDescription(), c);
-                if (parent == 0) {
-                    primaryCat.getItems().add(c.getDescription());
-                } else if (oldItem != null) {
-                    if (oldItem.getPrimaryCat() != null) {
-                        if (parent == oldItem.getPrimaryCat().getId()) {
-                            subCat.getItems().add(c.getDescription());
-                        }
-                    }
-                }
-            }
-
-            if (oldItem != null) {
-                if (oldItem.getSubCat() != null) {
-                    Category c = oldItem.getSubCat();
-                    if (c != null) {
-                        String desc = c.getDescription();
-                        if (!subCat.getItems().contains(desc)) {
-                            subCat.getItems().add(desc);
-                        }
-                        subCat.setValue(c.getDescription());
-                    }
-                }
-            }
-=======
             cbAccount.converterProperty().setValue(new AccountManager.AccountConverter());
             cbAccount.itemsProperty().setValue(AccountManager.getInstance().getAccounts());
->>>>>>> revision1
 
             primaryCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
             primaryCat.itemsProperty().setValue(CategoryManager.getInstance().getCategories());
@@ -216,21 +171,9 @@ public final class LedgerForm extends AnchorPane {
             subCat.itemsProperty().setValue(CategoryManager.getInstance().getFilteredCategoryList());
             subCat.valueProperty().addListener(new ChangeListener<Category>() {
                 @Override
-<<<<<<< HEAD
-                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    if (newValue != null) {
-                        String newCat = newValue.toString();
-                        if (subCatMap.containsKey(newCat)) {
-                            if (oldItem != null) {
-                                oldItem.setSubCat(subCatMap.get(newCat));
-                                btnOk.setDisable(false);
-                            }
-                        }
-                    }
-=======
+
                 public void changed(ObservableValue<? extends Category> observable, Category oldValue, Category newValue) {
                     btnOk.disableProperty().set(false);
->>>>>>> revision1
                 }
             });
 
@@ -274,11 +217,6 @@ public final class LedgerForm extends AnchorPane {
                 }
             });
 
-<<<<<<< HEAD
-            distView.setPrefSize(857.0, 175.0);
-            paymentDetail.setPrefSize(857.0, 175.0);
-            distView.getChildren().add(paymentDetail);
-=======
             detailId.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
                 @Override
                 public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
@@ -327,7 +265,6 @@ public final class LedgerForm extends AnchorPane {
             detailAmt.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
 
             paymentView.setPrefSize(857.0, 175.0);
->>>>>>> revision1
             stage.show();
 
         } catch (IOException ex) {
@@ -350,19 +287,10 @@ public final class LedgerForm extends AnchorPane {
             if (oldItem.getPrimaryCat() != null) {
                 primaryCat.setValue(oldItem.getPrimaryCat());
             }
-<<<<<<< HEAD
-            if (oldItem.getPayment() != null) {
-                paymentDetail.setList(FXCollections.observableList(oldItem.getPayment()));
-                paymentDetail.setItems(paymentDetail.getList());
-                Category c = oldItem.getSubCat();
-                if (c != null) {
-                    subCat.setValue(c.getDescription());
-=======
             if (oldItem.getSubCat() != null) {
                 Category c = oldItem.getSubCat();
                 if (c != null) {
                     subCat.setValue(c);
->>>>>>> revision1
                 }
             }
             if (oldItem.getPayment() != null && detailTable != null) {
@@ -423,13 +351,8 @@ public final class LedgerForm extends AnchorPane {
             view.getLedgerManager().update(oldItem);
             TableView tv = (TableView) view.getTable();
             TableViewSelectionModel sm = tv.getSelectionModel();
-<<<<<<< HEAD
-            int idx = sm.getSelectedIndex();
-=======
-//            int idx = view.getTable().getSelectionModel().getSelectedIndex();
             int idx;
             idx = sm.getSelectedIndex();
->>>>>>> revision1
             view.getTable().getItems().set(idx, oldItem);
         } else {
             Ledger ledger = new Ledger();

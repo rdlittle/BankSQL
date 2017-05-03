@@ -9,11 +9,8 @@ import com.webfront.app.Bank;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
-<<<<<<< HEAD
-=======
 import com.webfront.app.utils.QifImporter;
 import com.webfront.bean.AccountManager;
->>>>>>> revision1
 import com.webfront.model.Account;
 import com.webfront.model.Account.StatementFormat;
 import com.webfront.model.Config;

@@ -22,15 +22,7 @@ import javax.persistence.Query;
  */
 public class PaymentManager extends DBManager<Payment> implements Serializable {
 
-<<<<<<< HEAD
-    private static PaymentManager instance;
-    
-    protected PaymentManager() {
-    }
-    
-    public static PaymentManager getInstance() {
-        if(instance==null) {
-=======
+
     private static PaymentManager instance = null;
     private final ObservableList<Payment> list;
     private Payment selectedPayment;
@@ -41,7 +33,6 @@ public class PaymentManager extends DBManager<Payment> implements Serializable {
 
     public static synchronized PaymentManager getInstance() {
         if (instance == null) {
->>>>>>> revision1
             instance = new PaymentManager();
         }
         return instance;

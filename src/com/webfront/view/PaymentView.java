@@ -93,11 +93,9 @@ public class PaymentView extends Pane implements ViewInterface {
         GridPane grid = new GridPane();
 
         paymentManager = PaymentManager.getInstance();
-<<<<<<< HEAD
-        storesManager = new StoresManager();
-=======
+
         storesManager = StoresManager.getInstance();
->>>>>>> revision1
+
         categoryManager = CategoryManager.getInstance();
         ledgerManager = LedgerManager.getInstance();
 

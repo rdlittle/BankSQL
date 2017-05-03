@@ -212,11 +212,7 @@ public final class SearchResults extends Pane {
             secondaryCat.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
                 @Override
                 public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
-<<<<<<< HEAD
-                    if (param.getValue() != null) {
-=======
                     if (param.getValue().getSubCat() != null) {
->>>>>>> revision1
                         Category c = param.getValue().getSubCat();
                         if (c != null) {
                             String desc = c.getDescription();

@@ -102,11 +102,7 @@ public class LedgerView extends AnchorPane {
         subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
-<<<<<<< HEAD
-                if (param.getValue() != null) {
-=======
                 if (param.getValue().getSubCat() != null) {
->>>>>>> revision1
                     Category c = param.getValue().getSubCat();
                     if (c != null) {
                         String desc = c.getDescription();
@@ -175,48 +171,6 @@ public class LedgerView extends AnchorPane {
             }
         };
 
-<<<<<<< HEAD
-        Platform.runLater(() -> loadData());
-
-        table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
-
-        list.addListener(new ListChangeListener() {
-            @Override
-            public void onChanged(ListChangeListener.Change c) {
-                table.getItems().addAll(list);
-                isLoading.set(false);
-            }
-        });
-
-        table.getItems().addAll(list);
-
-        table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
-
-        btnSearch = new Button("Search");
-        btnSearch.setOnAction(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                doSearch("");
-            }
-        });
-
-        btnReset = new Button("Reset");
-        btnReset.setOnAction(new EventHandler() {
-            @Override
-            public void handle(Event event) {
-                ObservableList<Ledger> copyOfList;
-                copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
-                list.clear();
-                list.addAll(copyOfList);
-                table.getItems().clear();
-                table.setItems(list);
-            }
-        });
-
-        buttonBox.getChildren().addAll(btnSearch, btnReset);
-
-=======
->>>>>>> revision1
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);

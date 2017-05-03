@@ -46,19 +46,13 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Ledger.findByTransBal", query = "SELECT l FROM Ledger l WHERE l.transBal = :transBal"),
     @NamedQuery(name = "Ledger.findByPrimaryCat", query = "SELECT l FROM Ledger l WHERE l.primaryCat = :primaryCat"),
     @NamedQuery(name = "Ledger.findByCheckNum", query = "SELECT l FROM Ledger l WHERE l.checkNum = :checkNum"),
-<<<<<<< HEAD
-    @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.accountNum = :accountNum order by l.transDate desc,l.id desc"),
-    @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
-    @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger L WHERE l.accountNum = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})
-=======
+
     @NamedQuery(name = "Ledger.findByAccountNum", query = "SELECT l FROM Ledger l WHERE l.account.id = :accountNum order by l.transDate desc,l.id desc"),
     @NamedQuery(name = "Ledger.findAllByDate", query = "SELECT l FROM Ledger l WHERE l.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Ledger.findRangeByAccountNum", query = "SELECT l FROM Ledger l WHERE l.account.id = :accountNum AND l.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Ledger.findRangeById", query = "SELECT l FROM Ledger l WHERE l.account = :accountNum and l.id BETWEEN :startId AND :endId ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findRangeByDate", query = "SELECT l FROM Ledger l WHERE l.account = :accountNum and l.transDate BETWEEN :startDate AND :endDate ORDER BY l.transDate,l.id"),
     @NamedQuery(name = "Ledger.findRangeByTransAmt", query="SELECT l FROM Ledger l WHERE l.account = :accountNum and l.transAmt BETWEEN :minAmount AND :maxAmount ORDER BY l.transDate,l.id")})
->>>>>>> revision1
 public class Ledger implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -89,16 +83,7 @@ public class Ledger implements Serializable {
     
     @OneToOne
     @JoinColumn(name = "subCat")
-<<<<<<< HEAD
-    private Category subCat;
-    
-    @Column(name = "checkNum")
-    private String checkNum;
-    
-    @Basic(optional = false)
-    @Column(name = "accountNum")
-    private int accountNum;
-=======
+
     private Category subCat;    
 
     @Column(name = "checkNum")
@@ -107,7 +92,6 @@ public class Ledger implements Serializable {
     @OneToOne
     @JoinColumn(name = "accountNum")
     private Account account;
->>>>>>> revision1
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy="ledgerEntry")
     private List<Payment> payments;
@@ -120,11 +104,7 @@ public class Ledger implements Serializable {
         this.transBal=0;
         this.transDesc="";
         this.checkNum="";
-<<<<<<< HEAD
-        this.receipts=new ArrayList<>();
-=======
         this.payments=new ArrayList<>();
->>>>>>> revision1
     }
 
     public Ledger(Integer id) {
@@ -209,13 +189,11 @@ public class Ledger implements Serializable {
         return account;
     }
 
-<<<<<<< HEAD
-=======
+
     public void setAccount(Account acct) {
         this.account = acct;
     }
 
->>>>>>> revision1
     @Override
     public int hashCode() {
         int hash = 0;
@@ -240,40 +218,15 @@ public class Ledger implements Serializable {
 
     /**
      * @return the receipt
-<<<<<<< HEAD
-     */
-    public List<Payment> getPayment() {
-        return receipts;
-    }
-
-    /**
-     * @param receipt the receipt to set
-     */
-    public void setPayment(List<Payment> receipt) {
-        this.receipts = receipt;
-    }
-
-    /**
-     * @return the subCat
-     */
-    public Category getSubCat() {
-        return subCat;
-=======
      */
     public List<Payment> getPayment() {
         return payments;
->>>>>>> revision1
     }
 
     /**
      * @param subCat the subCat to set
      */
-<<<<<<< HEAD
-    public void setSubCat(Category subCat) {
-        this.subCat = subCat;
-=======
     public void setPayment(List<Payment> receipt) {
         this.payments = receipt;
->>>>>>> revision1
     }
 }

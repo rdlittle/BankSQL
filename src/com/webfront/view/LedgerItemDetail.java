@@ -86,7 +86,7 @@ public class LedgerItemDetail extends TableView {
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
                     Payment receipt = (Payment) getSelectionModel().getSelectedItem();
-                    PaymentForm receiptForm = new PaymentForm(PaymentView.getInstance(), receipt);
+                    PaymentForm receiptForm = new PaymentForm(receipt);
                 }
             }
         };

@@ -105,22 +105,7 @@ public class CSVImporter extends Importer {
                 if (lineMatcher.matches()) {
                     LedgerItem item = new LedgerItem();
                     int groups = lineMatcher.groupCount();
-<<<<<<< HEAD
-//                    for (int g = 1; g <= groups; g++) {
-//                        System.out.println(g + ") " + lineMatcher.group(g));
-//                    }
-                    item.setDate(lineMatcher.group(2).replaceAll("\"", ""));
-                    item.setDescription(lineMatcher.group(5).replaceAll("\"", ""));
-                    if (lineMatcher.group(7) != null) {
-                        String charge = lineMatcher.group(7).replaceAll("\"", "");
-                        item.setAmount(charge.replaceAll(",", ""));
-                    }
-                    if (lineMatcher.group(9) != null) {
-                        String payment = lineMatcher.group(9).replaceAll("\"", "");
-                        amount = Float.parseFloat(payment.replaceAll(",", ""));
-                        amount = amount * -1;
-                        item.setAmount(amount.toString());
-=======
+
                     for (Element dataElement : dataDefinition.getChildren()) {
                         int fieldNumber = Integer.parseInt(dataElement.getAttributeValue("number"));
                         String fieldName = dataElement.getAttributeValue("name");
@@ -171,7 +156,6 @@ public class CSVImporter extends Importer {
                                 item.setAmount(fieldData);
                             }
                         }
->>>>>>> revision1
                     }
                     entries.add(item);
                 }

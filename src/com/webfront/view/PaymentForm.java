@@ -380,16 +380,7 @@ public final class PaymentForm extends AnchorPane {
             prevPayment.setTransAmt(Float.parseFloat(transAmt.getText()));
             Category cat1 = categoryMap.get(primaryCat.getValue());
             Category cat2 = subCatMap.get(subCat.getValue());
-<<<<<<< HEAD
-            oldPayment.setPrimaryCat(cat1);
-            oldPayment.setSubCat(cat2);
-            oldPayment.setStore(store);
-            view.getPaymentManager().update(oldPayment);
-            int idx = view.getTable().getSelectionModel().getSelectedIndex();
-            if (idx > 0) {
-                view.getTable().getItems().set(idx, oldPayment);
-                view.getPaymentManager().refresh(oldPayment);
-=======
+
             prevPayment.setPrimaryCat(cat1);
             prevPayment.setSubCat(cat2);
             prevPayment.setStore(cbStores.getValue());
@@ -400,7 +391,6 @@ public final class PaymentForm extends AnchorPane {
                 Boolean b = updatedProperty.get();
                 b = Boolean.logicalXor(b, true);
                 updatedProperty.set(b);
->>>>>>> revision1
             }
             closeForm();
         } else {
@@ -472,16 +462,12 @@ public final class PaymentForm extends AnchorPane {
         searchCriteria.getEndDateProperty().setValue(endDate);
         sql += searchCriteria.getStartDateProperty().get().format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "and transDate <= \"";
-<<<<<<< HEAD
-        sql += endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
-        sql += "AND accountNum = " + oldPayment.getAccountNum() + " ";
-        sql += "ORDER BY transDate";
-=======
+
         sql += searchCriteria.getEndDateProperty().get().format(DateTimeFormatter.ISO_LOCAL_DATE) + "\" ";
         sql += "AND accountNum = ";
         sql += prevPayment.getAccountNum();
         sql += " ORDER BY transDate";
->>>>>>> revision1
+
         ObservableList<Ledger> results;
         results = LedgerManager.getInstance().doSqlQuery(sql);
 
