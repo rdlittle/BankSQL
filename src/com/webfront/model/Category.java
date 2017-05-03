@@ -21,6 +21,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  *
  * @author rlittle
+ * select \
+    c.id "Class", c.description "Class Description", \
+    c2.id "Category", c2.description "Category Description" \
+    from categories c \
+    inner join categories c2 \
+    on c2.parent = c.id \
+    order by c.parent,c.description,c2.description;
  */
 @Entity
 @Table(name = "categories")
@@ -30,7 +37,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Category.findById", query = "SELECT c FROM Category c WHERE c.id = :id"),
     @NamedQuery(name = "Category.findByDescription", query = "SELECT c FROM Category c WHERE c.description = :description"),
     @NamedQuery(name = "Category.findAllParent", query = "SELECT c FROM Category c WHERE c.parent = 0 ORDER BY c.description"),
-    @NamedQuery(name = "Category.findByParent", query = "SELECT c FROM Category c WHERE c.parent = :parent ORDER BY c.description")})
+    @NamedQuery(name = "Category.findByParent", query = "SELECT c FROM Category c WHERE c.parent = :parent ORDER BY c.description"),
+    @NamedQuery(name = "Category.tree", query = "SELECT c FROM Category c order by c.parent,c.description,c.id")})
 public class Category implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -44,6 +52,9 @@ public class Category implements Serializable {
 
     @Column()
     private Integer parent;
+    
+    @Column
+    private Character type;    
     
     public Category() {
     }
@@ -100,7 +111,21 @@ public class Category implements Serializable {
 
     @Override
     public String toString() {
-        return "com.webfront.model.Categories[ id=" + id + " ]";
+        return description;
+    }
+
+    /**
+     * @return the type
+     */
+    public Character getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(Character type) {
+        this.type = type;
     }
 
 }

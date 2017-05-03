@@ -5,10 +5,12 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
+import com.webfront.bean.BankManager;
+import com.webfront.model.Account;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,7 +73,8 @@ public class AccountPickerForm extends AnchorPane {
 
         stage.setScene(scene);
         
-        Bank.accountList.stream().forEach((acct) -> {
+        List<Account> al = BankManager.getInstance().getList("");
+        al.stream().forEach((acct) -> {
             accountList.put(acct.getAccountName(), acct.getId());
             cbAccountList.getItems().add(acct.getAccountName());
         });

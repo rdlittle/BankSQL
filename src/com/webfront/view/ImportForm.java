@@ -6,24 +6,34 @@
 package com.webfront.view;
 
 import com.webfront.app.Bank;
-import static com.webfront.app.Bank.viewList;
 import com.webfront.app.utils.CSVImporter;
 import com.webfront.app.utils.Importer;
 import com.webfront.app.utils.PDFImporter;
+<<<<<<< HEAD
+=======
+import com.webfront.app.utils.QifImporter;
+import com.webfront.bean.AccountManager;
+>>>>>>> revision1
 import com.webfront.model.Account;
+import com.webfront.model.Account.StatementFormat;
 import com.webfront.model.Config;
 import com.webfront.model.Ledger;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -47,17 +57,17 @@ public class ImportForm extends AnchorPane {
     @FXML
     TextField txtFileName;
     @FXML
-    ComboBox cbAccount;
+    ComboBox<Account> cbAccount;
     @FXML
     Label lblMessage;
     @FXML
     ProgressBar importProgress;
 
-    ArrayList<Account> accountList;
     public static ArrayList<Ledger> newItems;
-    
+    private final SimpleObjectProperty<LedgerView> ledgerViewProperty;
+
     Stage stage;
-    public int selectedAccount;
+    public Account selectedAccount;
     public String fileName;
 
     private static ImportForm form = null;
@@ -66,22 +76,23 @@ public class ImportForm extends AnchorPane {
     public static SimpleBooleanProperty importDone;
     public static SimpleIntegerProperty accountNum;
 
-    private ImportForm(ArrayList<Account> list) {
+    private final HashMap<StatementFormat, String> stmtFormatFileTypes;
+
+    private ImportForm(ObservableList<Account> list) {
         fileName = "";
-        selectedAccount = -1;
-        accountList = new ArrayList<>();
         newItems = new ArrayList<>();
         btnOK = new Button();
         btnCancel = new Button();
         txtFileName = new TextField();
-        cbAccount = new ComboBox();
-        accountList = list;
+        cbAccount = new ComboBox<>();
         importProgress = new ProgressBar();
         importDone = new SimpleBooleanProperty();
         accountNum = new SimpleIntegerProperty();
+        ledgerViewProperty = new SimpleObjectProperty();
+        stmtFormatFileTypes = new HashMap<>();
     }
 
-    public static ImportForm getInstance(ArrayList<Account> list) {
+    public static ImportForm getInstance(ObservableList<Account> list) {
         if (form == null) {
             form = new ImportForm(list);
             form.hasAccount = false;
@@ -103,26 +114,20 @@ public class ImportForm extends AnchorPane {
             } catch (IOException ex) {
                 Logger.getLogger(ImportForm.class.getName()).log(Level.SEVERE, null, ex);
             }
-            form.accountList.stream().forEach((acct) -> {
-                form.cbAccount.getItems().addAll(acct.getBankName() + " - " + acct.getAccountName());
-            });
 
-            form.cbAccount.setOnAction((Event event) -> {
-                ComboBox cb = (ComboBox) event.getSource();
-                if (cb.getValue() != null && !cb.getValue().toString().isEmpty()) {
-                    String sName = cb.getValue().toString();
-                    for (Account acct : form.accountList) {
-                        if (sName.equals(acct.getBankName() + " - " + acct.getAccountName())) {
-                            form.selectedAccount = acct.getId();
-                            form.hasAccount = true;
-                            form.btnOK.setDisable(form.hasFile == true ? false : true);
-                            ImportForm.accountNum.set(acct.getId());
-                            break;
-                        }
-                    }
+            form.cbAccount.converterProperty().setValue(new AccountManager.AccountConverter());
+            form.cbAccount.itemsProperty().setValue(AccountManager.getInstance().getAccounts());
+
+            form.cbAccount.valueProperty().addListener(new ChangeListener<Account>() {
+                @Override
+                public void changed(ObservableValue<? extends Account> observable, Account oldValue, Account newValue) {
+                    form.selectedAccount = form.cbAccount.getValue();
+                    form.hasAccount = true;
+                    form.btnOK.setDisable(form.hasFile == true ? false : true);
+                    ImportForm.accountNum.set(form.cbAccount.getValue().getId());
                 }
             });
-            
+            form.btnBrowse.disableProperty().bind(form.cbAccount.valueProperty().isNull());
             form.btnOK.setDisable(true);
             form.stage.setScene(scene);
             form.stage.setTitle("Import Statement");
@@ -141,8 +146,20 @@ public class ImportForm extends AnchorPane {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select statement to import");
         fileChooser.setInitialDirectory(new File(Config.getInstance().getImportDir()));
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
+
+        StatementFormat sf = form.cbAccount.getValue().getStatementFormat();
+        switch (sf) {
+            case PDF:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"));
+                break;
+            case QIF:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("QIF Files (*.qif)", "*.qif"));
+                break;
+            default:
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files (*.txt) (*.csv)", "*.txt", "*.csv"));
+                break;
+        }
+
         File selectedFile = fileChooser.showOpenDialog(stage);
         if (selectedFile != null) {
             form.txtFileName.setText(selectedFile.getAbsolutePath());
@@ -155,14 +172,18 @@ public class ImportForm extends AnchorPane {
     @FXML
     public void btnOKClicked() {
         importProgress.setVisible(true);
+        importProgress.progressProperty().set(0);
         importDone.set(false);
 
         Importer importer;
         if (fileName.contains("pdf")) {
-            importer = new PDFImporter(fileName, form.selectedAccount);
+            importer = new PDFImporter(fileName, form.cbAccount.getValue());
+        } else if (fileName.contains("qif")) {
+            importer = new QifImporter(fileName,form.cbAccount.getValue());
         } else {
-            importer = new CSVImporter(fileName, form.selectedAccount);
+            importer = new CSVImporter(fileName, form.cbAccount.getValue());
         }
+
         Thread t = new Thread(importer);
         t.start();
         while (t.isAlive()) {
@@ -172,14 +193,15 @@ public class ImportForm extends AnchorPane {
                 Logger.getLogger(Bank.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        Task<Void> importTask = new Task<Void>() {
+        Task<Void> importTask;
+        importTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
                 newItems = importer.getItemList();
                 Double itemCount = (double) newItems.size();
                 Double progress = (double) 0;
                 Double itemsCreated = (double) 0;
-                LedgerView view = viewList.get(Integer.valueOf(selectedAccount));
+                LedgerView view = ledgerViewProperty.getValue();
                 for (Ledger item : newItems) {
                     view.getLedgerManager().create(item);
                     itemsCreated += 1;
@@ -209,12 +231,20 @@ public class ImportForm extends AnchorPane {
             @Override
             protected void failed() {
                 super.failed();
-                updateMessage("Failed!");
+                updateMessage("Import failed!  " + super.exceptionProperty().toString());
+                importProgress.progressProperty().unbind();
+                importProgress.setProgress(0);
+                importProgress.setVisible(false);
                 form.stage.close();
             }
         };
         importProgress.progressProperty().bind(importTask.progressProperty());
-        new Thread(importTask).start();
+        if (Platform.isFxApplicationThread()) {
+            new Thread((Runnable) importTask).start();
+        } else {
+            Platform.runLater(importTask);
+        }
+
     }
 
     @FXML
@@ -235,4 +265,12 @@ public class ImportForm extends AnchorPane {
     public static void setForm(ImportForm aForm) {
         form = aForm;
     }
+
+    /**
+     * @return the viewProperty
+     */
+    public SimpleObjectProperty<LedgerView> getLedgerViewProperty() {
+        return ledgerViewProperty;
+    }
+
 }

@@ -16,13 +16,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -33,7 +29,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
@@ -65,6 +60,7 @@ public class LedgerView extends AnchorPane {
     public SimpleBooleanProperty isRebalance;
     public Ledger selectedItem;
     public SimpleBooleanProperty isLoading = new SimpleBooleanProperty(true);
+    public SimpleBooleanProperty changed = new SimpleBooleanProperty(false);
 
     /**
      *
@@ -74,13 +70,6 @@ public class LedgerView extends AnchorPane {
         super();
         this.setStyle("-fx-background-color: #336699;");
         isRebalance = new SimpleBooleanProperty(false);
-
-        HBox buttonBox = new HBox();
-        buttonBox.getStyleClass().add("panel");
-        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonBox.setPadding(new Insets(8));
-        buttonBox.setSpacing(10);
-
         accountNumber = acctNum;
         ledgerManager = LedgerManager.getInstance();
         categoryManager = CategoryManager.getInstance();
@@ -113,7 +102,11 @@ public class LedgerView extends AnchorPane {
         subCatColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Ledger, String>, ObservableValue<String>>() {
             @Override
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Ledger, String> param) {
+<<<<<<< HEAD
                 if (param.getValue() != null) {
+=======
+                if (param.getValue().getSubCat() != null) {
+>>>>>>> revision1
                     Category c = param.getValue().getSubCat();
                     if (c != null) {
                         String desc = c.getDescription();
@@ -145,18 +138,21 @@ public class LedgerView extends AnchorPane {
 
         MenuItem ctxItem1 = new MenuItem("Edit");
         ctxItem1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
         });
         MenuItem ctxItem2 = new MenuItem("Delete");
         ctxItem2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
         });
         MenuItem ctxItem3 = new MenuItem("Refresh");
         ctxItem3.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
             public void handle(ActionEvent e) {
                 System.out.println("About");
             }
@@ -179,6 +175,7 @@ public class LedgerView extends AnchorPane {
             }
         };
 
+<<<<<<< HEAD
         Platform.runLater(() -> loadData());
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
@@ -218,20 +215,28 @@ public class LedgerView extends AnchorPane {
 
         buttonBox.getChildren().addAll(btnSearch, btnReset);
 
+=======
+>>>>>>> revision1
         AnchorPane.setTopAnchor(table, 0.0);
         AnchorPane.setLeftAnchor(table, 0.0);
         AnchorPane.setRightAnchor(table, 0.0);
         AnchorPane.setBottomAnchor(table, 0.0);
 
-        AnchorPane.setBottomAnchor(buttonBox, 0.0);
-        AnchorPane.setLeftAnchor(buttonBox, 0.0);
-        AnchorPane.setRightAnchor(buttonBox, 0.0);
-
-        getChildren().addAll(table, buttonBox);
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+                table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
+                table.getColumns().addAll(dateColumn, descColumn, primaryCatColumn, subCatColumn, transAmtColumn, transBalColumn);
+                getChildren().add(table);
+            }
+        };
+        Platform.runLater(r);
     }
 
     public void loadData() {
         list.setAll(ledgerManager.getList(Integer.toString(accountNumber)));
+        table.itemsProperty().setValue(list);
     }
 
     public synchronized LedgerView getInstance(int acctNum) {
@@ -245,7 +250,7 @@ public class LedgerView extends AnchorPane {
         LedgerView view = new LedgerView(acctNum);
         view.accountNumber = acctNum;
         ledgerView = view;
-        return view;
+        return ledgerView;
     }
 
     public void doSearch(String sql) {
@@ -254,10 +259,7 @@ public class LedgerView extends AnchorPane {
         if (form.criteria.getSqlStmt() != null) {
             ObservableList<Ledger> copyOfList;
             copyOfList = ledgerManager.doSqlQuery(form.criteria.getSqlStmt());
-            list.clear();
-            list.addAll(copyOfList);
-            table.getItems().clear();
-            table.setItems(list);
+            list.setAll(copyOfList);
         }
     }
 
@@ -266,12 +268,7 @@ public class LedgerView extends AnchorPane {
         rebal.showForm();
         if (rebal.hasChanged.get()) {
             ledgerManager.rebalance(accountNumber, rebal.getCriteria());
-            ObservableList<Ledger> copyOfList;
-            copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
-            list.clear();
-            list.addAll(copyOfList);
-            table.getItems().clear();
-            table.setItems(list);
+            doRefresh();
         }
     }
 
@@ -279,9 +276,7 @@ public class LedgerView extends AnchorPane {
         ObservableList<Ledger> copyOfList;
         copyOfList = ledgerManager.getList(Integer.toString(accountNumber));
         list.clear();
-        list.addAll(copyOfList);
-        table.getItems().clear();
-        table.setItems(list);
+        list.setAll(copyOfList);
     }
 
     /**

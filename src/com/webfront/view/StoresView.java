@@ -48,11 +48,13 @@ public class StoresView extends Pane {
     private static StoresView view;
     MenuItem delMenu;
     MenuItem editMenu;
+    
 
     protected StoresView() {
         super();
+        
         list = FXCollections.<Stores>observableArrayList();
-        storesManager = new StoresManager();
+        storesManager = StoresManager.getInstance();
         VBox vbox = new VBox();
         Button btnAdd;
         btnAdd = new Button("Add store");
@@ -101,6 +103,8 @@ public class StoresView extends Pane {
         Platform.runLater(() -> loadData());
 
         table = new TableView<>();
+        table.setPrefHeight(700);
+        table.setPrefWidth(600);
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, doubleClick);
         list.addListener(new ListChangeListener() {
             @Override
@@ -109,7 +113,6 @@ public class StoresView extends Pane {
             }
         });
         table.setEditable(true);
-        table.setMaxWidth(USE_PREF_SIZE);
         table.setContextMenu(new ContextMenu(editMenu, delMenu));
 
         storeIdCol = new TableColumn<>("ID");
@@ -146,6 +149,8 @@ public class StoresView extends Pane {
             }
         });        
 
+//        System.out.println(StoresView.this.getHeight());
+        vbox.prefHeightProperty().bind(this.heightProperty());
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
         buttons.setPadding(new Insets(10, 10, 0, 10));

@@ -6,7 +6,6 @@
 package com.webfront.bean;
 
 import com.webfront.model.Category;
-import com.webfront.model.Ledger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -16,6 +15,9 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.util.StringConverter;
 import javax.persistence.Query;
 import javax.swing.SwingWorker;
 
@@ -25,24 +27,43 @@ import javax.swing.SwingWorker;
  */
 public class CategoryManager extends DBManager<Category> {
 
+    /**
+     * @return the filteredCategoryList
+     */
+    public FilteredList<Category> getFilteredCategoryList() {
+        return filteredCategoryList;
+    }
+
     private ObservableList<Category> categories;
     private static CategoryManager instance = null;
+    private final SortedList<Category> sortedCategories;
+    private FilteredList<Category> filteredCategoryList;
 
     protected CategoryManager() {
         super();
         categories = FXCollections.emptyObservableList();
+        sortedCategories = new SortedList<>(categories);
     }
 
     public synchronized static CategoryManager getInstance() {
         if (instance == null) {
             instance = new CategoryManager();
+            instance.filteredCategoryList = new FilteredList<>(instance.getCategories("select * from categories where parent > 0"));
+            instance.filteredCategoryList.setPredicate((e)->true);
         }
         return instance;
     }
 
+    public List<Category> getTree() {
+        Query query = em.createNamedQuery("Category.tree");
+        List<Category> l = query.getResultList();
+        return l;
+    }
+
     public ObservableList<Category> getCategories() {
         if (categories.isEmpty()) {
-            Query query = em.createNativeQuery("Select * from categories c order by c.description", Category.class);
+//            Query query = em.createNativeQuery("Select * from categories c order by c.description", Category.class);
+            Query query = em.createNamedQuery("Category.findAll");
             List<Category> list = query.getResultList();
             categories = (ObservableList<Category>) FXCollections.observableList(list);
         }
@@ -143,6 +164,31 @@ public class CategoryManager extends DBManager<Category> {
 
     public void removeListener(InvalidationListener listener) {
         categories.removeListener(listener);
+    }
+
+    public static class CategoryConverter extends StringConverter {
+
+        @Override
+        public String toString(Object object) {
+            Category target = (Category) object;
+            for (Category c : CategoryManager.getInstance().categories) {
+                if (target.getId().equals(c.getId())) {
+                    return c.getDescription();
+                }
+            }
+            return object.toString();
+        }
+
+        @Override
+        public Object fromString(String string) {
+            for (Category c : CategoryManager.getInstance().categories) {
+                if (c.getDescription().equalsIgnoreCase(string)) {
+                    return c;
+                }
+            }
+            return null;
+        }
+
     }
 
 }

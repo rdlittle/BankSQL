@@ -5,10 +5,13 @@
  */
 package com.webfront.view;
 
-import com.webfront.app.Bank;
+import com.webfront.bean.AccountManager;
+import com.webfront.bean.BankManager;
+import com.webfront.bean.CategoryManager;
 import com.webfront.model.Account;
 import com.webfront.model.Category;
 import com.webfront.model.Ledger;
+import com.webfront.model.Payment;
 import com.webfront.model.Stores;
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +21,7 @@ import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -33,15 +37,20 @@ import javafx.scene.control.DatePicker;
 
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 
 /**
  *
@@ -55,11 +64,11 @@ public final class LedgerForm extends AnchorPane {
     @FXML
     DatePicker transDate;
     @FXML
-    ChoiceBox<Integer> accountNum;
+    ChoiceBox<Account> cbAccount;
     @FXML
-    ComboBox<String> primaryCat;
+    ComboBox<Category> primaryCat;
     @FXML
-    ComboBox<String> subCat;
+    ComboBox<Category> subCat;
     @FXML
     TextField transId;
     @FXML
@@ -80,7 +89,7 @@ public final class LedgerForm extends AnchorPane {
     Hyperlink editLink;
 
     @FXML
-    Pane distView;
+    Pane paymentView;
 
     Stage stage;
     Scene scene;
@@ -89,14 +98,29 @@ public final class LedgerForm extends AnchorPane {
     HashMap<String, Category> categoryMap, subCatMap;
 
     @FXML
+<<<<<<< HEAD
     LedgerItemDetail paymentDetail;
+=======
+    TableView detailTable;
+
+    @FXML
+    TableColumn detailId;
+    @FXML
+    TableColumn detailDesc;
+    @FXML
+    TableColumn detailCat1;
+    @FXML
+    TableColumn detailCat2;
+    @FXML
+    TableColumn detailAmt;
+>>>>>>> revision1
 
     public LedgerForm(LedgerView lv, Ledger item) {
         view = lv;
         oldItem = item;
         newItem = new Ledger();
         transDate = new DatePicker();
-        accountNum = new ChoiceBox<>();
+        cbAccount = new ChoiceBox<>();
         primaryCat = new ComboBox<>();
         subCat = new ComboBox<>();
         transId = new TextField();
@@ -109,10 +133,13 @@ public final class LedgerForm extends AnchorPane {
         storeMap = new HashMap<>();
         categoryMap = new HashMap<>();
         subCatMap = new HashMap<>();
-        distView = new Pane();
+        paymentView = new Pane();
         lblDescription = new Label();
         lblDescription.setLabelFor(transDescription);
+<<<<<<< HEAD
         paymentDetail = new LedgerItemDetail(FXCollections.observableArrayList());
+=======
+>>>>>>> revision1
         buildForm();
         setFormData();
     }
@@ -135,6 +162,7 @@ public final class LedgerForm extends AnchorPane {
             loader.setController(this);
             loader.load();
 
+<<<<<<< HEAD
             ObservableList<Category> cList = view.getCategoryManager().getCategories();
 
             ObservableList<Account> accountList = javafx.collections.FXCollections.observableArrayList(Bank.accountList);
@@ -169,38 +197,26 @@ public final class LedgerForm extends AnchorPane {
                     }
                 }
             }
+=======
+            cbAccount.converterProperty().setValue(new AccountManager.AccountConverter());
+            cbAccount.itemsProperty().setValue(AccountManager.getInstance().getAccounts());
+>>>>>>> revision1
 
-            primaryCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            primaryCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
+            primaryCat.itemsProperty().setValue(CategoryManager.getInstance().getCategories());
+            primaryCat.valueProperty().addListener(new ChangeListener<Category>() {
                 @Override
-                public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                    String newCat = newValue.toString();
-                    if (categoryMap.containsKey(newCat)) {
-                        if (oldItem.getId() != null) {
-                            Category c = categoryMap.get(newCat);
-                            String sqlStmt = "SELECT * FROM categories WHERE parent = " + Integer.toString(c.getId());
-                            sqlStmt += " order by description";
-                            ObservableList<Category> subCatList = view.getCategoryManager().getCategories(sqlStmt);
-                            subCat.getItems().clear();
-                            subCatMap.clear();
-                            for (Category cat2 : subCatList) {
-                                subCatMap.put(cat2.getDescription(), cat2);
-                            }
-                            subCat.getItems().addAll(subCatMap.keySet());
-                            if (oldItem.getPrimaryCat() == null) {
-                                oldItem.setPrimaryCat(c);
-                                btnOk.setDisable(false);
-                            }
-                            if (!oldItem.getPrimaryCat().getDescription().equals(primaryCat.getValue())) {
-                                oldItem.setPrimaryCat(c);
-                                btnOk.setDisable(false);
-                            }
-                        }
-                    }
+                public void changed(ObservableValue<? extends Category> observable, Category oldValue, Category newValue) {
+                    CategoryManager.getInstance().getFilteredCategoryList().setPredicate((p) -> p.getParent() == newValue.getId());
+                    btnOk.disableProperty().set(false);
                 }
             });
 
-            subCat.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            subCat.converterProperty().setValue(new CategoryManager.CategoryConverter());
+            subCat.itemsProperty().setValue(CategoryManager.getInstance().getFilteredCategoryList());
+            subCat.valueProperty().addListener(new ChangeListener<Category>() {
                 @Override
+<<<<<<< HEAD
                 public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                     if (newValue != null) {
                         String newCat = newValue.toString();
@@ -211,6 +227,10 @@ public final class LedgerForm extends AnchorPane {
                             }
                         }
                     }
+=======
+                public void changed(ObservableValue<? extends Category> observable, Category oldValue, Category newValue) {
+                    btnOk.disableProperty().set(false);
+>>>>>>> revision1
                 }
             });
 
@@ -254,9 +274,60 @@ public final class LedgerForm extends AnchorPane {
                 }
             });
 
+<<<<<<< HEAD
             distView.setPrefSize(857.0, 175.0);
             paymentDetail.setPrefSize(857.0, 175.0);
             distView.getChildren().add(paymentDetail);
+=======
+            detailId.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
+                @Override
+                public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
+                    Payment p = param.getValue();
+                    if (p.getId() != null) {
+                        return new SimpleStringProperty(p.getId().toString());
+                    }
+                    return null;
+                }
+            });
+
+            detailDesc.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
+                @Override
+                public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
+                    Payment p = param.getValue();
+                    if (p.getId() != null) {
+                        return new SimpleStringProperty(p.getTransDesc());
+                    }
+                    return null;
+                }
+            });
+
+            detailCat1.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
+                @Override
+                public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
+                    Payment p = param.getValue();
+                    if (p.getPrimaryCat() != null) {
+                        return new SimpleStringProperty(p.getPrimaryCat().toString());
+                    }
+                    return null;
+                }
+            });
+
+            detailCat2.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Payment, String>, SimpleStringProperty>() {
+                @Override
+                public SimpleStringProperty call(TableColumn.CellDataFeatures<Payment, String> param) {
+                    Payment p = param.getValue();
+                    if (p.getSubCat() != null) {
+                        return new SimpleStringProperty(p.getSubCat().getDescription());
+                    }
+                    return null;
+                }
+            });
+
+            detailAmt.setCellValueFactory(new PropertyValueFactory("transAmt"));
+            detailAmt.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
+
+            paymentView.setPrefSize(857.0, 175.0);
+>>>>>>> revision1
             stage.show();
 
         } catch (IOException ex) {
@@ -274,20 +345,31 @@ public final class LedgerForm extends AnchorPane {
             transDescription.setText(oldItem.getTransDesc());
             transAmt.setText(Float.toString(oldItem.getTransAmt()));
             transBalance.setText(Float.toString(oldItem.getTransBal()));
-            accountNum.setValue(oldItem.getAccountNum());
+            cbAccount.setValue(oldItem.getAccount());
             transId.setText(oldItem.getId().toString());
             if (oldItem.getPrimaryCat() != null) {
-                String str = oldItem.getPrimaryCat().getDescription();
-                primaryCat.setValue(str);
+                primaryCat.setValue(oldItem.getPrimaryCat());
             }
+<<<<<<< HEAD
             if (oldItem.getPayment() != null) {
                 paymentDetail.setList(FXCollections.observableList(oldItem.getPayment()));
                 paymentDetail.setItems(paymentDetail.getList());
                 Category c = oldItem.getSubCat();
                 if (c != null) {
                     subCat.setValue(c.getDescription());
+=======
+            if (oldItem.getSubCat() != null) {
+                Category c = oldItem.getSubCat();
+                if (c != null) {
+                    subCat.setValue(c);
+>>>>>>> revision1
                 }
             }
+            if (oldItem.getPayment() != null && detailTable != null) {
+//                    detailTable.setList(FXCollections.observableList(oldItem.getPayment()));
+                detailTable.itemsProperty().set(FXCollections.observableList(oldItem.getPayment()));
+            }
+
             if (oldItem.getCheckNum() != null) {
                 checkNum.setText(oldItem.getCheckNum());
             }
@@ -300,20 +382,27 @@ public final class LedgerForm extends AnchorPane {
             transDate.setValue(date.toLocalDate());
             transAmt.setText(Float.toString(newItem.getTransAmt()));
             transDescription.setText(newItem.getTransDesc());
-            accountNum.setValue(newItem.getAccountNum());
+            cbAccount.setValue(newItem.getAccount());
             transId.setText(newItem.getId().toString());
-            primaryCat.setValue(newItem.getPrimaryCat().getDescription());
+            primaryCat.setValue(newItem.getPrimaryCat());
         }
     }
 
     public void updateModel(Ledger item) {
         item.setId(Integer.parseInt(transId.getText()));
-        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
+        item.setAccount(cbAccount.getValue());
         item.setTransDesc(transDescription.getText());
-        item.setAccountNum(Integer.parseInt(accountNum.getSelectionModel().getSelectedItem().toString()));
         item.setCheckNum(checkNum.getText());
         item.setTransAmt(Float.parseFloat(transAmt.getText()));
         item.setTransBal(Float.parseFloat(transBalance.getText()));
+        if (item.getPayment() == null || item.getPayment().isEmpty()) {
+            if (primaryCat.getValue() != null) {
+                item.setPrimaryCat(primaryCat.getValue());
+            }
+            if (subCat.getValue() != null) {
+                item.setSubCat(subCat.getValue());
+            }
+        }
     }
 
     @FXML
@@ -323,8 +412,8 @@ public final class LedgerForm extends AnchorPane {
     }
 
     @FXML
-    public void closeForm() {
-        stage.close();
+    public void onBtnCancel() {
+        closeForm();
     }
 
     @FXML
@@ -334,7 +423,13 @@ public final class LedgerForm extends AnchorPane {
             view.getLedgerManager().update(oldItem);
             TableView tv = (TableView) view.getTable();
             TableViewSelectionModel sm = tv.getSelectionModel();
+<<<<<<< HEAD
             int idx = sm.getSelectedIndex();
+=======
+//            int idx = view.getTable().getSelectionModel().getSelectedIndex();
+            int idx;
+            idx = sm.getSelectedIndex();
+>>>>>>> revision1
             view.getTable().getItems().set(idx, oldItem);
         } else {
             Ledger ledger = new Ledger();
@@ -344,5 +439,14 @@ public final class LedgerForm extends AnchorPane {
         }
 
         closeForm();
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public void closeForm() {
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
+        stage.close();
     }
 }

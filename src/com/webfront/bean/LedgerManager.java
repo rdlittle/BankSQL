@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.persistence.NoResultException;
@@ -25,6 +26,10 @@ public class LedgerManager extends DBManager {
     private final ObservableList<Ledger> ledgerList;
     private static LedgerManager instance = null;
 
+    public static enum EntryType {
+        CREDIT, DEBIT;
+    }
+
     /**
      *
      */
@@ -32,9 +37,9 @@ public class LedgerManager extends DBManager {
         this.ledgerList = FXCollections.<Ledger>observableArrayList();
         selectedItems = new ArrayList<>();
     }
-    
+
     public synchronized static LedgerManager getInstance() {
-        if(instance==null) {
+        if (instance == null) {
             instance = new LedgerManager();
         }
         return instance;
@@ -76,12 +81,27 @@ public class LedgerManager extends DBManager {
 
     /**
      *
+     * @param qName
+     * @return
+     */
+    public synchronized ObservableList<Ledger> doNamedQuery(String qName, Map<String, Object> args) {
+        Query query = em.createNamedQuery(qName, Ledger.class);
+        for (String key : args.keySet()) {
+            query.setParameter(key, args.get(key));
+        }
+        List<Ledger> list = query.getResultList();
+        ObservableList olist = FXCollections.observableList(list);
+        return olist;
+    }
+
+    /**
+     *
      * @param q
      * @return
      */
-    public List getResults(String q) {
+    public List<Object[]> getResults(String q) {
         Query query = em.createNativeQuery(q);
-        List list = query.getResultList();
+        List<Object[]> list = query.getResultList();
         return list;
     }
 
@@ -98,6 +118,10 @@ public class LedgerManager extends DBManager {
         ledger = (Ledger) query.getSingleResult();
         return ledger;
     }
+    
+    public Ledger getRef(Ledger item) {
+        return em.getReference(Ledger.class, item.getId());
+    }
 
     /**
      *
@@ -107,7 +131,7 @@ public class LedgerManager extends DBManager {
     public int getLastId(int accountNum) {
         String queryString = "SELECT id FROM ledger WHERE accountNum = ";
         queryString += Integer.toString(accountNum);
-        queryString += " ORDER BY id DESC LIMIT 0,1";
+        queryString += " ORDER BY transDate DESC, id DESC LIMIT 0,1";
         Query query = em.createNativeQuery(queryString);
         List<Integer> result = query.getResultList();
         if (result.isEmpty()) {
@@ -118,6 +142,18 @@ public class LedgerManager extends DBManager {
 
     public int getLastId() {
         return 1;
+    }
+    
+    public Float getBalance(int accountNum) {
+        return (getItem(getLastId(accountNum))).getTransBal();
+    }
+    
+    public Float getOpeningBalance(Account acct) {
+        Query query = em.createNamedQuery("Ledger.findBalance");
+        query.setParameter("account", acct);
+        query.setMaxResults(1);
+        Ledger l = (Ledger) query.getSingleResult();
+        return l.getTransBal();
     }
 
     public synchronized void rebalance(int acct, SearchCriteria criteria) {
@@ -143,8 +179,13 @@ public class LedgerManager extends DBManager {
                 float amt = l.getTransAmt();
                 if (account.getAccountType() == Account.AccountType.CREDIT) {
                     balance += amt;
-                } else {
-                    balance -= amt;
+                }
+                if (account.getAccountType() == Account.AccountType.CHECKING) {
+                    if (amt > 0) {
+                        balance += Math.abs(amt);
+                    } else {
+                        balance -= Math.abs(amt);
+                    }
                 }
                 l.setTransBal(balance);
                 update(l);

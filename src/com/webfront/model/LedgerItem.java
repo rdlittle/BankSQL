@@ -7,8 +7,10 @@ package com.webfront.model;
 
 import com.webfront.app.utils.DateConvertor;
 import java.text.ParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +27,11 @@ public class LedgerItem {
     private String checkNumber;
     private String amount;
     private float balance;
-    private String dateFormat;
+    private final String dateFormat = "MM/dd/yyyy";
+    private char transType;
+    private int primaryCat;
+    private int subCat;
+    private int storeId;
 
     public LedgerItem() {
         date = "";
@@ -34,25 +40,60 @@ public class LedgerItem {
         amount = "";
         balance = 0;
         checkNumber = "";
-        dateFormat = "MM/dd/yyyy";
+        primaryCat = -1;
+        subCat = -1;
+        transType = 'U';
     }
 
     public LedgerItem(String d, String desc, String amt) {
+        this();
         date = d;
         description = desc;
         amount = amt;
-        dateFormat = "MM/dd/yyyy";
         balance = 0;
+        transType = 'U';
     }
 
-    public static Comparator<LedgerItem> LedgerComparator = new Comparator<LedgerItem>() {
-        @Override
-        public int compare(LedgerItem ledger1, LedgerItem ledger2) {
-            Long d1 = ledger1.getDateValue();
-            Long d2 = ledger2.getDateValue();
-            return d1.compareTo(d2);
+    public LedgerItem(Ledger l) {
+        this();
+        Date d = l.getTransDate();
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ofPattern(dateFormat));
+        description = l.getTransDesc();
+        checkNumber = l.getCheckNum();
+        Float amt = l.getTransAmt();
+        
+        if (l.getPrimaryCat() != null) {
+            primaryCat = l.getPrimaryCat().getId();
         }
+        if (l.getSubCat() != null) {
+            subCat = l.getSubCat().getId();
+            transType = l.getSubCat().getType();
+        }
+        amount = Float.toString(amt);
+        
+    }
 
+    public LedgerItem(Payment p) {
+        this();
+        Date d = p.getTransDate();
+        date = DateConvertor.toLocalDate(d).format(DateTimeFormatter.ofPattern(dateFormat));
+        description = p.getTransDesc();
+        Float amt;
+        amt = p.getTransAmt() * -1;
+        amount = Float.toString(amt);
+        if (p.getPrimaryCat() != null) {
+            primaryCat = p.getPrimaryCat().getId();
+        }
+        if (p.getSubCat() != null) {
+            subCat = p.getSubCat().getId();
+            transType = p.getSubCat().getType();
+        }
+    }
+
+    public static Comparator<LedgerItem> LedgerComparator = (LedgerItem ledger1, LedgerItem ledger2) -> {
+        Long d1 = ledger1.getDateValue();
+        Long d2 = ledger2.getDateValue();
+        return d1.compareTo(d2);
     };
 
     /**
@@ -60,6 +101,48 @@ public class LedgerItem {
      */
     public String getDate() {
         return date;
+    }
+
+    /**
+     * @return the primaryCat
+     */
+    public int getPrimaryCat() {
+        return primaryCat;
+    }
+
+    /**
+     * @param primaryCat the primaryCat to set
+     */
+    public void setPrimaryCat(int primaryCat) {
+        this.primaryCat = primaryCat;
+    }
+
+    /**
+     * @return the subCat
+     */
+    public int getSubCat() {
+        return subCat;
+    }
+
+    /**
+     * @param subCat the subCat to set
+     */
+    public void setSubCat(int subCat) {
+        this.subCat = subCat;
+    }
+
+    /**
+     * @return the storeId
+     */
+    public int getStoreId() {
+        return storeId;
+    }
+
+    /**
+     * @param storeId the storeId to set
+     */
+    public void setStoreId(int storeId) {
+        this.storeId = storeId;
     }
 
     public Long getDateValue() {
@@ -79,6 +162,7 @@ public class LedgerItem {
         int currYear = cal.get(Calendar.YEAR);
         int currMonth = cal.get(Calendar.MONTH) + 1;
         date = date.replaceAll("-", "/");
+        date = date.replaceAll("\"", "");
         if (date.matches("\\d{1,2}(/|-)\\d{1,2}((/|-)\\d{2,4})?")) {
             if (date.matches("\\d{1,2}(/|-)\\d{1,2}")) {
                 int dateMonth = Integer.parseInt(date.substring(0, date.indexOf("/")));
@@ -162,7 +246,18 @@ public class LedgerItem {
         this.checkNumber = checkNumber;
     }
 
-    public void setDateFormat(String dFmt) {
-        this.dateFormat = dFmt;
+    /**
+     * @return the transType
+     */
+    public char getTransType() {
+        return transType;
+    }
+
+    /**
+     * @param transType the transType to set
+     */
+    public void setTransType(char transType) {
+        this.transType = transType;
+
     }
 }

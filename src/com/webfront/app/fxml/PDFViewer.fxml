@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <StackPane layoutX="-1.0" onMouseClicked="#startDraw" onMousePressed="#startDraw" prefHeight="400.0" prefWidth="600.0">
+         <children>
+            <Canvas fx:id="pdfMarker" height="395.0" onMouseClicked="#startDraw" onMousePressed="#startDraw" onMouseReleased="#endDraw" width="598.0" />
+            <ImageView fx:id="pdfView" fitHeight="400.0" fitWidth="596.0" onMouseClicked="#startDraw" onMousePressed="#startDraw" pickOnBounds="true" preserveRatio="true" />
+         </children>
+      </StackPane>
+   </children>
+</AnchorPane>

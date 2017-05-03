@@ -125,18 +125,22 @@ public class Config {
                 windowNode.addContent(new Element("y").addContent(getY()));
 
                 String tmp = tmpDir;
-                tmp.replaceAll("/", "\\/");
+                tmp = tmp.replaceAll("/", "\\/");
                 systemNode.addContent(new Element("tmpDir").addContent(tmp));
                 rootElement.addContent(systemNode);
                 rootElement.addContent(windowNode);
                 xmlDoc.setRootElement(rootElement);
             } else {
-                Element root = xmlDoc.getRootElement();
-                Element dims = root.getChild("window");
+                Element xmlRoot = xmlDoc.getRootElement();
+                Element dims = xmlRoot.getChild("window");
+                Element sys = xmlRoot.getChild("system");
                 dims.getChild("width").setText(getWidth());
                 dims.getChild("height").setText(getHeight());
                 dims.getChild("x").setText(getX());
                 dims.getChild("y").setText(getY());
+                sys.getChild("installDir").setText(getInstallDir());
+                sys.getChild("importDir").setText(getImportDir());
+                sys.getChild("tmpDir").setText(getTmpDir());
             }
             writer = new FileWriter(getInstallDir() + getFileSep() + configFileName);
             XMLOutputter xml = new XMLOutputter();
@@ -193,7 +197,6 @@ public class Config {
             if (windowNode.getChild("y") == null) {
                 windowNode.addContent(new Element("y").setText("0"));
             }
-//            docRoot.getChild("window").setContent(windowNode);
             setWidth(windowNode.getChild("width").getText());
             setHeight(windowNode.getChild("height").getText());
             setX(windowNode.getChild("x").getText());

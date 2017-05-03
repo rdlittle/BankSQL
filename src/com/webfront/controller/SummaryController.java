@@ -7,6 +7,7 @@ package com.webfront.controller;
 
 import com.webfront.bean.CategoryManager;
 import com.webfront.bean.LedgerManager;
+import com.webfront.bean.PaymentManager;
 import com.webfront.model.Category;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -51,10 +52,12 @@ public class SummaryController {
     }
 
     public void buildSummary(int category) {
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
-        String stmt = "SELECT FORMAT(ABS(SUM(l.transAmt)),2), c.description FROM ledger l ";
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
+        String stmt = "SELECT FORMAT(ABS(SUM(l.transAmt)),2) Amount, c.description Description FROM ledger l ";
         stmt += "join categories c on l.primaryCat = c.id ";
-        stmt += "where l.transDate > \"" + sDate + "\" group by l.primaryCat WITH ROLLUP";
+        stmt += "where l.transDate > \"" + sDate + "\" and l.primaryCat <> 13 ";
+        stmt += "group by c.description";
         List<Object[]> list = ledgerMgr.getResults(stmt);
         dataList.clear();
         class Item {
@@ -75,17 +78,16 @@ public class SummaryController {
 
     public ObservableList<PieChart.Data> getSubCat(int category) {
         final ObservableList<PieChart.Data> list = FXCollections.<PieChart.Data>observableArrayList();
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
         String stmt;
         Category cat = CategoryManager.getInstance().getCategory(category);
-        stmt = "SELECT c.description Category,format(ABS(SUM(l.transAmt)),2) Amount FROM ledger l ";
-        stmt += "INNER JOIN distribution d ON d.transId = l.id ";
-        stmt += "INNER JOIN categories c ON d.categoryId = c.id ";
-        stmt += "WHERE l.transDate > \"" + sDate + "\" ";
-        stmt += "AND c.parent = " + category + " ";
-        stmt += "GROUP BY c.id ";
-        stmt += "ORDER BY c.description";
-        List<Object[]> objList = ledgerMgr.getResults(stmt);
+        stmt = "SELECT c.description Category ,format(ABS(SUM(p.transAmt)),2) Amount FROM payment p ";
+        stmt += "INNER JOIN categories c ON c.id = p.subCat ";
+        stmt += "WHERE p.transDate > \"" + sDate + "\" ";
+        stmt += "AND p.primaryCat = " + category + " ";
+        stmt += "GROUP BY c.description ";
+        List<Object[]> objList = PaymentManager.getInstance().getResults(stmt);
         class Item {
             Float amt;
             String label;
@@ -105,7 +107,8 @@ public class SummaryController {
 
     public ObservableList<PieChart.Data> getPayments(int subCategory) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
         ObservableList<Category> catList = CategoryManager.getInstance().getCategories();
         for(Category c : catList) {
             if(c.getId()==subCategory) {
@@ -141,11 +144,12 @@ public class SummaryController {
     
     public ObservableList<PieChart.Data> getDetail(int subCategory) {
         ObservableList<PieChart.Data> list = FXCollections.observableArrayList();
-        String sDate = LocalDate.now().minusDays(365).format(DateTimeFormatter.ISO_DATE);
+        int doy = LocalDate.now().getDayOfYear();
+        String sDate = LocalDate.now().minusDays(doy).format(DateTimeFormatter.ISO_DATE);
         String stmt;
         stmt = "SELECT p.transDesc, format(ABS(p.transAmt),2) ";
         stmt += "FROM payment p ";
-        stmt += "WHERE p.primaryCat = "+subCategory+" ";
+        stmt += "WHERE p.subCat = "+subCategory+" ";
         stmt += "AND p.transDate > \"" + sDate + "\" ";
         stmt += "GROUP BY p.transDesc";
         List<Object[]> objList = ledgerMgr.getResults(stmt);

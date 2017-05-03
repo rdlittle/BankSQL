@@ -6,6 +6,7 @@
 package com.webfront.bean;
 
 import java.util.List;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;
@@ -20,6 +21,7 @@ import javax.persistence.Persistence;
  */
 public abstract class DBManager<T> {
 
+    public SimpleBooleanProperty isChanged;
     public final EntityManagerFactory emf;
     //T entity;
     /**
@@ -31,6 +33,7 @@ public abstract class DBManager<T> {
      *
      */
     public DBManager() {
+        isChanged = new SimpleBooleanProperty(false);
         emf = Persistence.createEntityManagerFactory("BankPU");
         em = emf.createEntityManager();
     }
@@ -42,28 +45,32 @@ public abstract class DBManager<T> {
      *
      * @param obj an Entity to create
      */
-    public void create(T obj) {
+    public synchronized void create(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.persist(obj);
         transaction.commit();
+        isChanged.set(true);
     }
 
-    public void update(T obj) {
+    public synchronized void update(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.merge(obj);
         transaction.commit();
+        isChanged.set(true);
     }
 
-    public void delete(T obj) {
+    public synchronized void delete(T obj) {
         EntityTransaction transaction = em.getTransaction();
+        
         transaction.begin();
         em.remove(obj);
         transaction.commit();
+        isChanged.set(true);
     }
 
-    public void refresh(T obj) {
+    public synchronized void refresh(T obj) {
         EntityTransaction transaction = em.getTransaction();
         transaction.begin();
         em.refresh(obj);

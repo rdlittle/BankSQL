@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+
+<AnchorPane prefHeight="760.0" prefWidth="1325.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.webfront.controller.BankController">
+    
+    <children>
+        <MenuBar layoutX="14.0" layoutY="14.0" AnchorPane.leftAnchor="0.0">
+            <menus>
+                <Menu fx:id="fileMenu" text="_File">
+                    <items>
+                        <Menu fx:id="fileNewMenu" text="_New">
+                            <items>
+                                <MenuItem fx:id="fileNewAccount" onAction="#onFileNewAccount" text="_Account" />
+                                <MenuItem fx:id="fileNewCategory" onAction="#onFileNewCategory" text="_Category" />
+                                <MenuItem fx:id="fileNewStore" onAction="#onFileNewStore" text="_Store" />
+                                <MenuItem fx:id="fileNewStatement" onAction="#onFileNewStatement" text="Statement _type" />
+                            </items>
+                        </Menu>
+                        <MenuItem fx:id="fileOpen" onAction="#onFileOpen" text="_Open" />
+                        <MenuItem fx:id="fileClose" onAction="#onFileClose" text="C_lose" />
+                        <MenuItem fx:id="fileExport" mnemonicParsing="false" onAction="#onFileExport" text="Export" />
+                        <MenuItem fx:id="fileImport" onAction="#onFileImport" text="_Import" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="fileExit" onAction="#onFileExit" text="E_xit" />
+                    </items>
+                </Menu>
+                <Menu fx:id="editMenu" text="_Edit">
+                    <items>
+                        <Menu fx:id="editAccountMenu" text="Acco_unts">
+                            <items>
+                                <MenuItem fx:id="editAccountsRebalance" onAction="#onEditRebalance" text="Re_balance" />
+                                <MenuItem mnemonicParsing="false" onAction="#onImportSetup" text="Import setup" />
+                            </items>
+                        </Menu>
+                        <MenuItem fx:id="editCategories" onAction="#onEditCategories" text="Ca_tegories" />
+                        <MenuItem fx:id="editXref" mnemonicParsing="false" onAction="#onEditXref" text="Cross-reference" />
+                        <MenuItem fx:id="editStores" onAction="#onEditStores" text="Sto_res" />
+                        <MenuItem fx:id="editSearch" onAction="#onEditSearch" text="Searc_h" />
+                        <MenuItem fx:id="editPreferences" onAction="#onEditPreferences" text="_Preferences" />
+                    </items>
+                </Menu>
+                <Menu fx:id="reportMenu" mnemonicParsing="false" text="Reports">
+                    <items>
+                        <MenuItem fx:id="reportsSummary" onAction="#onReportsSummary" mnemonicParsing="false" text="Summary" />
+                    </items>
+                </Menu>
+                <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="About" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <TabPane fx:id="tabPane" layoutY="41.0" prefHeight="718.0" prefWidth="1325.0" style="-fx-background-color: antiquewhite;" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0">
+            <tabs>
+                <Tab fx:id="summaryTab" closable="false" text="Summary">
+                    <content>
+                        <PieChart />
+                    </content>
+                </Tab>
+                <Tab fx:id="detailTab" closable="false" text="Detail">
+                    <content>
+                        <fx:include fx:id="detailView" source="DetailView.fxml" />                       
+                    </content>
+                </Tab>
+                <Tab fx:id="storesTab" text="Stores &amp; Categories">
+                    <content>
+                        <AnchorPane>
+                            <children>
+                                <HBox prefHeight="697.0" prefWidth="1299.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <children>
+                                        <fx:include source="Stores.fxml" />
+                                        <fx:include source="Category.fxml" />
+                                    </children>
+                                </HBox>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
+</AnchorPane>

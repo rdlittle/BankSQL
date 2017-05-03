@@ -8,21 +8,23 @@ package com.webfront.model;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -33,12 +35,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "payment")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC"),
+    @NamedQuery(name = "Payment.findAll", query = "SELECT r FROM Payment r ORDER BY r.transDate DESC, r.id DESC"),
+    @NamedQuery(name = "Payment.findAllByDate", query = "SELECT p FROM Payment p WHERE p.transDate BETWEEN :startDate AND :endDate ORDER BY p.transDate, p.id"),
+    @NamedQuery(name = "Payment.findOrphans", query = "SELECT r FROM Payment r WHERE r.ledgerEntry IS NULL ORDER BY r.transDate DESC, r.id DESC"),
+    @NamedQuery(name = "Payment.findOrphansRange", query = "SELECT p FROM Payment p WHERE p.ledgerEntry IS NULL AND p.accountNum = :acctNum AND p.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Payment.findById", query = "SELECT r FROM Payment r WHERE r.id = :id"),
     @NamedQuery(name = "Payment.findByTransDate", query = "SELECT r FROM Payment r WHERE r.transDate = :transDate"),
     @NamedQuery(name = "Payment.findByTransDesc", query = "SELECT r FROM Payment r WHERE r.transDesc = :transDesc"),
     @NamedQuery(name = "Payment.findBySubCat", query = "SELECT r FROM Payment r WHERE r.subCat = :subCat"),
     @NamedQuery(name = "Payment.findByAccountNum", query = "SELECT r FROM Payment r WHERE r.accountNum = :accountNum"),
+    @NamedQuery(name = "Payment.findRangeByAccountNum", query = "SELECT r FROM Payment r WHERE r.accountNum = :accountNum AND r.transDate BETWEEN :startDate AND :endDate"),
     @NamedQuery(name = "Payment.findByTransAmt", query = "SELECT r FROM Payment r WHERE r.transAmt = :transAmt")})
 public class Payment implements Serializable {
 
@@ -54,9 +60,9 @@ public class Payment implements Serializable {
     private Date transDate;
     @Column(name = "transDesc")
     private String transDesc;
-    
-    @ManyToOne(cascade = CascadeType.ALL, optional=false)
-    @JoinColumn(name = "transId", referencedColumnName="id")
+
+    @OneToOne
+    @JoinColumn(name = "transId", referencedColumnName = "id")
     private Ledger ledgerEntry;
 
     @OneToOne
@@ -73,22 +79,34 @@ public class Payment implements Serializable {
 
     @Column(name = "accountNum")
     private Integer accountNum;
-    
+
     @Basic(optional = false)
     @Column(name = "transAmt")
     private float transAmt;
 
+    @Transient
+    SimpleObjectProperty<Category> primaryCatProperty;
+
     public Payment() {
+//        cat1 = new SimpleObjectProperty<>();
+//        cat1.addListener(new CatChangeListener());
+//        cat1.bind(new SimpleObjectProperty<Category>(primaryCat));
     }
 
     public Payment(Integer id) {
         this.id = id;
+//        cat1 = new SimpleObjectProperty<>();
+//        cat1.addListener(new CatChangeListener());
+//        cat1.bind(new SimpleObjectProperty<Category>(primaryCat));
     }
 
     public Payment(Integer id, Date transDate, float transAmt) {
         this.id = id;
         this.transDate = transDate;
         this.transAmt = transAmt;
+//        cat1 = new SimpleObjectProperty<>();
+//        cat1.addListener(new CatChangeListener());
+//        cat1.bind(new SimpleObjectProperty<Category>(primaryCat));
     }
 
     public Integer getId() {
@@ -118,9 +136,9 @@ public class Payment implements Serializable {
     public Ledger getLedgerEntry() {
         return this.ledgerEntry;
     }
-    
+
     public void setLedgerEntry(Ledger entry) {
-        this.ledgerEntry=entry;
+        this.ledgerEntry = entry;
     }
 
     public Stores getStore() {
@@ -170,7 +188,7 @@ public class Payment implements Serializable {
             return entry2.compareTo(entry1);
         }
     };
-    
+
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
@@ -189,6 +207,22 @@ public class Payment implements Serializable {
         return "com.webfront.model.Payment[ id=" + id + " ]";
     }
 
+    public static Payment copy(Payment p) {
+        Payment copyOfPayment = new Payment();
+        if (p != null) {
+            copyOfPayment.setId(p.getId());
+            copyOfPayment.setAccountNum(p.getAccountNum());
+            copyOfPayment.setLedgerEntry(p.getLedgerEntry());
+            copyOfPayment.setPrimaryCat(p.getPrimaryCat());
+            copyOfPayment.setSubCat(p.getSubCat());
+            copyOfPayment.setTransAmt(p.getTransAmt());
+            copyOfPayment.setTransDate(p.getTransDate());
+            copyOfPayment.setStore(p.getStore());
+            copyOfPayment.setTransDesc(p.getTransDesc());
+        }
+        return copyOfPayment;
+    }
+
     /**
      * @return the category1
      */
@@ -201,6 +235,16 @@ public class Payment implements Serializable {
      */
     public void setPrimaryCat(Category category1) {
         this.primaryCat = category1;
+//        cat1.set(category1);
+    }
+
+    private class CatChangeListener implements ChangeListener {
+
+        @Override
+        public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+            System.out.println(newValue.toString());
+        }
+
     }
 
 }

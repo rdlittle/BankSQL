@@ -190,14 +190,20 @@ public final class CategoryForm extends AnchorPane {
                 instance.catMgr = CategoryManager.getInstance();
                 instance.catMgr.addListener(listChangeListener);
 
-                instance.setCatList(FXCollections.observableArrayList(instance.catMgr.getList("Category.findAllParent")));
+                instance.setCatList(FXCollections.observableArrayList(instance.catMgr.getList("Category.findAll")));
 
-                instance.catList.stream().map((c) -> {
-                    instance.primeCatMap.put(c.getDescription(), c.getId());
-                    return c;
-                }).forEach((c) -> {
-                    instance.parentCategories.put(c.getId(), c);
-                });
+                for(Category c : instance.catList) {
+                    if(c.getParent()==0) {
+                        instance.primeCatMap.put(c.getDescription(), c.getId());
+                        instance.parentCategories.put(c.getId(), c);
+                    }
+                }
+//                instance.catList.stream().map((c) -> {
+//                    instance.primeCatMap.put(c.getDescription(), c.getId());
+//                    return c;
+//                }).forEach((c) -> {
+//                    instance.parentCategories.put(c.getId(), c);
+//                });
 
                 instance.cbPrimeCat.getItems().addAll(instance.primeCatMap.keySet());
                 instance.cbPrimeCat.setEditable(true);

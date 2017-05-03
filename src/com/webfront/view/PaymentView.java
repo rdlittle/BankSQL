@@ -13,16 +13,20 @@ import com.webfront.model.Category;
 import com.webfront.model.Ledger;
 import com.webfront.model.Payment;
 import com.webfront.model.Stores;
-import java.util.List;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,6 +38,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 
@@ -41,7 +46,7 @@ import javafx.util.Callback;
  *
  * @author rlittle
  */
-public class PaymentView extends Pane {
+public class PaymentView extends Pane implements ViewInterface {
 
     private static PaymentView paymentView;
 
@@ -66,16 +71,33 @@ public class PaymentView extends Pane {
     TableColumn accountNumColumn;
     TableColumn transAmtColumn;
 
+    private ReadOnlyObjectWrapper<Payment> selectedPaymentProperty;
+    protected Payment prevPayment;
+    protected Payment prevPaymentCopy;
+
+    private final DeleteListener deleteListener = new DeleteListener();
+    private final CreateListener createListener = new CreateListener();
+    private final UpdateListener updateListener = new UpdateListener();
+
+    private VBox vbox;
     Button btnAdd;
 
-    public PaymentView() {
+    protected PaymentView() {
         super();
+        vbox = new VBox();
+        vbox.maxHeightProperty().bind(this.heightProperty());
         storeAdded = new SimpleBooleanProperty();
+        selectedPaymentProperty = new ReadOnlyObjectWrapper<>();
+
         storeAdded.set(false);
         GridPane grid = new GridPane();
 
         paymentManager = PaymentManager.getInstance();
+<<<<<<< HEAD
         storesManager = new StoresManager();
+=======
+        storesManager = StoresManager.getInstance();
+>>>>>>> revision1
         categoryManager = CategoryManager.getInstance();
         ledgerManager = LedgerManager.getInstance();
 
@@ -85,13 +107,14 @@ public class PaymentView extends Pane {
         Platform.runLater(() -> loadData());
 
         table = new TableView<>();
-        table.setMinWidth(1300.0);
-        table.setMinHeight(600.0);
+        table.setMinWidth(1325.0);
+        table.minHeightProperty().bind(this.heightProperty().subtract(40D));
         table.setEditable(true);
 
         idColumn = new TableColumn("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory("id"));
-        idColumn.setMinWidth(50.0);
+        idColumn.setMinWidth(10.0);
+        idColumn.setMaxWidth(55.0);
 
         transDateColumn = new TableColumn("Date");
         transDateColumn.setCellValueFactory(new PropertyValueFactory("transDate"));
@@ -110,7 +133,6 @@ public class PaymentView extends Pane {
                 if (param.getValue().getLedgerEntry() != null) {
                     // From this payment (param.getValue()) get the Ledger item
                     Ledger l = param.getValue().getLedgerEntry();
-                    List<Payment> tmpList = l.getPayment();
                     if (l.getPayment() != null && l.getPayment().size() > 0) {
                         return new SimpleStringProperty(l.getId().toString());
                     }
@@ -169,13 +191,15 @@ public class PaymentView extends Pane {
         transAmtColumn.setCellValueFactory(new PropertyValueFactory("transAmt"));
         transAmtColumn.setCellFactory(new CellFormatter<>(TextAlignment.RIGHT));
         transAmtColumn.setMinWidth(100.0);
-        
-        list.addListener(new ListChangeListener() {
+
+        paymentManager.addListener(new ListChangeListener() {
             @Override
             public void onChanged(ListChangeListener.Change c) {
-                table.getItems().addAll(list);
+                list.setAll(paymentManager.getList(""));
+                table.getItems().setAll(list);
+                paymentManager.removeListener(this);
             }
-        });        
+        });
 
         table.getColumns().add(idColumn);
         table.getColumns().add(transDateColumn);
@@ -187,32 +211,41 @@ public class PaymentView extends Pane {
         table.getColumns().add(transIdColumn);
         table.getColumns().add(transAmtColumn);
 
-        btnAdd = new Button("Add Receipt");
-        btnAdd.setOnAction((ActionEvent event) -> {
-            PaymentForm paymentForm = new PaymentForm(getInstance(), new Payment());
+        btnAdd = new Button("Add");
+
+        /*
+            Open a new PayementForm, add ListChangeListener
+         */
+        btnAdd.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                prevPayment = new Payment();
+                showPaymentForm();
+            }
         });
 
-        EventHandler<MouseEvent> click = new EventHandler<MouseEvent>() {
+        EventHandler<MouseEvent> click;
+        click = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Payment payment = (Payment) table.getSelectionModel().getSelectedItem();
-                    PaymentForm paymentForm = new PaymentForm(paymentView, payment);
+                    prevPayment = (Payment) table.getSelectionModel().getSelectedItem();
+                    showPaymentForm();
+                } else if (event.isSecondaryButtonDown()) {
+
                 }
             }
         };
 
         table.addEventHandler(MouseEvent.MOUSE_CLICKED, click);
 
-        grid.setHgap(10.0);
-        grid.add(table, 0, 0);
         HBox buttons = new HBox();
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
-        buttons.setPadding(new Insets(10, 10, 0, 10));
+        buttons.setPadding(new Insets(10, 10, 10, 10));
         buttons.setSpacing(10.0);
         buttons.getChildren().add(btnAdd);
-        grid.add(buttons, 0, 1);
-        getChildren().add(grid);
+        vbox.getChildren().addAll(table, buttons);
+        getChildren().add(vbox);
     }
 
     public static PaymentView getInstance() {
@@ -222,12 +255,60 @@ public class PaymentView extends Pane {
         return paymentView;
     }
 
-    private void loadData() {
-        list.setAll(paymentManager.getList("SELECT * FROM payment ORDER BY transDate DESC"));
+    public void showPaymentForm() {
+        ListChangeListener<Payment> listListener = new ListChangeListener<Payment>() {
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends Payment> c) {
+                while (c.next()) {
+                    if (c.wasAdded()) {
+                        for (Payment p : c.getAddedSubList()) {
+                            table.getItems().add(p);
+                        }
+                    } else if (c.wasRemoved()) {
+                        for (Payment p : c.getRemoved()) {
+                            table.getItems().remove(p);
+                        }
+                    } else if (c.wasUpdated()) {
+                    }
+                }
+                getTable().getItems().sort(Payment.PaymentComparator);
+            }
+        };
+        list.addListener(listListener);
+
+        PaymentForm paymentForm = new PaymentForm(prevPayment);
+        selectedPaymentProperty().bind(paymentForm.selectedPaymentProperty());
+
+        paymentForm.getCreatedProperty().addListener(createListener);
+        paymentForm.getUpdatedProperty().addListener(updateListener);
+        paymentForm.getDeletedProperty().addListener(deleteListener);
+
+        paymentForm.stage.setOnCloseRequest(new EventHandler() {
+            @Override
+            public void handle(Event event) {
+                int idx = list.indexOf(selectedPaymentProperty().getValue());
+                Payment p = selectedPaymentProperty().getValue();
+                if (p.getLedgerEntry() != null) {
+                    p.getLedgerEntry().getPayment().add(p);
+                }
+                list.removeListener(listListener);
+                selectedPaymentProperty().unbindBidirectional(paymentForm.getSelectedPayment());
+                paymentForm.getCreatedProperty().removeListener(createListener);
+                paymentForm.getUpdatedProperty().removeListener(updateListener);
+                paymentForm.getDeletedProperty().removeListener(deleteListener);
+            }
+        });
+
     }
+
+    private void loadData() {
+        list.setAll(paymentManager.getList(""));
+    }
+
     /**
      * @return the table
      */
+    @Override
     public TableView<Payment> getTable() {
         return table;
     }
@@ -242,6 +323,7 @@ public class PaymentView extends Pane {
     /**
      * @return the list
      */
+    @Override
     public ObservableList<Payment> getList() {
         return list;
     }
@@ -256,6 +338,7 @@ public class PaymentView extends Pane {
     /**
      * @return the storeList
      */
+    @Override
     public ObservableList<Stores> getStoreList() {
         return storeList;
     }
@@ -284,6 +367,7 @@ public class PaymentView extends Pane {
     /**
      * @return the ledgerManager
      */
+    @Override
     public LedgerManager getLedgerManager() {
         return ledgerManager;
     }
@@ -291,6 +375,7 @@ public class PaymentView extends Pane {
     /**
      * @return the storeAdded
      */
+    @Override
     public BooleanProperty getStoreAdded() {
         return storeAdded;
     }
@@ -305,7 +390,75 @@ public class PaymentView extends Pane {
     /**
      * @return the paymentManager
      */
+    @Override
     public PaymentManager getPaymentManager() {
         return paymentManager;
     }
+
+    /**
+     * @return the vbox
+     */
+    public VBox getVbox() {
+        return vbox;
+    }
+
+    @Override
+    public void updateItem(Payment p) {
+        int idx = getTable().getSelectionModel().getSelectedIndex();
+        getTable().getItems().set(idx, p);
+        PaymentManager.getInstance().update(p);
+    }
+
+    @Override
+    public void removeItem(Payment p) {
+        int idx = getTable().getSelectionModel().getSelectedIndex();
+        getTable().getItems().remove(idx);
+    }
+
+    @Override
+    public void updateTrans(int idx) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Ledger getLedgerItem(String id) {
+        return LedgerManager.getInstance().getItem(Integer.parseInt(id));
+    }
+
+    /**
+     * @return the selectedPaymentProperty
+     */
+    public SimpleObjectProperty<Payment> selectedPaymentProperty() {
+        return selectedPaymentProperty;
+    }
+
+    private class DeleteListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().delete(selectedPaymentProperty().getValue());
+            removeItem(selectedPaymentProperty().getValue());
+        }
+
+    }
+
+    private class UpdateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            updateItem(prevPayment);
+        }
+
+    }
+
+    private class CreateListener implements InvalidationListener {
+
+        @Override
+        public void invalidated(Observable observable) {
+            getPaymentManager().create(selectedPaymentProperty().getValue());
+            getList().add(selectedPaymentProperty().getValue());
+        }
+
+    }
+
 }
